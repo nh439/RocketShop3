@@ -1,0 +1,6 @@
+@RocketShop.Migration_HostAddress = http://localhost:5096
+
+GET {{RocketShop.Migration_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

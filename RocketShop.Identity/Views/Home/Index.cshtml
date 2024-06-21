@@ -1,8 +1,35 @@
-﻿@{
+﻿@using Microsoft.EntityFrameworkCore
+@using RocketShop.Database.EntityFramework
+@using RocketShop.Database.Model.Identity.Views
+@using RocketShop.Framework.Extension
+
+@inject IdentityContext context;
+@{
     ViewData["Title"] = "Home Page";
+    var sql = (from users in context.Users
+               join info in context.UserInformation on users.Id equals info.UserId into information
+               from i in information.DefaultIfEmpty()
+               select new UserView(
+                   users.Id,
+                   users.EmployeeCode,
+                   users.Email,
+                   users.Firstname,
+                   users.Surname,
+                   users.Prefix,
+                   i.Department,
+                   i.CurrentPosition,
+                   i.ManagerId,
+                   !users.Resigned
+               )
+    ).ToQueryString();
+
 }
 
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
     <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
 </div>
+
+                   <strong>
+                       @sql
+                   </strong>

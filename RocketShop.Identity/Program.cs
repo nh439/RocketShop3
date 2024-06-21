@@ -1,3 +1,6 @@
+using Microsoft.EntityFrameworkCore;
+using RocketShop.Database.EntityFramework;
+
 namespace RocketShop.Identity
 {
     public class Program
@@ -5,9 +8,15 @@ namespace RocketShop.Identity
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-
+            var currentEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            var configuration = (new ConfigurationBuilder())
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json")
+                .AddJsonFile($"appsettings.{currentEnvironment}.json")
+                .Build();
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+            builder.Services.AddDbContext<IdentityContext>();
 
             var app = builder.Build();
 

@@ -22,4 +22,8 @@
     <ProjectReference Include="..\RocketShop.Shared\RocketShop.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Views\Connect\" />
+  </ItemGroup>
+
 </Project>
