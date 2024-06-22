@@ -1,0 +1,6 @@
+@RocketShop.DomainCenter_HostAddress = http://localhost:5237
+
+GET {{RocketShop.DomainCenter_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
