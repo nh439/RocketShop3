@@ -15,4 +15,9 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\RocketShop.Framework\RocketShop.Framework.csproj" />
+    <ProjectReference Include="..\RocketShop.Shared\RocketShop.Shared.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using RocketShop.Database.EntityFramework;
 using RocketShop.Database.Model.Identity;
 using RocketShop.Framework.Extension;
+using RocketShop.Framework.Helper;
 using RocketShop.Migration.Configuration;
 
 namespace RocketShop.Migration
@@ -14,35 +15,29 @@ namespace RocketShop.Migration
         public static async Task<int> Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            var currentEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-            var configuration = (new ConfigurationBuilder())
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json")
-                .AddJsonFile($"appsettings.{currentEnvironment}.json")
-                .Build();
+            var configuration = builder.InstallConfiguration();
 
             var startUser = configuration.GetSection("StartUser").Get<StartUserConfiguration>();
-            builder.Services.AddIdentity<User, IdentityRole>(option =>
+            builder.InstallServices(service =>
             {
-                option.SignIn.RequireConfirmedAccount = false;
-                option.Password.RequireNonAlphanumeric = false;
-            }).AddEntityFrameworkStores<IdentityContext>()
+                service.AddIdentity<User, IdentityRole>(option =>
+                {
+                    option.SignIn.RequireConfirmedAccount = false;
+                    option.Password.RequireNonAlphanumeric = false;
+                }).AddEntityFrameworkStores<IdentityContext>()
 .AddDefaultTokenProviders();
-
-            builder.Services.AddIdentityCore<User>(s => {
-            })
+                service.AddIdentityCore<User>(s =>
+                {
+                })
     .AddRoles<IdentityRole>()
     .AddClaimsPrincipalFactory<UserClaimsPrincipalFactory<User, IdentityRole>>()
     .AddEntityFrameworkStores<IdentityContext>()
     .AddDefaultTokenProviders();
-            builder.Services.AddDbContext<IdentityContext>();
-
-            // Add services to the container.
-            builder.Services.AddAuthorization();
-
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+                service.AddDbContext<IdentityContext>()
+                .AddAuthorization()
+                .AddEndpointsApiExplorer()
+                .AddSwaggerGen();
+            });
 
             var app = builder.Build();
 
@@ -56,12 +51,12 @@ namespace RocketShop.Migration
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
-            using (var scope = app.Services.CreateScope())
+            var flowResult = await app.Services.InvokeEntryFlowAndReturn(async scope =>
             {
                 try
                 {
                     Console.WriteLine("Start Migrate");
-                    var context = scope.ServiceProvider.GetRequiredService<IdentityContext>();    
+                    var context = scope.ServiceProvider.GetRequiredService<IdentityContext>();
                     context!.Database.Migrate();
                     Console.WriteLine("End Migrate");
                     Console.WriteLine("Create First User");
@@ -81,7 +76,7 @@ namespace RocketShop.Migration
                             Surname = "Admin",
                             Resigned = false
                         };
-                        await userManager.CreateAsync(user,startUser.Password);
+                        await userManager.CreateAsync(user, startUser.Password);
                         context.UserRole.Add(new UserRole
                         {
                             RoleId = 1,
@@ -114,8 +109,8 @@ namespace RocketShop.Migration
                     Thread.Sleep(7000);
                     return -1;
                 }
-            }
-
+            });
+            return flowResult.Item2;
         }
     }
 }

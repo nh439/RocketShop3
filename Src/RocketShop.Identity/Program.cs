@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using RocketShop.Database.EntityFramework;
+using RocketShop.Framework.Helper;
 
 namespace RocketShop.Identity
 {
@@ -8,16 +9,14 @@ namespace RocketShop.Identity
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            var currentEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-            var configuration = (new ConfigurationBuilder())
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json")
-                .AddJsonFile($"appsettings.{currentEnvironment}.json")
-                .Build();
+            var configuration = builder.InstallConfiguration();
             // Add services to the container.
-            builder.Services.AddControllersWithViews();
-            builder.Services.AddDbContext<IdentityContext>();
-
+            builder.InstallServices(install =>
+            {
+                install.AddControllersWithViews();
+                install.AddDbContext<IdentityContext>();
+            });
+            
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
