@@ -1,6 +1,13 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using RocketShop.Database.EntityFramework;
+using RocketShop.Database.Model.Identity;
 using RocketShop.Framework.Helper;
+using RocketShop.Identity.Configuration;
 
 namespace RocketShop.Identity
 {
@@ -10,13 +17,40 @@ namespace RocketShop.Identity
         {
             var builder = WebApplication.CreateBuilder(args);
             var configuration = builder.InstallConfiguration();
+            var oauthConfiguration = configuration.GetSection("OauthConfiguration").Get<OauthConfiguration>();
             // Add services to the container.
             builder.InstallServices(install =>
             {
+                install.AddIdentity<User, IdentityRole>(option =>
+                {
+                    option.SignIn.RequireConfirmedAccount = false;
+                    option.Password.RequireNonAlphanumeric = false;
+                }).AddEntityFrameworkStores<IdentityContext>()
+.AddDefaultTokenProviders();
+                install.AddIdentityCore<User>(s =>
+                {
+                })
+    .AddRoles<IdentityRole>()
+    .AddClaimsPrincipalFactory<UserClaimsPrincipalFactory<User, IdentityRole>>()
+    .AddEntityFrameworkStores<IdentityContext>()
+    .AddDefaultTokenProviders();
                 install.AddControllersWithViews();
                 install.AddDbContext<IdentityContext>();
+                install.AddAuthentication()
+                .AddCookie(options =>
+                {
+                    options.LogoutPath = "/logout";
+                    options.AccessDeniedPath = "/access-denied";
+                })
+                .AddGoogle(options =>
+                {
+                    options.ClientId = oauthConfiguration.ClientId;
+                    options.ClientSecret = oauthConfiguration.ClientSecret;
+                    options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                    options.SaveTokens = true; // Optional, but recommended to improve performance
+                });
+                install.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             });
-            
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -32,6 +66,7 @@ namespace RocketShop.Identity
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllerRoute(

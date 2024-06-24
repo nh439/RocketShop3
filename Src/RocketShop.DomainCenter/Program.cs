@@ -29,11 +29,6 @@ namespace RocketShop.DomainCenter
 
             app.UseAuthorization();
 
-            var summaries = new[]
-            {
-                "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-            };
-
             app.MapGet("/", (HttpContext httpContext) =>
             {
                 return configuration.GetSection("Settings").Get<ConfigurationCenter>();

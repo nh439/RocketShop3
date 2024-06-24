@@ -1,0 +1,36 @@
+﻿@using System.Security.Claims
+@using RocketShop.Framework.Extension
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@inject IHttpContextAccessor accessor;
+@{
+    List<Claim> claims = new List<Claim>();
+    if (ViewBag.State == "Login_Successful")
+    {
+        claims = accessor.HttpContext.User.Claims.ToList();
+    }
+}
+
+<h1>@ViewBag.State</h1>
+
+@if (claims.HasData())
+{
+    <table class="table">
+        <thead class="table-dark">
+            <tr>
+                <th>Type</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody class="table-success">
+            @foreach(var claim in claims)
+            {
+                <tr>
+                    <td>@claim.Type</td>
+                    <td>@claim.Value</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
