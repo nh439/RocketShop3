@@ -36,19 +36,11 @@ namespace RocketShop.Identity
     .AddDefaultTokenProviders();
                 install.AddControllersWithViews();
                 install.AddDbContext<IdentityContext>();
-                install.AddAuthentication()
-                .AddCookie(options =>
+                install.AddAuthentication(options =>
                 {
-                    options.LogoutPath = "/logout";
-                    options.AccessDeniedPath = "/access-denied";
-                })
-                .AddGoogle(options =>
-                {
-                    options.ClientId = oauthConfiguration.ClientId;
-                    options.ClientSecret = oauthConfiguration.ClientSecret;
-                    options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                    options.SaveTokens = true; // Optional, but recommended to improve performance
-                });
+                    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+                }).AddCookie();
                 install.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             });
             var app = builder.Build();
