@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using RocketShop.Database.Model.Identity;
 using RocketShop.Framework.Extension;
 using RocketShop.Identity.Configuration;
@@ -12,6 +13,7 @@ using RocketShop.Identity.Models;
 using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text;
 using System.Web;
 
 namespace RocketShop.Identity.Controllers
@@ -68,18 +70,22 @@ namespace RocketShop.Identity.Controllers
             var user = await _userManager.FindByNameAsync(username);
             if (user.IsNull())
                 return Redirect("LoggedIn?state=Username_Invalid");
+            if (user!.Resigned)
+                return Redirect("AccessDeined?mode=2");
             var res = await _signInManager.CheckPasswordSignInAsync(user!,password,true);
             if (res.Succeeded)
             {
                 await _signInManager.SignInWithClaimsAsync(user!,null ,SetClaims(user!));
-                return Redirect("LoggedIn?state=Login_Successful");
+                var token = BuildToken();
+                return Redirect(returnUrl ?? $"LoggedIn?state=Login_Successful&id_token={token}");
             }
             return Redirect("LoggedIn?state=Error");
         }
         [HttpGet]
         public IActionResult GoogleLogin(string? returnUrl)
         {
-
+            if (returnUrl.HasMessage())
+                HttpContext.Response.Cookies.Append("redirect", returnUrl!);
             var oidc = _configuration.GetSection("OauthConfiguration").Get<OauthConfiguration>();
                 string url = @$"{oidc.Authority}/o/oauth2/v2/auth?
 client_id={oidc.ClientId}&
@@ -97,6 +103,7 @@ x-client-ver=7.1.2.0";
         [HttpPost]
         public async Task<IActionResult> External(string? returnUrl,string? id_token)
         {
+            Option<string> redirect = HttpContext.Request.Cookies.Where(s=>s.Key== "redirect").Select(s=>s.Value).FirstOrDefault();
             var handler = new JwtSecurityTokenHandler();
             var jwtSecurityToken = handler.ReadJwtToken(id_token);
             var email = jwtSecurityToken.Claims.Find(x => x.Type == "email").FirstOrDefault().Value;
@@ -104,10 +111,15 @@ x-client-ver=7.1.2.0";
                 return Redirect("LoggedIn?state=Username_Invalid");
             var user = await _userManager.FindByEmailAsync(email);
             if (user.IsNull())
-                return Redirect("LoggedIn?state=Access_Diened");
+                return Redirect("AccessDeined");
+            if (user!.Resigned)
+                return Redirect("AccessDeined?mode=2");
             var claims = SetClaims(user!);
             await _signInManager.SignInWithClaimsAsync(user!,null,claims);
-            return Redirect("LoggedIn?state=Login_Successful");
+            var token = BuildToken();
+            if (redirect.IsSome)
+                return Redirect(redirect.Extract()!);
+            return Redirect($"LoggedIn?state=Login_Successful&id_token={token}");
         }
         [HttpGet]
         public IActionResult LoggedIn(string? state)
@@ -142,6 +154,30 @@ x-client-ver=7.1.2.0";
                 claims.Add(nc);
             }
             return claims;
+        }
+        [HttpGet]
+        public IActionResult AccessDeined(int? mode) =>
+            View("./Views/Home/AccessFailed.cshtml",mode);
+
+        public string BuildToken()
+        {
+            var claims = HttpContext.User.Claims;
+            string secretKey = "828db15b-65f0-4492-a1eb-a89afb182e30"; // Replace with a strong, secure key
+            SymmetricSecurityKey signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+
+            var signingCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
+            var jwtHandler = new JwtSecurityTokenHandler();
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddMinutes(30), // Set expiration time (optional)
+                SigningCredentials = signingCredentials
+            };
+
+            var securityToken = jwtHandler.CreateToken(tokenDescriptor);
+            return  jwtHandler.WriteToken(securityToken);
+
         }
     }
 }
