@@ -8,7 +8,7 @@ namespace RocketShop.Database
 {
     public static class TableConstraint
     {
-        public const string User = "Users";
+        public const string User = "AspNetUsers";
         public const string UserInformation = "UserInformations";
         public const string UserView = "V_User";
         public const string Role = "Roles";

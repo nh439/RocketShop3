@@ -28,6 +28,7 @@ namespace RocketShop.Framework.Helper
             return services;
         }
 
+
         public static IHostApplicationBuilder InstallServices(this IHostApplicationBuilder builder,
              Action<IServiceCollection> ServiceToInstall)
         {

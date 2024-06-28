@@ -1,12 +1,18 @@
 ﻿@using Microsoft.EntityFrameworkCore
+@using Npgsql
+@using RocketShop.Database
 @using RocketShop.Database.EntityFramework
 @using RocketShop.Database.Model.Identity.Views
 @using RocketShop.Framework.Extension
+@using RocketShop.Database.Extension
 
 @inject IdentityContext context;
+@inject IConfiguration configuration;
 @{
     ViewData["Title"] = "Home Page";
-
+    using var connection = new NpgsqlConnection(configuration.GetConnectionString("IdentityDatabase"));
+    var data = await connection.FetchScrollingPageAsync<UserView>(TableConstraint.UserView);
+    Console.WriteLine("x");
 }
 
 <div class="text-center">

@@ -6,16 +6,19 @@ using System.Threading.Tasks;
 
 namespace RocketShop.Database.Model.Identity.Views
 {
-    public sealed record UserView(
-        string UserId,
-        string EmployeeCode,
-        string Email,
-        string Firstname,
-        string Surname,
-        string? Prefix,
-        string? Department,
-        string? Position,
-        string? ManagerId,
-        bool Active
-        );
+    public class UserView
+    {
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+        public string UserId { get; init; }
+        public string EmployeeCode { get; init; }
+        public string Email { get; init; }
+        public string Firstname { get; init; }
+        public string Surname { get; init; }
+        public string? Prefix { get; init; }
+        public string? Department { get; init; }
+        public string? Position { get; init; }
+        public string? ManagerId { get; init; }
+        public bool Active { get; init; }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+    }
 }
