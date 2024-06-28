@@ -16,8 +16,8 @@ namespace RocketShop.Framework.Helper
         {
                 IConfiguration conf = (new ConfigurationBuilder())
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json")
-                .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json")
+                .AddJsonFile("appsettings.json",false,true)
+                .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json",true,true)
                 .Build();
             return conf;
         }

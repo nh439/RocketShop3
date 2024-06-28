@@ -9,10 +9,13 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["RocketShop.Migration/RocketShop.Migration.csproj", "RocketShop.Migration/"]
-RUN dotnet restore "./RocketShop.Migration/RocketShop.Migration.csproj"
+COPY ["Src/RocketShop.Migration/RocketShop.Migration.csproj", "Src/RocketShop.Migration/"]
+COPY ["Src/RocketShop.Database/RocketShop.Database.csproj", "Src/RocketShop.Database/"]
+COPY ["Src/RocketShop.Shared/RocketShop.Shared.csproj", "Src/RocketShop.Shared/"]
+COPY ["Src/RocketShop.Framework/RocketShop.Framework.csproj", "Src/RocketShop.Framework/"]
+RUN dotnet restore "./Src/RocketShop.Migration/RocketShop.Migration.csproj"
 COPY . .
-WORKDIR "/src/RocketShop.Migration"
+WORKDIR "/src/Src/RocketShop.Migration"
 RUN dotnet build "./RocketShop.Migration.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish

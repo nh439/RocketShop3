@@ -1,0 +1,77 @@
+version: '3.8'
+networks:
+  rcs_network:
+    driver: bridge
+
+services:
+  migration :
+    build :
+      context : .
+      dockerfile : Src\RocketShop.Migration\Dockerfile
+    ports :
+      - "12003:80"
+    env_file:
+      - .env
+    depends_on :
+       db:
+        condition: service_started
+    networks :
+      - rcs_network    
+    healthcheck:
+      test: "exit 0"
+
+  identity :
+    build :
+      context : .
+      dockerfile : Src\RocketShop.Identity\Dockerfile
+    ports :
+      - "12000:8080"
+    env_file:
+      - .env
+    depends_on :
+      - migration
+    networks :
+      - rcs_network
+  
+  domainservice :
+    build :
+      context : .
+      dockerfile : Src\RocketShop.DomainCenter\Dockerfile
+    ports :
+      - "12001:8080"
+    env_file:
+      - domain.env
+    depends_on :
+      - migration
+    networks :
+      - rcs_network
+    volumes:
+      - ./documents:/app/documents
+  
+      
+  db:
+    image: postgres
+    restart: always
+    # set shared memory limit when using docker-compose
+    shm_size: 512mb
+    # or set shared memory limit when deploy via swarm stack
+    #volumes:
+    #  - type: tmpfs
+    #    target: /dev/shm
+    #    tmpfs:
+    #      size: 134217728 # 128*2^20 bytes = 128Mb
+    environment:
+      POSTGRES_PASSWORD: 123456
+    ports:
+      - "5432:5432"
+    networks :
+      - rcs_network
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    networks :
+      - rcs_network  
+    

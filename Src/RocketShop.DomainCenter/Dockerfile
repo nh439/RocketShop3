@@ -10,6 +10,8 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["Src/RocketShop.DomainCenter/RocketShop.DomainCenter.csproj", "Src/RocketShop.DomainCenter/"]
+COPY ["Src/RocketShop.Framework/RocketShop.Framework.csproj", "Src/RocketShop.Framework/"]
+COPY ["Src/RocketShop.Shared/RocketShop.Shared.csproj", "Src/RocketShop.Shared/"]
 RUN dotnet restore "./Src/RocketShop.DomainCenter/RocketShop.DomainCenter.csproj"
 COPY . .
 WORKDIR "/src/Src/RocketShop.DomainCenter"
