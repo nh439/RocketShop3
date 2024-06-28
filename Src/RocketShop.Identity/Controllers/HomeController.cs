@@ -179,5 +179,7 @@ x-client-ver=7.1.2.0";
             return  jwtHandler.WriteToken(securityToken);
 
         }
+        [Authorize]
+        public IActionResult AuthSample() => View();
     }
 }
