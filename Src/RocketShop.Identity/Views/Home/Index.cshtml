@@ -10,9 +10,11 @@
 @inject IConfiguration configuration;
 @{
     ViewData["Title"] = "Home Page";
-    using var connection = new NpgsqlConnection(configuration.GetConnectionString("IdentityDatabase"));
+    using var connection = new NpgsqlConnection(configuration.GetIdentityConnectionString());
     var data = await connection.FetchScrollingPageAsync<UserView>(TableConstraint.UserView);
     Console.WriteLine("x");
+
+
 }
 
 <div class="text-center">

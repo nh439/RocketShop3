@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using RocketShop.Database.EntityFramework;
+using RocketShop.Database.Helper;
 using RocketShop.Database.Model.Identity;
 using RocketShop.Framework.Helper;
 using RocketShop.Identity.Configuration;
@@ -35,8 +36,8 @@ namespace RocketShop.Identity
     .AddEntityFrameworkStores<IdentityContext>()
     .AddDefaultTokenProviders();
                 install.AddControllersWithViews();
-                install.AddDbContext<IdentityContext>();
-                install.AddAuthentication(options =>
+                install.InstallIdentityContext()
+                .AddAuthentication(options =>
                 {
                     options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                     options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;

@@ -19,8 +19,4 @@
     <ProjectReference Include="..\RocketShop.Shared\RocketShop.Shared.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Helper\" />
-  </ItemGroup>
-
 </Project>
