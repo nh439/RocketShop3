@@ -3,6 +3,7 @@ using LanguageExt;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RocketShop.Database.EntityFramework;
+using RocketShop.Database.Helper;
 using RocketShop.Database.Model.Identity;
 using RocketShop.Framework.Extension;
 using RocketShop.Framework.Helper;
@@ -33,7 +34,7 @@ namespace RocketShop.Migration
     .AddClaimsPrincipalFactory<UserClaimsPrincipalFactory<User, IdentityRole>>()
     .AddEntityFrameworkStores<IdentityContext>()
     .AddDefaultTokenProviders();
-                service.AddDbContext<IdentityContext>()
+                service.InstallDatabase<IdentityContext>()
                 .AddAuthorization()
                 .AddEndpointsApiExplorer()
                 .AddSwaggerGen();
