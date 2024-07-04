@@ -52,13 +52,14 @@ namespace RocketShop.Identity.Controllers
         public IActionResult Error() =>
             InvokeControllerService(() => View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier }));
 
-        public IActionResult Login(string? returnUrl) =>
+        public IActionResult Login(string? returnUrl,string? err) =>
             InvokeControllerService<IActionResult>(() =>
             {
                 var authenicate = HttpContext.User.Identity?.IsAuthenticated;
                 if (authenicate.IsTrue())
                     return Redirect("LoggedIn?state=Login_Successful");
                 ViewBag.ReturnUrl = returnUrl;
+                ViewBag.Err = err;
                 return View();
             });
 
@@ -71,7 +72,7 @@ namespace RocketShop.Identity.Controllers
                 {
                     var user = await _userManager.FindByNameAsync(username);
                     if (user.IsNull())
-                        return Redirect("LoggedIn?state=Username_Invalid");
+                        return Redirect($"Login?{(returnUrl.HasMessage() ? $"returnUrl={returnUrl}&" : string.Empty)}err=Username Invalid");
                     if (user!.Resigned)
                         return Redirect("AccessDeined?mode=2");
                     var res = await _signInManager.CheckPasswordSignInAsync(user!, password, true);
@@ -79,9 +80,9 @@ namespace RocketShop.Identity.Controllers
                     {
                         await _signInManager.SignInWithClaimsAsync(user!, null, SetClaims(user!));
                         var token = BuildToken();
-                        return Redirect(returnUrl ?? $"LoggedIn?state=Login_Successful&id_token={token}");
+                        return Redirect(returnUrl.HasMessage() ?  $"{returnUrl}?id_token={token}" : "/");
                     }
-                    return Redirect("LoggedIn?state=Error");
+                    return Redirect($"Login?&{(returnUrl.HasMessage() ? $"returnUrl={returnUrl}&":string.Empty)}err=Password Incorrect");
                 }
                 );
 
@@ -107,15 +108,15 @@ x-client-ver=7.1.2.0";
             });
 
         [HttpPost]
-        public async Task<IActionResult> External(string? returnUrl, string? id_token) =>
+        public async Task<IActionResult> External( string? id_token) =>
             await InvokeControllerServiceAsync(async () =>
             {
                 Option<string> redirect = HttpContext.Request.Cookies.Where(s => s.Key == "redirect").Select(s => s.Value).FirstOrDefault();
                 var handler = new JwtSecurityTokenHandler();
                 var jwtSecurityToken = handler.ReadJwtToken(id_token);
-                var email = jwtSecurityToken.Claims.Find(x => x.Type == "email").FirstOrDefault().Value;
+                var email = jwtSecurityToken.Claims.Find(x => x.Type == "email").FirstOrDefault()!.Value;
                 if (email.IsNull())
-                    return Redirect("LoggedIn?state=Username_Invalid");
+                    return Redirect(($"Login?{(redirect.IsSome ? $"returnUrl={redirect.Extract()!}&" : string.Empty)}err=Username Invalid");
                 var user = await _userManager.FindByEmailAsync(email);
                 if (user.IsNull())
                     return Redirect("AccessDeined");
@@ -125,8 +126,8 @@ x-client-ver=7.1.2.0";
                 await _signInManager.SignInWithClaimsAsync(user!, null, claims);
                 var token = BuildToken();
                 if (redirect.IsSome)
-                    return Redirect(redirect.Extract()!);
-                return Redirect($"LoggedIn?state=Login_Successful&id_token={token}");
+                    return Redirect(redirect.Extract().Tranform(r=> $"{r}?id_token={token}")!);
+                return Redirect($"/");
             });
 
         [HttpGet]

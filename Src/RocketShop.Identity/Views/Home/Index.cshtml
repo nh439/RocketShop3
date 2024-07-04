@@ -5,16 +5,29 @@
 @using RocketShop.Database.Model.Identity.Views
 @using RocketShop.Framework.Extension
 @using RocketShop.Database.Extension
+@using RocketShop.Identity.Service
+@using System.Security.Claims
 
 @inject IdentityContext context;
 @inject IConfiguration configuration;
 @inject IHttpContextAccessor accessor;
+@inject IUserService userService;
+@inject Serilog.ILogger logger;
 @{
     ViewData["Title"] = "Home Page";
     string name = string.Empty;
     if (accessor.HttpContext.IsNotNull() && accessor.HttpContext!.User.Identity!.IsAuthenticated)
     {
-        
+        var userId = accessor.HttpContext.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)!.Value;
+        var userResult = await userService.GetById(userId);
+        if (userResult.IsLeft)
+        {
+            var x = userResult.GetLeft();
+            logger.Error(x!.Message,x);
+            name = "Error While Get User";
+        }
+        else
+            name = userResult.GetRight().Tranform(x => $"{x!.Firstname} {x!.Surname}")!;
     }
 
 }
@@ -24,24 +37,16 @@
 </div>
 @if (accessor.HttpContext.IsNotNull() && accessor.HttpContext!.User.Identity!.IsAuthenticated)
 {
+    <h1>Hi @name</h1>
+    <br />
+    <a href="Profile" class="btn btn-primary">View My Profile</a>
+    <a href="Profile" class="btn btn-warning">Change Password</a>
+    <a href="home/logout" class="btn btn-secondary">Logout</a>
 
-    <div class="card" style="width: 18rem;">
-        <div class="card-body">
-            <h5 class="card-title">You are NOT Logged In</h5>
-            <h6 class="card-subtitle mb-2 text-muted">Card subtitle</h6>
-            <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-            <a asp-controller="home" asp-action="logout" class="card-link">Logout</a>
-        </div>
-    </div>
 }
 else
 {
-    <div class="card" style="width: 18rem;">
-        <div class="card-body">
-            <h5 class="card-title">You are NOT Logged In</h5>
-            <h6 class="card-subtitle mb-2 text-muted">Card subtitle</h6>
-            <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-            <a asp-controller="home" asp-action="login" class="card-link">Login</a>
-        </div>
-    </div>
+    <h1>You are Not Logged In</h1>
+    <h2>Please Login Below</h2>
+    <a href="home/login" class="btn btn-primary">Login</a>
 }

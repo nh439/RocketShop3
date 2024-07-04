@@ -59,5 +59,8 @@ namespace RocketShop.Framework.Extension
 
         public static bool IsNotNull(this object? item) =>
             item != null;
+
+        public static TResult? Tranform<TSource,TResult>(this TSource? source,Func<TSource?,TResult> Operation) =>
+            Operation(source);
     }
 }

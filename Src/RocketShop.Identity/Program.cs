@@ -50,7 +50,8 @@ namespace RocketShop.Identity
             })
             .InstallServices(service =>
                 {
-                    service.AddScoped<IProfileServices, ProfileServices>();
+                    service.AddScoped<IProfileServices, ProfileServices>()
+                    .AddScoped<IUserService,UserService>();
                 });
             var app = builder.Build();
 
