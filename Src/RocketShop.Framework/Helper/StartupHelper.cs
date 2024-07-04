@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using RocketShop.Framework.Extension;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace RocketShop.Framework.Helper
 {
@@ -27,7 +29,18 @@ namespace RocketShop.Framework.Helper
             ServiceToInstall(services);
             return services;
         }
-
+        public static IHostApplicationBuilder InstallSerilog(this IHostApplicationBuilder builder,
+            string logPath = "../log/serilog_Service.log")
+        {
+            var logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.File(logPath, rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+            builder.Logging.ClearProviders();
+            builder.Logging.AddSerilog(logger);
+            builder.Services.AddSingleton(Log.Logger);
+            return builder;
+        }
 
         public static IHostApplicationBuilder InstallServices(this IHostApplicationBuilder builder,
              Action<IServiceCollection> ServiceToInstall)

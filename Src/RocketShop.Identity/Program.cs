@@ -9,6 +9,8 @@ using RocketShop.Database.Helper;
 using RocketShop.Database.Model.Identity;
 using RocketShop.Framework.Helper;
 using RocketShop.Identity.Configuration;
+using RocketShop.Identity.Service;
+using Serilog;
 
 namespace RocketShop.Identity
 {
@@ -20,6 +22,7 @@ namespace RocketShop.Identity
             var configuration = builder.InstallConfiguration();
             var oauthConfiguration = configuration.GetSection("OauthConfiguration").Get<OauthConfiguration>();
             // Add services to the container.
+            builder.InstallSerilog();
             builder.InstallServices(install =>
             {
                 install.AddIdentity<User, IdentityRole>(option =>
@@ -44,7 +47,11 @@ namespace RocketShop.Identity
                 }).AddCookie();
                 install.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
                 install.AddSession();
-            });
+            })
+            .InstallServices(service =>
+                {
+                    service.AddScoped<IProfileServices, ProfileServices>();
+                });
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -68,6 +75,7 @@ namespace RocketShop.Identity
                 pattern: "{controller=Home}/{action=Index}/{id?}");
 
             app.Run();
+
         }
     }
 }

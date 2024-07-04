@@ -1,0 +1,80 @@
+﻿@using LanguageExt
+@using RocketShop.Database.Model.NonDatabaseModel
+@using RocketShop.Framework.Extension
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@model Either<Exception,UserProfile>;
+@{
+}
+<h1>Profile</h1>
+@if(Model.IsLeft)
+{
+    <h2 style="color:red">Error While Gethering Profile</h2>
+}
+else
+{
+    var profile = Model.GetRight();
+    <div class="row">
+        <div class="col-1"></div>
+        <div class="col-10">
+            <div class="form-group">
+                <label for="text">Id</label>
+                <input id="text" name="text" type="text" readonly value="@profile!.Id" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="text1">Employee Code</label>
+                <input id="text1" name="text1" type="text" readonly value="@profile.EmployeeCode" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="text4">First Name</label>
+                <input id="text4" name="text4" type="text" readonly value="@profile.Firstname" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="text5">Last Name</label>
+                <input id="text5" name="text" type="text" readonly value="@profile.Surname" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="text2">Gender</label>
+                <input id="text2" name="text2" type="text" readonly value="@profile.GetGender()"  class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="text3">Email</label>
+                <input id="text3" name="text3" type="text" readonly value="@profile.Email" class="form-control">
+            </div>
+        
+        </div>
+        <div class="col-1"></div>
+    </div>
+    <div class="row">
+        <div class="col-1"></div>
+        <div class="col-10">
+            @if (profile.Information.IsNotNull())
+            {
+                <h2>Informations</h2>
+                <hr />
+                <div class="form-group">
+                    <label for="text">Brith Day</label>
+                    <input id="text" name="text" type="text" readonly value="@profile.Information!.BrithDay" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="text1">Start Date</label>
+                    <input id="text1" name="text1" type="text" readonly value="@profile.Information!.StartWorkDate" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="text2">Current Position</label>
+                    <input id="text2" name="text2" type="text" readonly value="@profile.Information!.CurrentPosition" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="text3">Department</label>
+                    <input id="text3" name="text3" type="text" readonly value="@profile.Information!.Department" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="text4">Manager Id</label>
+                    <input id="text4" name="text4" type="text" readonly value="@profile.Information!.ManagerId" class="form-control">
+                </div>
+            }
+        </div>
+        <div class="col-1"></div>
+    </div>
+}
