@@ -44,13 +44,14 @@ namespace RocketShop.Identity
                 {
                     options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                     options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
-                }).AddCookie();
+                }).AddCookie(c=>c.ExpireTimeSpan = TimeSpan.FromHours(10));
                 install.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
                 install.AddSession();
             })
             .InstallServices(service =>
                 {
-                    service.AddScoped<IProfileServices, ProfileServices>()
+                    service
+                    .AddScoped<IProfileServices, ProfileServices>()
                     .AddScoped<IUserService,UserService>();
                 });
             var app = builder.Build();

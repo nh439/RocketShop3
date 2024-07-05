@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json.Linq;
 using RocketShop.Database.Model.Identity;
 using RocketShop.Framework.Extension;
 using RocketShop.Identity.Configuration;
@@ -57,7 +58,10 @@ namespace RocketShop.Identity.Controllers
             {
                 var authenicate = HttpContext.User.Identity?.IsAuthenticated;
                 if (authenicate.IsTrue())
-                    return Redirect("LoggedIn?state=Login_Successful");
+                {
+                    var token = BuildToken();
+                    return Redirect(returnUrl.HasMessage() ? $"{returnUrl}?id_token={token}" : "/");
+                }
                 ViewBag.ReturnUrl = returnUrl;
                 ViewBag.Err = err;
                 return View();
@@ -116,7 +120,7 @@ x-client-ver=7.1.2.0";
                 var jwtSecurityToken = handler.ReadJwtToken(id_token);
                 var email = jwtSecurityToken.Claims.Find(x => x.Type == "email").FirstOrDefault()!.Value;
                 if (email.IsNull())
-                    return Redirect(($"Login?{(redirect.IsSome ? $"returnUrl={redirect.Extract()!}&" : string.Empty)}err=Username Invalid");
+                    return Redirect(($"Login?{(redirect.IsSome ? $"returnUrl={redirect.Extract()!}&" : string.Empty)}err=Username Invalid"));
                 var user = await _userManager.FindByEmailAsync(email);
                 if (user.IsNull())
                     return Redirect("AccessDeined");
@@ -156,7 +160,8 @@ x-client-ver=7.1.2.0";
                 email = user.Email,
                 surname = user.Surname,
                 firstname = user.Firstname,
-                active = !user.Resigned
+                active = !user.Resigned,
+                exp = DateTime.UtcNow.AddHours(10).ToUnixTime()
             };       
             foreach (var claim in newClaim.ToDictionaryStringObject())
             {
@@ -183,8 +188,8 @@ x-client-ver=7.1.2.0";
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddMinutes(30), // Set expiration time (optional)
-                SigningCredentials = signingCredentials
+                SigningCredentials = signingCredentials,
+                Expires = DateTime.Now.AddHours(10)
             };
 
             var securityToken = jwtHandler.CreateToken(tokenDescriptor);
