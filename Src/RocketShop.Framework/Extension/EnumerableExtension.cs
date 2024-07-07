@@ -87,5 +87,11 @@ public static async Task< TResult?> HasDataAndTranformDataAsync<TSource,TResult>
         public static bool IsNull<T>(this IEnumerable<T> Titem) => Titem == null;
 
         public static bool IsNotNull<T>(this IEnumerable<T> Titem) => Titem != null;
+
+        public static void SafeAdd<T>(this List<T>? itemList,T item)
+        {
+            if(itemList == null) itemList= new List<T>();
+            itemList.Add(item);
+        }
     }
 }

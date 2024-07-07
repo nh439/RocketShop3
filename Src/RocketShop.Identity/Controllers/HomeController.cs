@@ -163,11 +163,11 @@ x-client-ver=7.1.2.0";
                 active = !user.Resigned,
                 exp = DateTime.UtcNow.AddHours(10).ToUnixTime()
             };       
-            foreach (var claim in newClaim.ToDictionaryStringObject())
+            foreach (var claim in newClaim.ToDictionaryStringObject()!)
             {
                 if (claim.Value == null)
                     continue;
-                var nc = new Claim(claim.Key, claim.Value.ToString());
+                var nc = new Claim(claim.Key, claim.Value.ToString()!);
                 claims.Add(nc);
             }
             return claims;
