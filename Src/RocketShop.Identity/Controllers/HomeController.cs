@@ -7,11 +7,15 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json.Linq;
+using Npgsql;
+using RocketShop.Database.Extension;
 using RocketShop.Database.Model.Identity;
+using RocketShop.Database.NonEntityFramework.QueryGenerator;
 using RocketShop.Framework.Extension;
 using RocketShop.Identity.Configuration;
 using RocketShop.Identity.IdentityBaseServices;
 using RocketShop.Identity.Models;
+using System.Data;
 using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -43,7 +47,20 @@ namespace RocketShop.Identity.Controllers
         }
 
         public IActionResult Index() =>
-            InvokeControllerService(() => View());
+            InvokeControllerService(() => {
+                IDbConnection? connection = new NpgsqlConnection(_configuration.GetIdentityConnectionString());
+                var query = connection.CreateQueryStore("Students")
+                .Where("Id", 12).Where("Name", SqlOperator.NotEqual, "Susan")
+                .WhereIn("Plan", "Science-Math", "Intensive Science", "English Program")
+                .WhereBetween("GPA", 3, 4)
+                .OrWhereNotNull("Lastname")
+                .UsePaging(2,10)
+                .OrderBy("Lastname")
+                .OrderBy("Id",true);
+                var sql = query.Compiled();
+                var qs = sql.ToString();
+                return View();         
+                });
 
         public IActionResult Privacy() =>
             InvokeControllerService(() => View());

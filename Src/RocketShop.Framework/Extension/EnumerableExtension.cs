@@ -93,5 +93,11 @@ public static async Task< TResult?> HasDataAndTranformDataAsync<TSource,TResult>
             if(itemList == null) itemList= new List<T>();
             itemList.Add(item);
         }
+        public static void SafeAddRange<T>(this List<T>? itemList,IEnumerable<T> items)
+        {
+            if(itemList == null) itemList= new List<T>();
+            itemList.AddRange(items);
+        }
+
     }
 }

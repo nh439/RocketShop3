@@ -11,9 +11,12 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     public class QueryStore
     {
-        public string TableName { get; set; }
-        public List<QueryCondition>? conditions { get; set; }
-        readonly IDbConnection connection;
+        internal string TableName { get; set; }
+        internal List<QueryCondition>? conditions { get; set; } = new List<QueryCondition>();
+        internal List<OrderBy> orderBies { get; set; } = new List<OrderBy>();
+        internal QueryPaging? QueryPaging { get; set; }
+        internal List<string> SelectedColumns { get; set; } = new List<string>();
+        internal readonly IDbConnection connection;
         public QueryStore(IDbConnection connection,
             string tableName)
         {
@@ -21,28 +24,8 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
             this.TableName = tableName;
         }
 
-        public QueryStore Where(string column, object value)
-        {
-            AddNormalCond(column, SqlOperator.Equal, value);
-            return this;
-        }
-        public QueryStore OrWhere(string column, object value)
-        {
-            AddNormalCond(column, SqlOperator.Equal, value, true);
-            return this;
-        }
-        public QueryStore Where(string column, SqlOperator @operator, object value)
-        {
-            AddNormalCond(column, @operator, value);
-            return this;
-        }
-        public QueryStore OrWhere(string column, SqlOperator @operator, object value)
-        {
-            AddNormalCond(column, @operator, value, true);
-            return this;
-        }
-
-        void AddNormalCond(string column,
+        
+       internal void AddNormalCond(string column,
             SqlOperator @operator,
             object value,
             bool Or = false) =>
@@ -53,6 +36,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
                  Operator = @operator,
                  RelatedOrCondition = Or
              });
+       
     }
     public class QueryCondition
     {
@@ -75,13 +59,20 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         In,
         NotIn,
         Between,
-        NotBetween
+        NotBetween,
+        Null,
+        NotNull
     }
     public class OrderBy
     {
         public string Column { get; set; }
         public bool Desc { get; set; }
         public string GeneratePartial() => $" \"{Column}\" {(Desc ? "desc" : "asc")}";
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     }
+    public class QueryPaging(int page,int per= 10)
+    {
+        public int Page { get; set; } = page;
+        public int Per { get; set; } = per;
+    }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 }
