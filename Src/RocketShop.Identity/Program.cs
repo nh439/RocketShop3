@@ -52,7 +52,8 @@ namespace RocketShop.Identity
                 {
                     service
                     .AddScoped<IProfileServices, ProfileServices>()
-                    .AddScoped<IUserService,UserService>();
+                    .AddScoped<IUserService,UserService>()
+                    .AddScoped<IPasswordServices,PasswordServices>();
                 });
             var app = builder.Build();
 

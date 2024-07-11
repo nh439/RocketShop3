@@ -48,17 +48,6 @@ namespace RocketShop.Identity.Controllers
 
         public IActionResult Index() =>
             InvokeControllerService(() => {
-                IDbConnection? connection = new NpgsqlConnection(_configuration.GetIdentityConnectionString());
-                var query = connection.CreateQueryStore("Students")
-                .Where("Id", 12).Where("Name", SqlOperator.NotEqual, "Susan")
-                .WhereIn("Plan", "Science-Math", "Intensive Science", "English Program")
-                .WhereBetween("GPA", 3, 4)
-                .OrWhereNotNull("Lastname")
-                .UsePaging(2,10)
-                .OrderBy("Lastname")
-                .OrderBy("Id",true);
-                var sql = query.Compiled();
-                var qs = sql.ToString();
                 return View();         
                 });
 
