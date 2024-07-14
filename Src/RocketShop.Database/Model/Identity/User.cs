@@ -13,7 +13,6 @@ namespace RocketShop.Database.Model.Identity
     public sealed class User : IdentityUser
     {
         [Required]
-
         public string EmployeeCode { get; set; }
         [Required]
         public string Firstname { get; set; }
@@ -25,7 +24,8 @@ namespace RocketShop.Database.Model.Identity
         public DateTime CreateDate { get; set; } = DateTime.UtcNow;
         public DateTime? LastLoggedIn { get; set; }
         public DateTime? LastLoggedOut { get; set; }
-        
+        public string? ProviderName { get; set; }
+        public string? ProviderKey { get; set; }
     }
 }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.

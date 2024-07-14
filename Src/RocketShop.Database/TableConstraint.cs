@@ -13,5 +13,6 @@ namespace RocketShop.Database
         public const string UserView = "V_User";
         public const string Role = "Roles";
         public const string UserRole = "UserRoles";
+        public const string ChangePasswordHistory = "ChangePasswordHistories";
     }
 }

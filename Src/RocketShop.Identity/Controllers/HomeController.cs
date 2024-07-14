@@ -5,9 +5,11 @@ using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json.Linq;
 using Npgsql;
+using RocketShop.Database.EntityFramework;
 using RocketShop.Database.Extension;
 using RocketShop.Database.Model.Identity;
 using RocketShop.Database.NonEntityFramework.QueryGenerator;
@@ -29,6 +31,7 @@ namespace RocketShop.Identity.Controllers
         private readonly ILogger<HomeController> _logger;
         readonly UserManager<User> _userManager;
         readonly SignInManager<User> _signInManager;
+        readonly IdentityContext _identityContext;
         readonly IConfiguration _configuration;
         readonly IHttpContextAccessor _accessor;
 
@@ -36,7 +39,8 @@ namespace RocketShop.Identity.Controllers
             UserManager<User> user,
             SignInManager<User> signInManager,
             IConfiguration configuration,
-            IHttpContextAccessor accessor)
+            IHttpContextAccessor accessor,
+            IdentityContext identityContext)
             :base(logger)
         {
             _logger = logger;
@@ -44,6 +48,7 @@ namespace RocketShop.Identity.Controllers
             _signInManager = signInManager;
             _configuration = configuration;
             _accessor = accessor;
+            _identityContext = identityContext;
         }
 
         public IActionResult Index() =>
@@ -124,14 +129,27 @@ x-client-ver=7.1.2.0";
                 Option<string> redirect = HttpContext.Request.Cookies.Where(s => s.Key == "redirect").Select(s => s.Value).FirstOrDefault();
                 var handler = new JwtSecurityTokenHandler();
                 var jwtSecurityToken = handler.ReadJwtToken(id_token);
-                var email = jwtSecurityToken.Claims.Find(x => x.Type == "email").FirstOrDefault()!.Value;
-                if (email.IsNull())
-                    return Redirect(($"Login?{(redirect.IsSome ? $"returnUrl={redirect.Extract()!}&" : string.Empty)}err=Username Invalid"));
-                var user = await _userManager.FindByEmailAsync(email);
-                if (user.IsNull())
-                    return Redirect("AccessDeined");
-                if (user!.Resigned)
-                    return Redirect("AccessDeined?mode=2");
+                var iss = jwtSecurityToken.Issuer;
+                var sub = jwtSecurityToken.Subject;
+                var user = await _identityContext.Users.FirstOrDefaultAsync(
+                    x => x.ProviderName == iss &&
+                    x.ProviderKey == sub
+                );
+                if(user.IsNull())
+                {
+                    var email = jwtSecurityToken.Claims.Find(x => x.Type == "email").FirstOrDefault()!.Value;
+                    if (email.IsNull())
+                        return Redirect(($"Login?{(redirect.IsSome ? $"returnUrl={redirect.Extract()!}&" : string.Empty)}err=Username Invalid"));
+                    user = await _userManager.FindByEmailAsync(email);
+                    if (user.IsNull())
+                        return Redirect("AccessDeined");
+                    if (user!.Resigned)
+                        return Redirect("AccessDeined?mode=2");
+                    await _identityContext.Users.Where(x => x.Email == email)
+                    .ExecuteUpdateAsync(s =>
+                    s.SetProperty(c => c.ProviderName, iss)
+                    .SetProperty(c => c.ProviderKey, sub));
+                }          
                 var claims = SetClaims(user!);
                 await _signInManager.SignInWithClaimsAsync(user!, null, claims);
                 var token = BuildToken();

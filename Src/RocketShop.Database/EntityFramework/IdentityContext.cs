@@ -36,6 +36,11 @@ namespace RocketShop.Database.EntityFramework
             builder.Entity<User>()
                 .HasIndex(x => x.Email)
                 .IsUnique();
+            builder.Entity<User>()
+               .HasIndex(x => x.ProviderName);
+             builder.Entity<User>()
+               .HasIndex(x => x.ProviderKey);
+
             builder.Entity<UserInformation>()
                 .HasIndex(x => x.ManagerId);
 
@@ -52,11 +57,15 @@ namespace RocketShop.Database.EntityFramework
                     RoleName = "Application Starter"
                 });
 
+            builder.Entity<ChangePasswordHistory>().HasIndex(x => x.UserId);
+            builder.Entity<ChangePasswordHistory>().HasIndex(x => x.Reset);
+            
             base.OnModelCreating(builder);
         }
         public DbSet<UserInformation> UserInformation { get; set; }
         public DbSet<UserRole> UserRole { get; set; }
         public DbSet<Role> Role { get; set; }
+        public DbSet<ChangePasswordHistory> ChangePasswordHistory { get; set; }
 
         public virtual DbSet<UserView> UserViews { get; set; }
     }
