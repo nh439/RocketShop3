@@ -1,4 +1,10 @@
-﻿<!DOCTYPE html>
+﻿@inject IConfiguration configuration
+@using RocketShop.Shared.Helper;
+@{
+    string domainCenter = configuration.GetDominCenterServiceUrl();
+}
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -15,6 +21,7 @@
 <br>
 <br>
 <br>
+    <script src="@($"{domainCenter}/js/sweetalert")"></script>
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
@@ -26,7 +33,7 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-    <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.5.0/dist/semantic.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.5.0/dist/semantic.min.js"></script>   
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -60,7 +60,7 @@ namespace RocketShop.Framework.Services
                 return x;
             }
         }
-        protected void InvokeVoidService<T>(Func<T> operation,
+        protected void InvokeVoidService(Action operation,
             Action<Exception>? catchOperation = null,
             string? errorMessage = null)
         {
@@ -78,7 +78,7 @@ namespace RocketShop.Framework.Services
                 throw;
             }
         }
-        protected async Task InvokeVoidServiceAsync<T>(Func<Task<T>> operation,
+        protected async Task InvokeVoidServiceAsync(Func<Task> operation,
             Action<Exception>? catchOperation = null,
             string? errorMessage = null)
         {

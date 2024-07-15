@@ -1,6 +1,30 @@
 ﻿@*
     For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 *@
-<h1>Password</h1>
+
 @{
 }
+
+<h1>Change Password</h1>
+<br />
+<form>
+    <div class="form-group">
+        <label for="text">Email</label>
+        <input id="text" name="text" value="@ViewBag.e" type="text" readonly class="form-control">
+    </div>
+    <div class="form-group">
+        <label for="oldPassword">Old Password</label>
+        <input id="oldPassword" name="oldPassword" type="password" class="form-control">
+    </div>
+    <div class="form-group">
+        <label for="newPassword">New Password</label>
+        <input id="newPassword" name="newPassword" type="password" class="form-control">
+    </div>
+    <div class="form-group">
+        <label for="retypePassword">Confirm Password</label>
+        <input id="retypePassword" name="retypePassword" type="password" class="form-control">
+    </div>
+    <div class="form-group">
+        <button name="submit" type="submit" class="btn btn-primary">Submit</button>
+    </div>
+</form>

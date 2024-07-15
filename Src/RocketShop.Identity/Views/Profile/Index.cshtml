@@ -8,7 +8,7 @@
 @{
 }
 <h1>Profile</h1>
-@if(Model.IsLeft)
+@if (Model.IsLeft)
 {
     <h2 style="color:red">Error While Gethering Profile</h2>
 }
@@ -36,13 +36,13 @@ else
             </div>
             <div class="form-group">
                 <label for="text2">Gender</label>
-                <input id="text2" name="text2" type="text" readonly value="@profile.GetGender()"  class="form-control">
+                <input id="text2" name="text2" type="text" readonly value="@profile.GetGender()" class="form-control">
             </div>
             <div class="form-group">
                 <label for="text3">Email</label>
                 <input id="text3" name="text3" type="text" readonly value="@profile.Email" class="form-control">
             </div>
-        
+
         </div>
         <div class="col-1"></div>
     </div>
@@ -74,6 +74,27 @@ else
                     <input id="text4" name="text4" type="text" readonly value="@profile.Information!.ManagerId" class="form-control">
                 </div>
             }
+        </div>
+        <div class="col-1"></div>
+    </div>
+    
+    <div class="row">
+        <div class="col-1"></div>
+        <div class="col-10">
+            <h2>External Provider</h2>
+            <form method="post">
+                <div class="form-group">
+                    <label for="text">Provider Name</label>
+                    <input id="text" value="@profile.ProviderName" readonly type="text" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="text1">Provider Key</label>
+                    <input id="text1" value="@profile.ProviderKey" readonly name="text1" type="text" class="form-control">
+                </div>
+                <div class="form-group">
+                    <button name="submit" type="submit" class="btn btn-danger" asp-controller="profile" asp-action="clearprovider" disabled="@(!(profile.ProviderKey.HasMessage() || profile.ProviderName.HasMessage()))"><i class="trash icon"></i>Remove Provider</button>
+                </div>
+            </form>
         </div>
         <div class="col-1"></div>
     </div>

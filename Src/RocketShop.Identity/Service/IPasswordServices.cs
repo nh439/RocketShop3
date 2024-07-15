@@ -1,5 +1,7 @@
 ﻿using LanguageExt;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using RocketShop.Database.EntityFramework;
 using RocketShop.Database.Model.Identity;
 using RocketShop.Framework.Services;
 
@@ -14,13 +16,30 @@ namespace RocketShop.Identity.Service
     public class PasswordServices : BaseServices, IPasswordServices
     {
         readonly UserManager<User> _userManager;
-        public PasswordServices(UserManager<User> userManager,Serilog.ILogger logger) : base("Password", logger)
+        readonly DbSet<ChangePasswordHistory> _changePasswordHistory;
+        public PasswordServices(UserManager<User> userManager, Serilog.ILogger logger, IdentityContext context) : base("Password", logger)
         {
             _userManager = userManager;
+            _changePasswordHistory = context.ChangePasswordHistory;
         }
 
         public async Task<Either<Exception, IdentityResult>> ChangePassword(string userId, string oldPassword, string newPassword) =>
-            await InvokeServiceAsync(async () => await _userManager.ChangePasswordAsync((await _userManager.FindByIdAsync(userId))!, oldPassword, newPassword));
+            await InvokeServiceAsync(async () =>
+            {
+                var identityResult = await _userManager.ChangePasswordAsync((await _userManager.FindByIdAsync(userId))!, oldPassword, newPassword);
+                if (identityResult.Succeeded)
+                    await _changePasswordHistory.Add(new ChangePasswordHistory
+                    {
+                        ChangeAt = DateTime.UtcNow,
+                        Id = userId,
+                        Reset = false,
+                        UserId = userId
+                    })
+                    .Context
+                    .SaveChangesAsync();
+
+                return identityResult;
+            });
 
         public async Task<Either<Exception, IdentityResult>> ResetPassword(string userId, string token, string password) =>
             await InvokeServiceAsync(async () =>
@@ -28,7 +47,19 @@ namespace RocketShop.Identity.Service
                 var user = await _userManager.FindByIdAsync(userId);
                 if (user == null)
                     throw new NullReferenceException("User Invaild");
-                return await _userManager.ResetPasswordAsync(user, token, password);
+                var result = await _userManager.ResetPasswordAsync(user, token, password);
+                if (result.Succeeded)
+                    await _changePasswordHistory.Add(new ChangePasswordHistory
+                    {
+                        ChangeAt = DateTime.UtcNow,
+                        Id = userId,
+                        Reset = true,
+                        UserId = userId
+                    })
+     .Context
+     .SaveChangesAsync();
+
+                return result;
             });
 
         public async Task<Either<Exception, string>> GenerateResetPasswordToken(string userId) =>

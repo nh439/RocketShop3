@@ -13,6 +13,7 @@ namespace RocketShop.Identity.Service
     public interface IProfileServices
     {
         Task<Either<Exception, UserProfile>> GetProfile(string id);
+        Task<Either<Exception, bool>> ClearProviderKey(string userId);
     }
     public class ProfileServices: RocketShop.Framework.Services.BaseServices, IProfileServices
     {
@@ -39,8 +40,19 @@ namespace RocketShop.Identity.Service
                     user.Firstname,
                     user.Surname,
                     user.Email,
+                    user.ProviderName,
+                    user.ProviderKey,
                     information);
             });
+        public async Task<Either<Exception, bool>> ClearProviderKey(string userId) =>
+            await InvokeServiceAsync(async () => await _identityContext
+            .Users
+            .Where(x => x.Id == userId)
+            .ExecuteUpdateAsync(s =>
+            s.SetProperty(c => c.ProviderKey, string.Empty)
+            .SetProperty(c => c.ProviderName, string.Empty)
+            ) > 0
+            );
         
     }
 }

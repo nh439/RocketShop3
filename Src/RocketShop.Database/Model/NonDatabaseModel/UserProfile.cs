@@ -15,6 +15,8 @@ namespace RocketShop.Database.Model.NonDatabaseModel
         string Firstname,
         string Surname,
         string? Email,
+        string? ProviderName,
+        string? ProviderKey,
         UserInformation? Information = null
         )
     {
