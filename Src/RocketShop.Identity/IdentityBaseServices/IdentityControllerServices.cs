@@ -8,13 +8,8 @@ using System.Security.Claims;
 
 namespace RocketShop.Identity.IdentityBaseServices
 {
-    public class IdentityControllerServices : Controller
+    public class IdentityControllerServices(ILogger logger) : Controller
     {
-        readonly ILogger logger;
-        public IdentityControllerServices(ILogger logger)
-        {
-            this.logger = logger;
-        }
 
         public IActionResult AuthorizedViaHeaderServices<TReturn>(Func<JwtSecurityToken, TReturn> Operation)
         {

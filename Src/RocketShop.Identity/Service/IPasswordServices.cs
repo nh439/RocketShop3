@@ -31,7 +31,6 @@ namespace RocketShop.Identity.Service
                     await _changePasswordHistory.Add(new ChangePasswordHistory
                     {
                         ChangeAt = DateTime.UtcNow,
-                        Id = userId,
                         Reset = false,
                         UserId = userId
                     })

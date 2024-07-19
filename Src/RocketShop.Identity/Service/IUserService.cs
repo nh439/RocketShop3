@@ -18,15 +18,11 @@ namespace RocketShop.Identity.Service
         Task<Either<Exception, UserView>> GetById(string userId);
         Task<Either<Exception, UserView>> GetByEmpCode(string employeeCode);
     }
-    public class UserService : BaseServices,IUserService
+    public class UserService (IdentityContext context, Serilog.ILogger logger)
+        : BaseServices("User Service", logger)
+        ,IUserService
     {
-        readonly IdentityContext context;
-        readonly DbSet<User> entity;
-        public UserService(IdentityContext context,Serilog.ILogger logger) :
-            base("User Service" , logger){
-        this.context = context;
-            entity = context.Users;
-        }
+        readonly DbSet<User> entity = context.Users;
 
         public async Task<Either<Exception, List<UserView>>> GetUserList(int? page, int per = 20) =>
             await InvokeServiceAsync(async () =>

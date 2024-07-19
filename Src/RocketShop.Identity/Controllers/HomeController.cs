@@ -26,35 +26,18 @@ using System.Web;
 
 namespace RocketShop.Identity.Controllers
 {
-    public class HomeController : IdentityControllerServices
-    {
-        private readonly ILogger<HomeController> _logger;
-        readonly UserManager<User> _userManager;
-        readonly SignInManager<User> _signInManager;
-        readonly IdentityContext _identityContext;
-        readonly IConfiguration _configuration;
-        readonly IHttpContextAccessor _accessor;
-
-        public HomeController(ILogger<HomeController> logger,
-            UserManager<User> user,
+    public class HomeController(ILogger<HomeController> logger,
+            UserManager<User> userManager,
             SignInManager<User> signInManager,
             IConfiguration configuration,
-            IHttpContextAccessor accessor,
-            IdentityContext identityContext)
-            :base(logger)
-        {
-            _logger = logger;
-            _userManager = user;
-            _signInManager = signInManager;
-            _configuration = configuration;
-            _accessor = accessor;
-            _identityContext = identityContext;
-        }
+            IdentityContext identityContext) : IdentityControllerServices(logger)
+    {
 
         public IActionResult Index() =>
-            InvokeControllerService(() => {
-                return View();         
-                });
+            InvokeControllerService(() =>
+            {
+                return View();
+            });
 
         public IActionResult Privacy() =>
             InvokeControllerService(() => View());
@@ -64,7 +47,7 @@ namespace RocketShop.Identity.Controllers
         public IActionResult Error() =>
             InvokeControllerService(() => View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier }));
 
-        public IActionResult Login(string? returnUrl,string? err) =>
+        public IActionResult Login(string? returnUrl, string? err) =>
             InvokeControllerService<IActionResult>(() =>
             {
                 var authenicate = HttpContext.User.Identity?.IsAuthenticated;
@@ -85,19 +68,29 @@ namespace RocketShop.Identity.Controllers
             await InvokeControllerServiceAsync(
                 async () =>
                 {
-                    var user = await _userManager.FindByNameAsync(username);
+                    var user = await userManager.FindByNameAsync(username);
                     if (user.IsNull())
                         return Redirect($"Login?{(returnUrl.HasMessage() ? $"returnUrl={returnUrl}&" : string.Empty)}err=Username Invalid");
                     if (user!.Resigned)
                         return Redirect("AccessDeined?mode=2");
-                    var res = await _signInManager.CheckPasswordSignInAsync(user!, password, true);
+                    var res = await signInManager.CheckPasswordSignInAsync(user!, password, true);
                     if (res.Succeeded)
                     {
-                        await _signInManager.SignInWithClaimsAsync(user!, null, SetClaims(user!));
+                        var userAccessFailed = await userManager.GetAccessFailedCountAsync(user);
+                        if (userAccessFailed >= 3)
+                            return Redirect($"AccessDeined?mode=3");
+                        await userManager.ResetAccessFailedCountAsync(user); 
+                        await userManager.UpdateAsync(user);
+                        await signInManager.SignInWithClaimsAsync(user!, null, SetClaims(user!));
                         var token = BuildToken();
-                        return Redirect(returnUrl.HasMessage() ?  $"{returnUrl}?id_token={token}" : "/");
+                        return Redirect(returnUrl.HasMessage() ? $"{returnUrl}?id_token={token}" : "/");
                     }
-                    return Redirect($"Login?&{(returnUrl.HasMessage() ? $"returnUrl={returnUrl}&":string.Empty)}err=Password Incorrect");
+                    if(res.IsLockedOut)
+                        return Redirect($"AccessDeined?mode=3");
+                    else
+                        await userManager.AccessFailedAsync(user);
+
+                    return Redirect($"Login?&{(returnUrl.HasMessage() ? $"returnUrl={returnUrl}&" : string.Empty)}err=Password Incorrect");
                 }
                 );
 
@@ -107,7 +100,7 @@ namespace RocketShop.Identity.Controllers
             {
                 if (returnUrl.HasMessage())
                     HttpContext.Response.Cookies.Append("redirect", returnUrl!);
-                var oidc = _configuration.GetSection("OauthConfiguration").Get<OauthConfiguration>();
+                var oidc = configuration.GetSection("OauthConfiguration").Get<OauthConfiguration>();
                 string url = @$"{oidc.Authority}/o/oauth2/v2/auth?
 client_id={oidc.ClientId}&
 redirect_uri={oidc.RedirectUrl}&
@@ -123,7 +116,7 @@ x-client-ver=7.1.2.0";
             });
 
         [HttpPost]
-        public async Task<IActionResult> External( string? id_token) =>
+        public async Task<IActionResult> External(string? id_token) =>
             await InvokeControllerServiceAsync(async () =>
             {
                 Option<string> redirect = HttpContext.Request.Cookies.Where(s => s.Key == "redirect").Select(s => s.Value).FirstOrDefault();
@@ -131,30 +124,30 @@ x-client-ver=7.1.2.0";
                 var jwtSecurityToken = handler.ReadJwtToken(id_token);
                 var iss = jwtSecurityToken.Issuer;
                 var sub = jwtSecurityToken.Subject;
-                var user = await _identityContext.Users.FirstOrDefaultAsync(
+                var user = await identityContext.Users.FirstOrDefaultAsync(
                     x => x.ProviderName == iss &&
                     x.ProviderKey == sub
                 );
-                if(user.IsNull())
+                if (user.IsNull())
                 {
                     var email = jwtSecurityToken.Claims.Find(x => x.Type == "email").FirstOrDefault()!.Value;
                     if (email.IsNull())
                         return Redirect(($"Login?{(redirect.IsSome ? $"returnUrl={redirect.Extract()!}&" : string.Empty)}err=Username Invalid"));
-                    user = await _userManager.FindByEmailAsync(email);
+                    user = await userManager.FindByEmailAsync(email);
                     if (user.IsNull())
                         return Redirect("AccessDeined");
                     if (user!.Resigned)
                         return Redirect("AccessDeined?mode=2");
-                    await _identityContext.Users.Where(x => x.Email == email)
+                    await identityContext.Users.Where(x => x.Email == email)
                     .ExecuteUpdateAsync(s =>
                     s.SetProperty(c => c.ProviderName, iss)
                     .SetProperty(c => c.ProviderKey, sub));
-                }          
+                }
                 var claims = SetClaims(user!);
-                await _signInManager.SignInWithClaimsAsync(user!, null, claims);
+                await signInManager.SignInWithClaimsAsync(user!, null, claims);
                 var token = BuildToken();
                 if (redirect.IsSome)
-                    return Redirect(redirect.Extract().Tranform(r=> $"{r}?id_token={token}")!);
+                    return Redirect(redirect.Extract().Tranform(r => $"{r}?id_token={token}")!);
                 return Redirect($"/");
             });
 
@@ -170,7 +163,7 @@ x-client-ver=7.1.2.0";
         public async Task<IActionResult> Logout() =>
             await InvokeControllerServiceAsync(async () =>
             {
-                await _signInManager.SignOutAsync();
+                await signInManager.SignOutAsync();
                 return Redirect("/");
             });
 
@@ -186,7 +179,7 @@ x-client-ver=7.1.2.0";
                 firstname = user.Firstname,
                 active = !user.Resigned,
                 exp = DateTime.UtcNow.AddHours(10).ToUnixTime()
-            };       
+            };
             foreach (var claim in newClaim.ToDictionaryStringObject()!)
             {
                 if (claim.Value == null)
@@ -198,7 +191,7 @@ x-client-ver=7.1.2.0";
         }
         [HttpGet]
         public IActionResult AccessDeined(int? mode) =>
-            View("./Views/Home/AccessFailed.cshtml",mode);
+            View("./Views/Home/AccessFailed.cshtml", mode);
 
         public string BuildToken()
         {
@@ -217,7 +210,7 @@ x-client-ver=7.1.2.0";
             };
 
             var securityToken = jwtHandler.CreateToken(tokenDescriptor);
-            return  jwtHandler.WriteToken(securityToken);
+            return jwtHandler.WriteToken(securityToken);
 
         }
         [Authorize]

@@ -10,19 +10,10 @@ using System.Threading.Tasks;
 
 namespace RocketShop.Framework.Services
 {
-    public class BaseServices
-    {
-        readonly ILogger logger;
-        readonly string serviceName;
-        readonly IDbConnection? connection;
-        public BaseServices(string serviceName,
+    public class BaseServices(string serviceName,
             ILogger logger,
             IDbConnection? connection = null)
-        {
-            this.serviceName = serviceName;
-            this.logger = logger;
-            this.connection = connection;
-        }
+    {
 
         protected Either<Exception,T> InvokeService<T>(Func<T> operation,
             Action<Exception>? catchOperation = null,
@@ -34,7 +25,7 @@ namespace RocketShop.Framework.Services
             }
             catch(Exception x)
             {
-                logger.Error(x,errorMessage ?? x.Message);
+                logger.Error(x,"Service : {ServiceName} Error : {Message}",serviceName,errorMessage ?? x.Message);
                 if(catchOperation.IsNotNull())
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
                     catchOperation(x);
@@ -52,8 +43,8 @@ namespace RocketShop.Framework.Services
             }
             catch(Exception x)
             {
-                logger.Error(x,errorMessage ?? x.Message);
-                if(catchOperation.IsNotNull())
+                logger.Error(x, "Service : {ServiceName} Error : {Message}", serviceName, errorMessage ?? x.Message);
+                if (catchOperation.IsNotNull())
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
                     catchOperation(x);
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
@@ -70,8 +61,8 @@ namespace RocketShop.Framework.Services
             }
             catch(Exception x)
             {
-                logger.Error(x,errorMessage ?? x.Message);
-                if(catchOperation.IsNotNull())
+                logger.Error(x, "Service : {ServiceName} Error : {Message}", serviceName, errorMessage ?? x.Message);
+                if (catchOperation.IsNotNull())
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
                     catchOperation(x);
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
@@ -88,8 +79,8 @@ namespace RocketShop.Framework.Services
             }
             catch(Exception x)
             {
-                logger.Error(x,errorMessage ?? x.Message);
-                if(catchOperation.IsNotNull())
+                logger.Error(x, "Service : {ServiceName} Error : {Message}", serviceName, errorMessage ?? x.Message);
+                if (catchOperation.IsNotNull())
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
                     catchOperation(x);
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
@@ -108,12 +99,17 @@ namespace RocketShop.Framework.Services
             }
             catch (Exception x)
             {
-                logger.Error(x, errorMessage ?? x.Message);
+                logger.Error(x, "Service : {ServiceName} Error : {Message}", serviceName, errorMessage ?? x.Message);
                 if (catchOperation.IsNotNull())
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
                     catchOperation(x);
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
                 return x;
+            }
+            finally
+            {
+                if (connection!.State != ConnectionState.Closed)
+                    connection.Close();
             }
         }
         protected async Task<Either<Exception, T>> InvokeDapperServiceAsync<T>(Func<IDbConnection,Task<T>> operation,
@@ -134,6 +130,11 @@ namespace RocketShop.Framework.Services
                     catchOperation(x);
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
                 return x;
+            }
+            finally
+            {
+                if(connection!.State != ConnectionState.Closed)
+                    connection.Close();
             }
         }
 

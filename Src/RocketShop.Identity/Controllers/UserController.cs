@@ -7,17 +7,11 @@ namespace RocketShop.Identity.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class UserController : IdentityControllerServices
+    public class UserController(ILogger<UserController> logger,
+            IUserService userService) 
+        : IdentityControllerServices(logger)
     {
-        ILogger<UserController> logger;
-        readonly IUserService userService;
-        public UserController(ILogger<UserController> logger,
-            IUserService userService)
-            : base(logger)
-        {
-            this.logger = logger;
-            this.userService = userService;
-        }
+
         [HttpGet]
         public async Task<IActionResult> Index(string? search, int? page, int? per) =>
         await AuthorizedViaHeaderServicesAsync(async token =>

@@ -11,16 +11,9 @@ using System.Security.Principal;
 namespace RocketShop.Identity.Controllers
 {
     [Route("[controller]")]
-    public class ProfileController : IdentityControllerServices
+    public class ProfileController(IProfileServices profileServices, ILogger<ProfileController> logger) : 
+        IdentityControllerServices(logger)
     {
-        readonly IProfileServices profileServices;
-        readonly ILogger<ProfileController> logger;
-        public ProfileController(IProfileServices profileServices, ILogger<ProfileController> logger)
-            :base(logger)
-        {
-            this.profileServices = profileServices;
-            this.logger = logger;
-        }
 
         [Authorize]
         [HttpGet]
