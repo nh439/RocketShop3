@@ -61,7 +61,6 @@ namespace RocketShop.DomainCenter
                 _packageService.Add(key, newvalue);
                 return newvalue;
             });
-           
 
             app.Run();
         }

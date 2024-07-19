@@ -28,7 +28,5 @@ namespace RocketShop.DomainCenter.Services
                 _logger.Information("Get Data From Key {key} {state}", key, (value.HasMessage() ? "Success" : "Failed"));
                 return value;
             });
-           
-
     }
 }
