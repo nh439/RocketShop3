@@ -16,13 +16,16 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         public static QueryStore CreateQueryStore(this IDbConnection connection,
             string tableName) => new QueryStore(connection, tableName);
 
-        public static SqlResult Compiled(this QueryStore store)
+        public static SqlResult Compiled(this QueryStore store,StatementType statementType = StatementType.Select)
         {
             string sql = string.Empty;
             var columns = store.SelectedColumns.HasDataAndTranformData(
                 s => string.Join(",", $"\"{s}\""),
                 () => "*");
-            sql = $"select {columns} from \"{store.TableName}\" ";
+            if(statementType == StatementType.Select ) 
+                sql = $"select {columns} from \"{store.TableName}\" ";
+            else if(statementType == StatementType.Delete )
+                sql = $"delete from \"{store.TableName}\" ";
             Dictionary<string, object> data = new Dictionary<string, object>();
             int paramId = 0;
             if (store.conditions.HasData())
@@ -114,8 +117,8 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         public static async Task<List<T>> ToListAsync<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30) =>
           (await store.FetchAsync<T>()).ToList();
 
-         public static T[] ToArray<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30) =>
-            store.Fetch<T>().ToArray();
+        public static T[] ToArray<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30) =>
+           store.Fetch<T>().ToArray();
 
         public static async Task<T[]> ToArrayAsync<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30) =>
           (await store.FetchAsync<T>()).ToArray();
@@ -126,12 +129,79 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
             return store.connection.QueryFirst<T>(compiledResult.Sql, compiledResult.Parameters, transaction, commandTimeout: commandTimeout);
         }
 
-        public static async Task< Option<T>> FetchOneAsync<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30)
+        public static async Task<Option<T>> FetchOneAsync<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30)
         {
             var compiledResult = await store.CompiledAsync();
             return await store.connection.QueryFirstAsync<T>(compiledResult.Sql, compiledResult.Parameters, transaction, commandTimeout: commandTimeout);
         }
-       
+
+        public static bool Insert<T>(this QueryStore store,
+            T insertItem,
+            IDbTransaction? transaction = null,
+            int commandTimeout = 100)
+        {
+            var type = typeof(T);
+            var properties = type.GetProperties();
+            var columns = properties.Select(s => s.Name);
+            string sql = $"insert into \"{store.TableName}\" ({string.Join(",", columns.Select(s => $"\"{s}\""))}) values ({string.Join(",", columns.Select(s => $"@{s}"))})";
+            return store.connection.Execute(sql, insertItem, transaction, commandTimeout).Ge(0);
+        }
+
+        public static async Task<bool> InsertAsync<T>(this QueryStore store,
+            T insertItem,
+            IDbTransaction? transaction = null,
+            int commandTimeout = 100)
+        {
+            var type = typeof(T);
+            var properties = type.GetProperties();
+            var columns = properties.Select(s => s.Name);
+            string sql = $"insert into \"{store.TableName}\" ({string.Join(",", columns.Select(s => $"\"{s}\""))}) values ({string.Join(",", columns.Select(s => $"@{s}"))})";
+            return (await store.connection.ExecuteAsync(sql, insertItem, transaction, commandTimeout)).Ge(0);
+        }
+
+        public static int BulkInsert<T>(this QueryStore store,
+            IEnumerable<T> insertItem,
+            IDbTransaction? transaction = null,
+            int commandTimeout = 100)
+        {
+            var type = typeof(T);
+            var properties = type.GetProperties();
+            var columns = properties.Select(s => s.Name);
+            string sql = $"insert into \"{store.TableName}\" ({string.Join(",", columns.Select(s => $"\"{s}\""))}) values ({string.Join(",", columns.Select(s => $"@{s}"))})";
+            return store.connection.Execute(sql, insertItem, transaction, commandTimeout);
+        }
+
+        public static async Task<int> BulkInsertAsync<T>(this QueryStore store,
+            IEnumerable<T> insertItem,
+            IDbTransaction? transaction = null,
+            int commandTimeout = 100)
+        {
+            var type = typeof(T);
+            var properties = type.GetProperties();
+            var columns = properties.Select(s => s.Name);
+            string sql = $"insert into \"{store.TableName}\" ({string.Join(",", columns.Select(s => $"\"{s}\""))}) values ({string.Join(",", columns.Select(s => $"@{s}"))})";
+            return await store.connection.ExecuteAsync(sql, insertItem, transaction, commandTimeout);
+        }
+
+        public static int Delete(this QueryStore store,
+            IDbTransaction? transaction = null,
+            int commandTimeout = 100)
+        {
+            var sqlRes = store.Compiled(StatementType.Delete);
+            return store.connection.Execute(sqlRes.Sql,sqlRes.Parameters, transaction: transaction, commandTimeout: commandTimeout);
+        }
+
+        public static async Task<int> DeleteAsync(this QueryStore store,
+            IDbTransaction? transaction = null,
+            int commandTimeout = 100)
+        {
+            var sqlRes = store.Compiled(StatementType.Delete);
+            return await store.connection.ExecuteAsync(sqlRes.Sql,sqlRes.Parameters, transaction: transaction, commandTimeout: commandTimeout);
+        }
+
+
+
+
         internal static string GetOperator(this SqlOperator @operator)
         {
             switch (@operator)

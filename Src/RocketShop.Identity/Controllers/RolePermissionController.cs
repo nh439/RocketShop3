@@ -22,5 +22,6 @@ namespace RocketShop.Identity.Controllers
             await AuthorizedViaHeaderServicesAsync(async token =>
             await roleAndPermissionService.PermissionCheckByUserId(token.Subject,permissionName)
             );
+
     }
 }
