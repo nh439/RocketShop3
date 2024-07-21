@@ -29,6 +29,8 @@ namespace RocketShop.Framework.ControllerFunction
                 var result = handler();
                 if(result.IsNull())
                     return NoContent();
+                if (result is IActionResult)
+                    return (result as IActionResult)!;
                 return Ok(result);
             }
             catch (Exception x)

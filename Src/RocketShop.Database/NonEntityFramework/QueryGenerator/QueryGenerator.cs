@@ -19,6 +19,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         public static SqlResult Compiled(this QueryStore store,StatementType statementType = StatementType.Select,object? updateValue = null)
         {
             string sql = string.Empty;
+            Dictionary<string, object> data = new Dictionary<string, object>();
             var columns = store.SelectedColumns.HasDataAndTranformData(
                 s => string.Join(",", $"\"{s}\""),
                 () => "*");
@@ -31,10 +32,16 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
                 if (updateValue.IsNull())
                     throw new ArgumentNullException("Update Value Required ON Update Statement Type");
                 var updateProp = updateValue!.GetType().GetProperties();
-
-
-            }
-            Dictionary<string, object> data = new Dictionary<string, object>();
+                List<string> setVal = new List<string>();
+                int updateIdx = 0;
+                foreach (var prop in updateProp) {
+                    string paramName = $"up_{updateIdx}";
+                    setVal.Add($" \"{prop.Name}\"=@{paramName}");
+                    data.Add(paramName, prop.GetValue(updateValue)!);
+                    updateIdx++;
+                }
+                sql = $"update \"{store.TableName}\" set {string.Join(",",setVal)} ";
+            }       
             int paramId = 0;
             if (store.conditions.HasData())
             {
@@ -76,6 +83,13 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
                         data.Add(paramNameMax, cond.ValueMax!);
                         where += cd;
                         paramId++;
+                        continue;
+                    }
+                    if(cond.Operator == SqlOperator.WhereSub)
+                    {
+                        var subQueryObj = cond.queryStore.conditions!.CompiledConditionWithParameterizedMode();
+                        where += $" ({subQueryObj.Item1})";
+                        subQueryObj.Item2.HasDataAndForEach(d => data.Add(d.Key, d.Value));
                         continue;
                     }
                     string pn = $"P_{paramId}";
@@ -190,6 +204,25 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
             string sql = $"insert into \"{store.TableName}\" ({string.Join(",", columns.Select(s => $"\"{s}\""))}) values ({string.Join(",", columns.Select(s => $"@{s}"))})";
             return await store.connection.ExecuteAsync(sql, insertItem, transaction, commandTimeout);
         }
+
+        public static int Update(this QueryStore store,
+            object data,
+            IDbTransaction? transaction = null,
+            int commandTimeout = 100)
+        {
+            var sqlRes = store.Compiled(StatementType.Update,data);
+            return store.connection.Execute(sqlRes.Sql, sqlRes.Parameters, transaction, commandTimeout);
+        }
+
+        public static async Task<int> UpdateAsync(this QueryStore store,
+            object data,
+            IDbTransaction? transaction = null,
+            int commandTimeout = 100)
+        {
+            var sqlRes = store.Compiled(StatementType.Update,data);
+            return await store.connection.ExecuteAsync(sqlRes.Sql, sqlRes.Parameters, transaction, commandTimeout);
+        }
+
 
         public static int Delete(this QueryStore store,
             IDbTransaction? transaction = null,

@@ -47,10 +47,10 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         public object[]? ValueIn { get; set; }
         public object? ValueMin { get; set; }
         public object? ValueMax { get; set; }
-
+        internal QueryStore queryStore { get; set; }
         public QueryCondition() { }
 
-        public QueryCondition(string column,SqlOperator @operator,object value,bool or = false)
+        public QueryCondition(string column,SqlOperator @operator,object value,bool or = false,QueryStore? store = null)
         {
             ColumnName = column;
             Value = value;
@@ -71,7 +71,8 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         Between,
         NotBetween,
         Null,
-        NotNull
+        NotNull,
+        WhereSub
     }
     public class OrderBy
     {

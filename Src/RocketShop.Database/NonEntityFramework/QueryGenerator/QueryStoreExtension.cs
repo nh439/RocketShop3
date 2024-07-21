@@ -29,6 +29,31 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
             query.AddNormalCond(column, @operator, value, true);
             return query;
         }
+        public static QueryStore Where(this QueryStore query,Func<QueryStore,QueryStore> callback)
+        {
+            var st = new QueryStore(query.connection,query.TableName);
+            st = callback(st);
+            query.conditions!.Add(new QueryCondition
+            {
+                queryStore = st,
+                RelatedOrCondition = false,
+                Operator = SqlOperator.WhereSub
+            });
+            return query;
+        }
+        public static QueryStore OrWhere(this QueryStore query,Func<QueryStore,QueryStore> callback)
+        {
+            var st = new QueryStore(query.connection,query.TableName);
+            st = callback(st);
+            query.conditions!.Add(new QueryCondition
+            {
+                queryStore = st,
+                RelatedOrCondition = true,
+                Operator = SqlOperator.WhereSub
+            });
+            return query;
+        }
+
         public static QueryStore WhereIn(this QueryStore query, string column, params object[] values)
         {
             query.conditions.SafeAdd(new QueryCondition
