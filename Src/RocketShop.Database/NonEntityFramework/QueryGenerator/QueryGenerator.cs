@@ -16,7 +16,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         public static QueryStore CreateQueryStore(this IDbConnection connection,
             string tableName) => new QueryStore(connection, tableName);
 
-        public static SqlResult Compiled(this QueryStore store,StatementType statementType = StatementType.Select)
+        public static SqlResult Compiled(this QueryStore store,StatementType statementType = StatementType.Select,object? updateValue = null)
         {
             string sql = string.Empty;
             var columns = store.SelectedColumns.HasDataAndTranformData(
@@ -26,6 +26,14 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
                 sql = $"select {columns} from \"{store.TableName}\" ";
             else if(statementType == StatementType.Delete )
                 sql = $"delete from \"{store.TableName}\" ";
+            else if(statementType==StatementType.Update)
+            {
+                if (updateValue.IsNull())
+                    throw new ArgumentNullException("Update Value Required ON Update Statement Type");
+                var updateProp = updateValue!.GetType().GetProperties();
+
+
+            }
             Dictionary<string, object> data = new Dictionary<string, object>();
             int paramId = 0;
             if (store.conditions.HasData())
