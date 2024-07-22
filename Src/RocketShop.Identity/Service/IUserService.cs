@@ -17,6 +17,7 @@ namespace RocketShop.Identity.Service
         Task<Either<Exception, int>> GetLastPage(string? keyword = null, int per = 20);
         Task<Either<Exception, UserView>> GetById(string userId);
         Task<Either<Exception, UserView>> GetByEmpCode(string employeeCode);
+        Task<Either<Exception, UserView>> GetByEmail(string email);
     }
     public class UserService (IdentityContext context, Serilog.ILogger logger)
         : BaseServices("User Service", logger)
@@ -70,6 +71,9 @@ namespace RocketShop.Identity.Service
 
         public async Task<Either<Exception, UserView>> GetByEmpCode(string employeeCode) =>
             await InvokeServiceAsync(async () =>  await context.UserViews.FirstOrDefaultAsync(x => x.EmployeeCode == employeeCode));
+
+        public async Task<Either<Exception, UserView>> GetByEmail(string email) =>
+            await InvokeServiceAsync(async () => await context.UserViews.FirstOrDefaultAsync(x => x.Email == email));
 
     }
 }

@@ -14,5 +14,6 @@ namespace RocketShop.Shared.GlobalConfiguration
         public string WarehouseAPIUrl { get; set; }
         public string WarehouseAdminUrl { get; set; }
         public string MachineLearningUrl { get; set; }
+        public string HRUrl { get; set; }
     }
 }

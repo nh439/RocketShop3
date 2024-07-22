@@ -10,6 +10,7 @@ using RocketShop.Database.Model.Identity;
 using RocketShop.Framework.Helper;
 using RocketShop.Identity.Configuration;
 using RocketShop.Identity.Service;
+using RocketShop.Shared.SharedService;
 using Serilog;
 
 namespace RocketShop.Identity
@@ -47,6 +48,7 @@ namespace RocketShop.Identity
                 }).AddCookie(c=>c.ExpireTimeSpan = TimeSpan.FromHours(10));
                 install.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
                 install.AddSession();
+                install.AddResponseCaching();
             })
             .InstallServices(service =>
                 {
@@ -54,7 +56,8 @@ namespace RocketShop.Identity
                     .AddScoped<IProfileServices, ProfileServices>()
                     .AddScoped<IUserService,UserService>()
                     .AddScoped<IPasswordServices,PasswordServices>()
-                    .AddScoped<IRoleAndPermissionService,RoleAndPermissionService>();
+                    .AddScoped<IRoleAndPermissionService,RoleAndPermissionService>()
+                    .AddScoped<ISendEmailServices,SendEmailServices>();
                 });
             var app = builder.Build();
 
@@ -70,7 +73,7 @@ namespace RocketShop.Identity
             app.UseStaticFiles();
 
             app.UseRouting();
-
+            app.UseResponseCaching();
             app.UseAuthentication();
             app.UseAuthorization();
 

@@ -366,3 +366,4 @@ FodyWeavers.xsd
 /Src/RocketShop.DomainCenter/Dockerfile.original
 /Src/RocketShop.Identity/Dockerfile.original
 /Src/RocketShop.Migration/Dockerfile.original
+*/appsettings.Development.json

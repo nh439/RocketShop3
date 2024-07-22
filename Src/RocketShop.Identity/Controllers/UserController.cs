@@ -11,8 +11,8 @@ namespace RocketShop.Identity.Controllers
             IUserService userService) 
         : IdentityControllerServices(logger)
     {
-
         [HttpGet]
+        [ResponseCache(VaryByHeader = "User-Agent", Duration = 10)]
         public async Task<IActionResult> Index(string? search, int? page, int? per) =>
         await AuthorizedViaHeaderServicesAsync(async token =>
         {

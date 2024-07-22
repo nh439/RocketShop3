@@ -1,10 +1,12 @@
 
 using LanguageExt;
+using Microsoft.AspNetCore.Mvc;
 using RocketShop.DomainCenter.Model;
 using RocketShop.DomainCenter.Services;
 using RocketShop.Framework.Extension;
 using RocketShop.Framework.Helper;
 using RocketShop.Shared.GlobalConfiguration;
+using RocketShop.Shared.Model;
 
 namespace RocketShop.DomainCenter
 {
@@ -20,7 +22,8 @@ namespace RocketShop.DomainCenter
                 service.AddAuthorization()
                 .AddEndpointsApiExplorer()
                 .AddSwaggerGen()
-                .AddSingleton<Packageservices>();
+                .AddSingleton<Packageservices>()
+                .AddScoped<IEmailServices,EmailServices>();
             });
             var app = builder.Build();
 
@@ -37,6 +40,7 @@ namespace RocketShop.DomainCenter
 
             using var scope =app.Services.CreateScope();
             var _packageService = scope.ServiceProvider.GetService<Packageservices>();
+            var _emailService = scope.ServiceProvider.GetService<IEmailServices>();
 
             app.MapGet("/", (HttpContext httpContext) =>
             {
@@ -47,21 +51,31 @@ namespace RocketShop.DomainCenter
 
             app.MapGet("/js/sweetalert", async () =>
             {
-                var key = "https://cdn.jsdelivr.net/npm/sweetalert2@11";
-                var queryResult = _packageService!.Find(key);
-                if (queryResult.IsRight)
-                {
-                    string? value = queryResult.GetRight();
-                    if (value.HasMessage()) return value;
-                }
-                
+                var key = "https://cdn.jsdelivr.net/npm/sweetalert2@11";          
                 using var httpclient = new HttpClient();
                 var result = await httpclient.GetAsync(key);
                 var newvalue = await result.Content.ReadAsStringAsync();
-                _packageService.Add(key, newvalue);
                 return newvalue;
             });
 
+            app.MapGet("/css/tailwind",async () =>{
+                var key = "https://cdn.tailwindcss.com";
+                using var httpclient = new HttpClient();
+                var result = await httpclient.GetAsync(key);
+                var newvalue = await result.Content.ReadAsStringAsync();
+                return newvalue;
+            });
+
+            app.MapPost("/mail", async ([FromBody] MailRequest req) =>
+            {
+                var sendResult = await _emailService.SendAsync(req);
+                if (sendResult.IsLeft)
+                {
+                    Results.Problem(sendResult.GetLeft()!.Message, statusCode: 500);
+                    return sendResult.GetLeft()!.Message;
+                }
+                return sendResult.GetRight();
+            });
             app.Run();
         }
     }

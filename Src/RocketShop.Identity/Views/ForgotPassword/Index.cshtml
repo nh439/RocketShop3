@@ -1,0 +1,49 @@
+﻿@using RocketShop.Framework.Extension
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    string message = ViewBag.e;
+}
+@if (message.HasMessage())
+{
+    <script>
+        Swal.fire({
+            title: "<strong>@message</strong>",
+            icon: "error",
+            html: `
+        @ViewBag.message
+                  `,
+            showCloseButton: true,
+            showCancelButton: false,
+            focusConfirm: false,
+            confirmButtonText: `
+                    Ok
+                  `,
+            confirmButtonAriaLabel: "Thumbs up, great!"
+        });
+    </script>
+}
+<center>
+    <h1>Forgot Password</h1>
+</center>
+<form method="post">
+    <div class="form-group">
+        <label for="code">Employee Code</label>
+        <div class="input-group">
+            <div class="input-group-prepend">
+                <div class="input-group-text">
+                    <i class="fa fa-address-card"></i>
+                </div>
+            </div>
+            <input id="code" name="code" type="text" class="form-control">
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="text" class="form-control">
+    </div>
+    <div class="form-group">
+        <button name="submit" type="submit" class="btn btn-primary">Submit</button>
+    </div>
+</form>
