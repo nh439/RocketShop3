@@ -1,0 +1,34 @@
+﻿using LanguageExt;
+using Microsoft.Extensions.Configuration;
+using RocketShop.Framework.Extension;
+using RocketShop.Framework.Services;
+using RocketShop.Shared.GlobalConfiguration;
+using RocketShop.Shared.Helper;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http.Json;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace RocketShop.Shared.SharedService
+{
+    public interface IUrlIndeiceServices
+    {
+    }
+    public class UrlIndeiceServices(IConfiguration configuration,Serilog.ILogger logger) : BaseServices("Url Indeice Services", logger),IUrlIndeiceServices
+    {
+        ConfigurationCenter? center;
+        public async Task<Either< Exception,ConfigurationCenter>> GetUrls() =>
+            await InvokeServiceAsync(async () =>
+            {
+                if (center.IsNotNull()) return center!;
+                var url = $"{configuration.GetDominCenterServiceUrl()}/Urls";
+                using var client = new HttpClient(HttpClientHelper.CreateByPassSSLHandler());
+                var item = await client.GetFromJsonAsync<ConfigurationCenter>(url);
+                center = item;
+                return center!;
+            },retries:5,
+                isExponential:true);
+    }
+}

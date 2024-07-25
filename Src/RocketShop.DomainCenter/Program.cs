@@ -23,7 +23,8 @@ namespace RocketShop.DomainCenter
                 .AddEndpointsApiExplorer()
                 .AddSwaggerGen()
                 .AddSingleton<Packageservices>()
-                .AddScoped<IEmailServices,EmailServices>();
+                .AddScoped<IEmailServices,EmailServices>()
+                .AddScoped<IFilePathServices,FilePathServices>();
             });
             var app = builder.Build();
 
@@ -41,30 +42,58 @@ namespace RocketShop.DomainCenter
             using var scope =app.Services.CreateScope();
             var _packageService = scope.ServiceProvider.GetService<Packageservices>();
             var _emailService = scope.ServiceProvider.GetService<IEmailServices>();
+            var _fileService = scope.ServiceProvider.GetService<IFilePathServices>();
 
-            app.MapGet("/", (HttpContext httpContext) =>
+            app.MapGet("/Urls", (HttpContext httpContext) =>
             {
                 return configuration.GetSection("Settings").Get<ConfigurationCenter>();
             })
             .WithName("GetConfiguration")
             .WithOpenApi();
 
-            app.MapGet("/js/sweetalert", async () =>
+            app.MapGet("/sweetalert", async () =>
             {
-                var key = "https://cdn.jsdelivr.net/npm/sweetalert2@11";          
+                string filename = "sweetalert";
+                var hasfile = _fileService!.CheckFileExists(filename);
+                if (hasfile)
+                    return _fileService.GetContent(filename);
+                var url = "https://cdn.jsdelivr.net/npm/sweetalert2@11";          
                 using var httpclient = new HttpClient();
-                var result = await httpclient.GetAsync(key);
+                var result = await httpclient.GetAsync(url);
                 var newvalue = await result.Content.ReadAsStringAsync();
+                _fileService.Create(filename, newvalue);
                 return newvalue;
             });
 
-            app.MapGet("/css/tailwind",async () =>{
-                var key = "https://cdn.tailwindcss.com";
+            app.MapGet("/tailwind",async () =>{
+                string filename = "tailwind";
+                var hasfile = _fileService!.CheckFileExists(filename);
+                if (hasfile)
+                    return _fileService.GetContent(filename);
+                var url = "https://cdn.tailwindcss.com";
+                var value = _packageService!.Find(url);
                 using var httpclient = new HttpClient();
-                var result = await httpclient.GetAsync(key);
+                var result = await httpclient.GetAsync(url);
                 var newvalue = await result.Content.ReadAsStringAsync();
+                _fileService.Create(filename, newvalue);
                 return newvalue;
             });
+
+            app.MapGet("/semantic",async () =>{
+                string filename = "semantic";
+                var hasfile = _fileService!.CheckFileExists(filename);
+                if (hasfile)
+                    return _fileService.GetContent(filename);
+                var url = "https://cdn.jsdelivr.net/npm/semantic-ui@2.5.0/dist/semantic.min.css";
+                var value = _packageService!.Find(url);
+                using var httpclient = new HttpClient();
+                var result = await httpclient.GetAsync(url);
+                var newvalue = await result.Content.ReadAsStringAsync();
+                _fileService.Create(filename, newvalue);
+                return newvalue;
+            });
+
+
 
             app.MapPost("/mail", async ([FromBody] MailRequest req) =>
             {
@@ -76,6 +105,7 @@ namespace RocketShop.DomainCenter
                 }
                 return sendResult.GetRight();
             });
+            app.MapGet("bind", (HttpContext httpContext) => configuration.GetSection("BindMount").Value);
             app.Run();
         }
     }

@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using CurrentType = int;
+using CurrentType = double;
 namespace RocketShop.Framework.Extension
 {
-    public static class IntHelper
+    public static class DoubleHelper
     {
         #region Not Nullable
         public static bool Eq(this CurrentType x, CurrentType y) =>
@@ -31,10 +31,10 @@ namespace RocketShop.Framework.Extension
             (CurrentType)Math.Abs((x) - (y));
         #endregion
         #region Nullable
-        public static bool Eq(this CurrentType? x, CurrentType? y)=>
-            x==y;
+        public static bool Eq(this CurrentType? x, CurrentType? y) =>
+            x == y;
 
-        public static bool NotEq(this CurrentType? x, CurrentType? y)=>
+        public static bool NotEq(this CurrentType? x, CurrentType? y) =>
             !Eq(x, y);
 
         public static bool Ge(this CurrentType? x, CurrentType? y) =>
@@ -50,7 +50,7 @@ namespace RocketShop.Framework.Extension
             x <= y;
 
         public static CurrentType FindDistance(this CurrentType? x, CurrentType? y) =>
-            (CurrentType)Math.Abs((x??0) - (y??0));
+            (CurrentType)Math.Abs((x ?? 0) - (y ?? 0));
         #endregion
     }
 }

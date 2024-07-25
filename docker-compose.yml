@@ -32,6 +32,21 @@ services:
       - migration
     networks :
       - rcs_network
+
+  hr :
+    build :
+      context : .
+      dockerfile : Src\RocketShop.HR\Dockerfile
+    ports :
+      - "12002:8080"
+    env_file:
+      - .env
+    depends_on :
+      - migration
+    networks :
+      - rcs_network
+
+  
   
   domainservice :
     build :
@@ -39,15 +54,18 @@ services:
       dockerfile : Src\RocketShop.DomainCenter\Dockerfile
     ports :
       - "12001:8080"
-    env_file:
-      - domain.env
     depends_on :
       - migration
     networks :
       - rcs_network
     volumes:
       - ./documents:/app/documents
-  
+    env_file:
+      - domain.env
+    deploy:
+      mode: replicated
+      replicas: 2
+      endpoint_mode: vip
       
   db:
     image: postgres

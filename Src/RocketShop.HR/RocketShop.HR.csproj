@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>812b7031-05e1-4ae8-8a88-709e984e82fc</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileContext>..\..</DockerfileContext>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.20.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RocketShop.Database\RocketShop.Database.csproj" />
+    <ProjectReference Include="..\RocketShop.Framework\RocketShop.Framework.csproj" />
+    <ProjectReference Include="..\RocketShop.Shared\RocketShop.Shared.csproj" />
+  </ItemGroup>
+
+</Project>
