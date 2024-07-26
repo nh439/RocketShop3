@@ -1,0 +1,22 @@
+﻿@page "/login"
+@using RocketShop.Shared.SharedService
+@using RocketShop.Framework.Extension
+@inject IUrlIndeiceServices urlIndeiceServices
+@inject NavigationManager navigationManager
+@rendermode InteractiveServer
+@code {
+    string errMsg = string.Empty;
+    protected override async Task OnInitializedAsync()
+    {
+        var urlResult = await urlIndeiceServices.GetUrls();
+        if(urlResult.IsLeft)
+        {
+            errMsg = urlResult.GetLeft()!.Message;
+        }
+        var url = urlResult.GetRight();
+        var redirect = $"{navigationManager.BaseUri}/Signed";
+        navigationManager.NavigateTo($"{url!.IdentityUrl}/home/login?returnUrl={redirect}");
+    }
+}
+<h3>Logging In...</h3>
+@errMsg

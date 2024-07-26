@@ -4,6 +4,10 @@ using RocketShop.Database.Model.Identity;
 using RocketShop.Database.Helper;
 using RocketShop.Framework.Helper;
 using RocketShop.HR.Components;
+using RocketShop.Shared.SharedService;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.InstallConfiguration();
@@ -24,11 +28,21 @@ builder.InstallSerilog()
 .AddEntityFrameworkStores<IdentityContext>()
 .AddDefaultTokenProviders();
         install.AddControllersWithViews();
-        install.InstallIdentityContext();
+        install.InstallIdentityContext()
+        .AddRazorComponents()
+    .AddInteractiveServerComponents();
+        install.AddAuthentication(options =>
+        {
+            options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+        }).AddCookie(c => c.ExpireTimeSpan = TimeSpan.FromHours(10));
+        install.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+    })
+    .InstallServices(service =>
+    {
+        service.AddSingleton<IUrlIndeiceServices,UrlIndeiceServices>();
     });
 // Add services to the container.
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
 
 var app = builder.Build();
 
@@ -44,7 +58,8 @@ app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 app.UseAntiforgery();
-
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

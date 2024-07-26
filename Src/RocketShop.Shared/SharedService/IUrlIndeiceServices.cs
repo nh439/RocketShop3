@@ -15,6 +15,7 @@ namespace RocketShop.Shared.SharedService
 {
     public interface IUrlIndeiceServices
     {
+        Task<Either<Exception, ConfigurationCenter>> GetUrls();
     }
     public class UrlIndeiceServices(IConfiguration configuration,Serilog.ILogger logger) : BaseServices("Url Indeice Services", logger),IUrlIndeiceServices
     {
@@ -23,7 +24,7 @@ namespace RocketShop.Shared.SharedService
             await InvokeServiceAsync(async () =>
             {
                 if (center.IsNotNull()) return center!;
-                var url = $"{configuration.GetDominCenterServiceUrl()}/Urls";
+                var url = $"{configuration.GetDomainCenterServiceUrl()}/Urls";
                 using var client = new HttpClient(HttpClientHelper.CreateByPassSSLHandler());
                 var item = await client.GetFromJsonAsync<ConfigurationCenter>(url);
                 center = item;

@@ -9,6 +9,6 @@ namespace RocketShop.Shared.Helper
 {
     public static class ConfigurationHelper
     {
-        public static string GetDominCenterServiceUrl(this IConfiguration configuration) => configuration.GetSection("DomainCenterService").Value!;
+        public static string GetDomainCenterServiceUrl(this IConfiguration configuration) => configuration.GetSection("DomainCenterService").Value!;
     }
 }

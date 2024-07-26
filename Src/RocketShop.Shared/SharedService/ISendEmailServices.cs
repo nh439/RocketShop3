@@ -23,7 +23,7 @@ namespace RocketShop.Shared.SharedService
         public async Task< Either<Exception, string>> SendEmailAsync(MailRequest request) =>
             await InvokeServiceAsync(async () =>
             {
-                var url = $"{configuration.GetDominCenterServiceUrl()}/mail";
+                var url = $"{configuration.GetDomainCenterServiceUrl()}/mail";
                 using HttpClient client = new HttpClient(HttpClientHelper.CreateByPassSSLHandler());
                 var response = await client.PostAsJsonAsync(url, request);
                 return await response.Content.ReadAsStringAsync();

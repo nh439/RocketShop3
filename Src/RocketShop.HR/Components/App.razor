@@ -1,4 +1,9 @@
-﻿<!DOCTYPE html>
+﻿@inject IConfiguration configuration
+@using RocketShop.Shared.Helper;
+@code{
+    
+}
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -8,11 +13,14 @@
     <link rel="stylesheet" href="bootstrap/bootstrap.min.css" />
     <link rel="stylesheet" href="app.css" />
     <link rel="stylesheet" href="RocketShop.HR.styles.css" />
+    <link rel="stylesheet" href="@($"{configuration.GetDomainCenterServiceUrl()}/semantic")" />
+    <link rel="stylesheet" href="@($"{configuration.GetDomainCenterServiceUrl()}/tailwind")" />
     <link rel="icon" type="image/png" href="favicon.png" />
     <HeadOutlet />
 </head>
 
 <body>
+    <script src="@($"{configuration.GetDomainCenterServiceUrl()}/sweetalert")"></script>
     <Routes />
     <script src="_framework/blazor.web.js"></script>
 </body>

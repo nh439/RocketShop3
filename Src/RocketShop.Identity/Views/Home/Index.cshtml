@@ -32,9 +32,10 @@
 
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome To Rocket Shop Identity Center</h1>
-</div>
+<center>
+    <h1>Rocket Shop</h1>
+    <h2>Authenication And Account Center</h2>
+</center>
 @if (accessor.HttpContext.IsNotNull() && accessor.HttpContext!.User.Identity!.IsAuthenticated)
 {
     <h1>Hi @name</h1>

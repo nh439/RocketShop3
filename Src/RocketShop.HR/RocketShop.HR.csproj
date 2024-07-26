@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.6" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.20.1" />
   </ItemGroup>
 
@@ -17,6 +18,10 @@
     <ProjectReference Include="..\RocketShop.Database\RocketShop.Database.csproj" />
     <ProjectReference Include="..\RocketShop.Framework\RocketShop.Framework.csproj" />
     <ProjectReference Include="..\RocketShop.Shared\RocketShop.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>

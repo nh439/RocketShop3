@@ -1,0 +1,20 @@
+﻿@page "/Signed"
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.WebUtilities
+@using System.IdentityModel.Tokens.Jwt
+@using RocketShop.Database.Model.Identity
+@inject NavigationManager navigationManager;
+@inject IHttpContextAccessor accessor;
+@inject SignInManager<User> signInManager;
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = navigationManager.ToAbsoluteUri(navigationManager.Uri);
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("id_token", out var idToken))
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var jwtSecurityToken = handler.ReadJwtToken(idToken);
+            var subject = jwtSecurityToken.Subject;
+        }
+    }
+}
