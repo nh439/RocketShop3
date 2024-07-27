@@ -14,7 +14,7 @@
             errMsg = urlResult.GetLeft()!.Message;
         }
         var url = urlResult.GetRight();
-        var redirect = $"{navigationManager.BaseUri}/Signed";
+        var redirect = $"{navigationManager.BaseUri}Signed";
         navigationManager.NavigateTo($"{url!.IdentityUrl}/home/login?returnUrl={redirect}");
     }
 }

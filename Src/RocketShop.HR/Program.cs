@@ -8,6 +8,8 @@ using RocketShop.Shared.SharedService;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using RocketShop.HR.Repository;
+using RocketShop.HR.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.InstallConfiguration();
@@ -40,7 +42,13 @@ builder.InstallSerilog()
     })
     .InstallServices(service =>
     {
-        service.AddSingleton<IUrlIndeiceServices,UrlIndeiceServices>();
+        service.AddScoped<UserRepository>()
+        .AddScoped<UserInformationRepository>();
+    })
+    .InstallServices(service =>
+    {
+        service.AddSingleton<IUrlIndeiceServices,UrlIndeiceServices>()
+        .AddScoped<IUserServices,UserServices>();
     });
 // Add services to the container.
 

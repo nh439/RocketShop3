@@ -1,5 +1,22 @@
-﻿@inherits LayoutComponentBase
-
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using RocketShop.Framework.Extension
+@inherits LayoutComponentBase
+@inject IHttpContextAccessor accessor
+@code{
+    [CascadingParameter]
+    AuthenticationState? authState { get; set; }
+    string name = string.Empty;
+    protected override async Task OnInitializedAsync()
+    {
+        authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        authState.If(x => x!.User.Identity!.IsAuthenticated,
+             e =>
+             {
+                 name = accessor.HttpContext!.User.Identity!.Name!;
+             }          
+         );
+    }
+}
 <div class="page">
     <div class="sidebar">
         <NavMenu />
@@ -7,7 +24,13 @@
 
     <main>
         <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+            <CascadingAuthenticationState>
+                <AuthorizeView>
+                    <Authorized>@name</Authorized>
+                    <NotAuthorized><a href="/login" target="_blank">Log In</a></NotAuthorized>
+                </AuthorizeView>
+            </CascadingAuthenticationState>
+            
         </div>
 
         <article class="content px-4">

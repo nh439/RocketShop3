@@ -165,12 +165,12 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
 
         public static QueryStore Select(this QueryStore query, params string[] columns)
         {
-            query.SelectedColumns.SafeAddRange(columns);
+            query.SelectedColumns.AddRange(columns);
             return query;
         }
         public static QueryStore WhereNull(this QueryStore query, string column)
         {
-            query.conditions.SafeAdd(new QueryCondition
+            query.conditions!.Add(new QueryCondition
             {
                 ColumnName = column,
                 Operator = SqlOperator.Null
@@ -179,7 +179,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         }
         public static QueryStore OrWhereNull(this QueryStore query, string column)
         {
-            query.conditions.SafeAdd(new QueryCondition
+            query.conditions!.Add(new QueryCondition
             {
                 ColumnName = column,
                 Operator = SqlOperator.Null,
@@ -189,7 +189,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         }
         public static QueryStore WhereNotNull(this QueryStore query, string column)
         {
-           query.conditions.SafeAdd(new QueryCondition
+           query.conditions!.Add(new QueryCondition
             {
                 ColumnName = column,
                 Operator = SqlOperator.NotNull
@@ -198,7 +198,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         }
         public static QueryStore OrWhereNotNull(this QueryStore query, string column)
         {
-            query.conditions.SafeAdd(new QueryCondition
+            query.conditions!.Add(new QueryCondition
             {
                 ColumnName = column,
                 Operator = SqlOperator.NotNull,

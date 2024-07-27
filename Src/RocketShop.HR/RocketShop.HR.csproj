@@ -20,8 +20,4 @@
     <ProjectReference Include="..\RocketShop.Shared\RocketShop.Shared.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Services\" />
-  </ItemGroup>
-
 </Project>

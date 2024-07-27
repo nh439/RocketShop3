@@ -3,9 +3,12 @@
 @using Microsoft.AspNetCore.WebUtilities
 @using System.IdentityModel.Tokens.Jwt
 @using RocketShop.Database.Model.Identity
+@using RocketShop.Framework.Extension
+@using RocketShop.HR.Services
 @inject NavigationManager navigationManager;
-@inject IHttpContextAccessor accessor;
 @inject SignInManager<User> signInManager;
+@inject IHttpContextAccessor accessor;
+@inject IUserServices _userServices;
 @code {
     protected override async Task OnInitializedAsync()
     {
@@ -15,6 +18,9 @@
             var handler = new JwtSecurityTokenHandler();
             var jwtSecurityToken = handler.ReadJwtToken(idToken);
             var subject = jwtSecurityToken.Subject;
+            var user = await _userServices.FindById(subject);
+            await signInManager.SignInWithClaimsAsync(user.GetRight().Extract()!, true, jwtSecurityToken.Claims);
+            navigationManager.NavigateTo("/", true);
         }
     }
 }

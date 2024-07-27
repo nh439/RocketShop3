@@ -1,28 +1,23 @@
 using LanguageExt;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json.Linq;
-using Npgsql;
 using RocketShop.Database.EntityFramework;
-using RocketShop.Database.Extension;
 using RocketShop.Database.Model.Identity;
 using RocketShop.Database.NonEntityFramework.QueryGenerator;
 using RocketShop.Framework.Extension;
 using RocketShop.Identity.Configuration;
 using RocketShop.Identity.IdentityBaseServices;
 using RocketShop.Identity.Models;
+using RocketShop.Identity.Service;
 using System.Data;
 using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using System.Web;
 
 namespace RocketShop.Identity.Controllers
 {
@@ -30,6 +25,7 @@ namespace RocketShop.Identity.Controllers
             UserManager<User> userManager,
             SignInManager<User> signInManager,
             IConfiguration configuration,
+            IRoleAndPermissionService roleAndPermissionService,
             IdentityContext identityContext) : IdentityControllerServices(logger)
     {
 
@@ -81,7 +77,10 @@ namespace RocketShop.Identity.Controllers
                             return Redirect($"AccessDeined?mode=3");
                         await userManager.ResetAccessFailedCountAsync(user); 
                         await userManager.UpdateAsync(user);
-                        await signInManager.SignInWithClaimsAsync(user!, null, SetClaims(user!));
+                        var roles = await roleAndPermissionService.GetRoleByUserId(user.Id);
+                        var permissions = await roleAndPermissionService.GetAuthoriozedPermissionList(user.Id);
+                        var roleNames = roles.GetRight()?.Select(s => s.RoleName);
+                        await signInManager.SignInWithClaimsAsync(user!, null, SetClaims(user!,roleNames,permissions.GetRight()));
                         var token = BuildToken();
                         return Redirect(returnUrl.HasMessage() ? $"{returnUrl}?id_token={token}" : "/");
                     }
@@ -143,7 +142,10 @@ x-client-ver=7.1.2.0";
                     s.SetProperty(c => c.ProviderName, iss)
                     .SetProperty(c => c.ProviderKey, sub));
                 }
-                var claims = SetClaims(user!);
+                var roles = await roleAndPermissionService.GetRoleByUserId(user!.Id);
+                var permissions = await roleAndPermissionService.GetAuthoriozedPermissionList(user.Id);
+                var roleNames = roles.GetRight()?.Select(s => s.RoleName);
+                var claims = SetClaims(user!,roleNames,permissions.GetRight());
                 await signInManager.SignInWithClaimsAsync(user!, null, claims);
                 var token = BuildToken();
                 if (redirect.IsSome)
@@ -167,7 +169,7 @@ x-client-ver=7.1.2.0";
                 return Redirect("/");
             });
 
-        List<Claim> SetClaims(User user)
+        List<Claim> SetClaims(User user, IEnumerable<string>? roles, IEnumerable<string> ?permissions)
         {
             List<Claim> claims = new List<Claim>();
             var newClaim = new
@@ -187,6 +189,11 @@ x-client-ver=7.1.2.0";
                 var nc = new Claim(claim.Key, claim.Value.ToString()!);
                 claims.Add(nc);
             }
+            roles.HasDataAndForEach(role =>    
+                    claims.Add(new Claim("Role", role)));
+            permissions.HasDataAndForEach(permission =>
+                    claims.Add(new Claim("Permission", permission)));
+
             return claims;
         }
         [HttpGet]

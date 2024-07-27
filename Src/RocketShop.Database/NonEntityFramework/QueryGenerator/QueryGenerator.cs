@@ -21,7 +21,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
             string sql = string.Empty;
             Dictionary<string, object> data = new Dictionary<string, object>();
             var columns = store.SelectedColumns.HasDataAndTranformData(
-                s => string.Join(",", $"\"{s}\""),
+                s => string.Join(",", s.Select(t=> $"\"{t}\"") ),
                 () => "*");
             if(statementType == StatementType.Select ) 
                 sql = $"select {columns} from \"{store.TableName}\" ";
