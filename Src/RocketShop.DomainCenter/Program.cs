@@ -93,7 +93,19 @@ namespace RocketShop.DomainCenter
                 return newvalue;
             });
 
-
+            app.MapGet("/bootstrap-icons", async () =>{
+                string filename = "bootstrap-icons";
+                var hasfile = _fileService!.CheckFileExists(filename);
+                if (hasfile)
+                    return _fileService.GetContent(filename);
+                var url = "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css";
+                var value = _packageService!.Find(url);
+                using var httpclient = new HttpClient();
+                var result = await httpclient.GetAsync(url);
+                var newvalue = await result.Content.ReadAsStringAsync();
+                _fileService.Create(filename, newvalue);
+                return newvalue;
+            });
 
             app.MapPost("/mail", async ([FromBody] MailRequest req) =>
             {

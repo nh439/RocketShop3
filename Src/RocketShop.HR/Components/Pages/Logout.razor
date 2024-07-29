@@ -1,7 +1,8 @@
 ﻿@page "/logout"
 @using Microsoft.AspNetCore.Identity
 @using RocketShop.Database.Model.Identity
-@using RocketShop.Shared.SharedService
+@using RocketShop.Shared.SharedService;
+@using RocketShop.Shared.SharedService.Singletion
 @inject NavigationManager navigationManager
 @inject IUrlIndeiceServices urlIndeiceServices
 @inject SignInManager<User> signInManager;

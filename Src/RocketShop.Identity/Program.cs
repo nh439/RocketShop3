@@ -10,7 +10,7 @@ using RocketShop.Database.Model.Identity;
 using RocketShop.Framework.Helper;
 using RocketShop.Identity.Configuration;
 using RocketShop.Identity.Service;
-using RocketShop.Shared.SharedService;
+using RocketShop.Shared.SharedService.Scoped;
 using Serilog;
 
 namespace RocketShop.Identity

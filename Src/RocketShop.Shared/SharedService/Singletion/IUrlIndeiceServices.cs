@@ -11,16 +11,16 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RocketShop.Shared.SharedService
+namespace RocketShop.Shared.SharedService.Singletion
 {
     public interface IUrlIndeiceServices
     {
         Task<Either<Exception, ConfigurationCenter>> GetUrls();
     }
-    public class UrlIndeiceServices(IConfiguration configuration,Serilog.ILogger logger) : BaseServices("Url Indeice Services", logger),IUrlIndeiceServices
+    public class UrlIndeiceServices(IConfiguration configuration, Serilog.ILogger logger) : BaseServices("Url Indeice Services", logger), IUrlIndeiceServices
     {
         ConfigurationCenter? center;
-        public async Task<Either< Exception,ConfigurationCenter>> GetUrls() =>
+        public async Task<Either<Exception, ConfigurationCenter>> GetUrls() =>
             await InvokeServiceAsync(async () =>
             {
                 if (center.IsNotNull()) return center!;
@@ -29,7 +29,7 @@ namespace RocketShop.Shared.SharedService
                 var item = await client.GetFromJsonAsync<ConfigurationCenter>(url);
                 center = item;
                 return center!;
-            },retries:5,
-                isExponential:true);
+            }, retries: 5,
+                isExponential: true);
     }
 }

@@ -1,4 +1,6 @@
-﻿@code{
+﻿@using RocketShop.HR.Components.Tools
+@using RocketShop.HR.ServicePermissions
+@code {
     [CascadingParameter]
     AuthenticationState? authState { get; set; }
     protected override async Task OnInitializedAsync()
@@ -11,35 +13,55 @@
         <a class="navbar-brand" href="">RocketShop HR</a>
     </div>
 </div>
-
 <input type="checkbox" title="Navigation menu" class="navbar-toggler" />
 
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="flex-column">
-        <div class="nav-item px-3">
+        <div class="nav-item px-4">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
             </NavLink>
         </div>
         <CascadingAuthenticationState>
+            <AuthorizeView Policy="@ServicePermission.AllHRServiceName">
+                <div class="nav-item px-4">
+                    <NavLink class="nav-link" href="Employee">
+                        <NavIcon IconClass="bi bi-people-fill" /> Employee
+                    </NavLink>
+                </div>
+                <div class="nav-item px-4">
+                    <NavLink class="nav-link" href="EmployeeFinace">                      
+                        <NavIcon IconClass="bi bi-piggy-bank" /> Finacial
+                    </NavLink>
+                </div>
+                <div class="nav-item px-4">
+                    <NavLink class="nav-link" href="Role">
+                        <NavIcon IconClass="bi bi-list-check" /> Role
+                    </NavLink>
+                </div>
+            </AuthorizeView>
+        </CascadingAuthenticationState>
+        <CascadingAuthenticationState>
             <AuthorizeView>
                 <Authorized>
                     <div class="nav-item px-3">
                         <NavLink class="nav-link" href="logout">
-                            <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Logout
+                            <NavIcon IconClass="bi bi-x-circle" />
+                            Logout
                         </NavLink>
                     </div>
                 </Authorized>
                 <NotAuthorized>
                     <div class="nav-item px-3">
-                        <NavLink class="nav-link" href="login">
-                            <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Login
+                        <NavLink class="nav-link" href="login">                        
+                            <NavIcon IconClass="bi bi-door-open" />
+                            Login
                         </NavLink>
                     </div>
                 </NotAuthorized>
             </AuthorizeView>
         </CascadingAuthenticationState>
-      
+
     </nav>
 </div>
 

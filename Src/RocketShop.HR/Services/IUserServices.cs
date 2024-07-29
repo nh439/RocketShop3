@@ -28,6 +28,7 @@ namespace RocketShop.HR.Services
         Task<Either<Exception, bool>> CreateInformation(UserInformation information);
         Task<Either<Exception, bool>> UpdateInformation(UserInformation information);
         Task<Either<Exception, Option<UserInformation>>> GetInformation(string userId);
+        Task<Either<Exception, Option<User>>> FindByEmail(string email);
     }
     public class UserServices(
         Serilog.ILogger logger,
@@ -62,6 +63,9 @@ namespace RocketShop.HR.Services
 
         public async Task<Either<Exception, Option<User>>> FindById(string userId) =>
             await InvokeServiceAsync(async () => await userRepository.FindById(userId));
+
+         public async Task<Either<Exception, Option<User>>> FindByEmail(string email) =>
+            await InvokeServiceAsync(async () => await userRepository.FindById(email));
 
         public async Task<Either<Exception, Option<UserProfile>>> GetProfile(string userId) =>
             await InvokeServiceAsync(async () =>

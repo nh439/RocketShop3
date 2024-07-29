@@ -4,12 +4,14 @@ using RocketShop.Database.Model.Identity;
 using RocketShop.Database.Helper;
 using RocketShop.Framework.Helper;
 using RocketShop.HR.Components;
-using RocketShop.Shared.SharedService;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using RocketShop.HR.Repository;
 using RocketShop.HR.Services;
+using RocketShop.HR.ServicePermissions;
+using RocketShop.Shared.SharedService.Singletion;
+using RocketShop.Shared.SharedService.Scoped;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.InstallConfiguration();
@@ -39,6 +41,13 @@ builder.InstallSerilog()
             options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
         }).AddCookie(c => c.ExpireTimeSpan = TimeSpan.FromHours(10));
         install.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+        install.AddAuthorization(a =>
+        {
+            a.AddPolicy(ServicePermission.AllHRServiceName, p =>
+            {
+                p.RequireClaim("Permission", ServicePermission.AllHRService);
+            });
+        });
     })
     .InstallServices(service =>
     {
@@ -48,7 +57,8 @@ builder.InstallSerilog()
     .InstallServices(service =>
     {
         service.AddSingleton<IUrlIndeiceServices,UrlIndeiceServices>()
-        .AddScoped<IUserServices,UserServices>();
+        .AddScoped<IUserServices,UserServices>()
+        .AddScoped<IGetRoleAndPermissionService, GetRoleAndPermissionService>();
     });
 // Add services to the container.
 

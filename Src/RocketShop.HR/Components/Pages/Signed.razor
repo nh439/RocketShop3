@@ -5,10 +5,12 @@
 @using RocketShop.Database.Model.Identity
 @using RocketShop.Framework.Extension
 @using RocketShop.HR.Services
+@using RocketShop.Shared.SharedService.Scoped
 @inject NavigationManager navigationManager;
 @inject SignInManager<User> signInManager;
 @inject IHttpContextAccessor accessor;
 @inject IUserServices _userServices;
+@inject IGetRoleAndPermissionService _getRoleAndPermissionService;
 @code {
     protected override async Task OnInitializedAsync()
     {
@@ -18,8 +20,28 @@
             var handler = new JwtSecurityTokenHandler();
             var jwtSecurityToken = handler.ReadJwtToken(idToken);
             var subject = jwtSecurityToken.Subject;
+            if (!subject.HasMessage())
+                subject = jwtSecurityToken.Claims.FirstOrDefault(x => x.Type == "nameid")!.Value;
             var user = await _userServices.FindById(subject);
-            await signInManager.SignInWithClaimsAsync(user.GetRight().Extract()!, true, jwtSecurityToken.Claims);
+            var hasRole = jwtSecurityToken.Claims.Where(x => x.Type == "Role").HasData();
+            var hasPermission= jwtSecurityToken.Claims.Where(x => x.Type == "Permission").HasData();
+            var claims = jwtSecurityToken.Claims.ToList();
+            if(!hasRole)
+            {
+                var roles = await _getRoleAndPermissionService.GetMyRoles(idToken!);
+                if (roles.IsRight && roles.GetRight().HasData())
+                    foreach (var role in roles.GetRight()!)
+                        claims.Add(new System.Security.Claims.Claim("Role", role));
+            }
+             if(!hasPermission)
+            {
+                var permissions = await _getRoleAndPermissionService.GetMyPermissions(idToken!);
+                if (permissions.IsRight && permissions.GetRight().HasData())
+                    foreach (var permission in permissions.GetRight()!)
+                        claims.Add(new System.Security.Claims.Claim("Permission", permission));
+            }
+
+            await signInManager.SignInWithClaimsAsync(user.GetRight().Extract()!, true, claims);
             navigationManager.NavigateTo("/", true);
         }
     }

@@ -33,11 +33,11 @@ namespace RocketShop.HR.Repository
         public async Task<Option<User>> FindById(string userId) =>
             await userManager.FindByIdAsync(userId);
 
+        public async Task<Option<User>> FindByEmail(string userId) =>
+            await userManager.FindByEmailAsync(userId);
+
         public async Task<Option<User>> FindByEmployeeCode(string employeeCode) =>
             await userTable.FirstOrDefaultAsync(x => x.EmployeeCode == employeeCode);
-
-        public async Task<Option<User>> FindByEmail(string email) =>
-            await userManager.FindByEmailAsync(email);
 
         public async Task<List<UserView>> GetUsers(string? searchTerm = null, int? page = null, int pageSize = 20)
         {

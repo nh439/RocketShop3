@@ -11,16 +11,16 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RocketShop.Shared.SharedService
+namespace RocketShop.Shared.SharedService.Scoped
 {
     public interface ISendEmailServices
     {
         Task<Either<Exception, string>> SendEmailAsync(MailRequest request);
     }
     public class SendEmailServices(IConfiguration configuration, Serilog.ILogger logger) :
-        BaseServices("Send Email Service", logger),ISendEmailServices
+        BaseServices("Send Email Service", logger), ISendEmailServices
     {
-        public async Task< Either<Exception, string>> SendEmailAsync(MailRequest request) =>
+        public async Task<Either<Exception, string>> SendEmailAsync(MailRequest request) =>
             await InvokeServiceAsync(async () =>
             {
                 var url = $"{configuration.GetDomainCenterServiceUrl()}/mail";
