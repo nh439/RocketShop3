@@ -13,6 +13,13 @@ namespace RocketShop.Database
         public static CreateViewSql UserView = new CreateViewSql($@"
 create or replace view ""{TableConstraint.UserView}"" as SELECT a.""Id"", a.""EmployeeCode"", a.""Email"", a.""Firstname"", a.""Surname"", a.""Prefix"", u.""Department"", u.""CurrentPosition"", u.""ManagerId"", NOT (a.""Resigned"") as ""Active"" FROM ""AspNetUsers"" AS a LEFT JOIN ""UserInformations"" AS u ON a.""Id"" = u.""UserId""
 ", $"Drop View \"{TableConstraint.UserView}\"");
+
+        public static CreateViewSql UserFinacialView = new CreateViewSql($@"
+create or replace view ""{TableConstraint.UserFinacialView}"" as
+SELECT u.""UserId"", u.""AccountNo"", u.""BanckName"", u.""Currency"", u.""ProvidentFund"" AS ""ProvidentFundPerMonth"", p.""Balance"" AS ""AccumulatedProvidentFund"", u.""Salary"", u.""SocialSecurites"", u.""TotalAddiontialExpense"", u.""TotalPayment"", u.""TravelExpenses""
+FROM ""UserFinancal"" AS u
+INNER JOIN ""ProvidentFund"" AS p ON u.""UserId"" = p.""UserId"";",
+           $"Drop View \"{TableConstraint.UserFinacialView}\"");
         #endregion
     }
 

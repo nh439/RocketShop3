@@ -14,5 +14,11 @@ namespace RocketShop.Database
         public const string Role = "Roles";
         public const string UserRole = "UserRoles";
         public const string ChangePasswordHistory = "ChangePasswordHistories";
+        public const string UserFinancal = "UserFinancal";
+        public const string UserAddiontialExpense = "AddiontialExpense";
+        public const string UserProvidentFund = "ProvidentFund";
+        public const string UserPayroll = "Payroll";
+        public const string AdditionalPayroll = "AdditionalPayroll";
+        public const string UserFinacialView = "V_UFinacial";
     }
 }

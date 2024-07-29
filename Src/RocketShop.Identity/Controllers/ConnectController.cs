@@ -3,8 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using RocketShop.Database;
+using RocketShop.Database.EntityFramework;
 using RocketShop.Database.Extension;
 using RocketShop.Database.Model.Identity;
+using RocketShop.Database.Model.Identity.Views;
 using RocketShop.Database.NonEntityFramework.QueryGenerator;
 using RocketShop.Framework.ControllerFunction;
 
@@ -13,7 +15,8 @@ namespace RocketShop.Identity.Controllers
     [Route("api/[controller]")]
     [ApiController]
     public class ConnectController(ILogger<ConnectController> logger,
-        IConfiguration configuration) : 
+        IConfiguration configuration,
+        IdentityContext context) : 
         APIControllerServices(logger)
     {
 
@@ -21,13 +24,24 @@ namespace RocketShop.Identity.Controllers
         public IActionResult Get() =>
             Respond(() =>
             {
-                using var conn = new NpgsqlConnection(configuration.GetIdentityConnectionString());
-                var query = conn.CreateQueryStore(TableConstraint.UserInformation)
-                .Where(x => x.Where("UserId", "81c6bf5b-aac5-4f72-a2af-86d4de4de935").OrWhere("UserId", "TTT"))
-                .OrWhere("Department","IT");
-                var sql = query.Compiled();
-                var item = query.Fetch<UserInformation>();
-                return Ok( item);
+                var query = context.UserFinancal.Join(context.UserProvidentFund,
+                    f => f.UserId,
+                    p => p.UserId,
+                    (f, p) => new UserFinancialView
+                    {
+                        UserId = f.UserId,
+                        AccountNo = f.AccountNo,
+                        BanckName = f.BanckName,
+                        Currency = f.Currency,
+                        ProvidentFundPerMonth = f.ProvidentFund,
+                        AccumulatedProvidentFund=p.Balance,
+                        Salary = f.Salary,
+                        SocialSecurites = f.SocialSecurites,
+                        TotalAddiontialExpense=f.TotalAddiontialExpense,
+                        TotalPayment=f.TotalPayment,
+                        TravelExpenses=f.TravelExpenses
+                    });
+                return query.ToQueryString();
             });
     }
     

@@ -87,7 +87,6 @@ on r.""Id"" = ur.""RoleId"" where ur.""UserId""=@userId and ""{permissionName}""
                 prop.If(x => x!.PropertyType == typeof(bool), x =>
                 {
                     var value = (bool)prop.GetValue(role)!;
-                    Console.WriteLine($"Pror -> {prop.Name},Value ->{value}");
                     if (value)
                         permissions.Add(x!.Name);
                 });

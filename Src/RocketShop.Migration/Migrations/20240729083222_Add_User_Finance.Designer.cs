@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using RocketShop.Database.EntityFramework;
@@ -11,9 +12,11 @@ using RocketShop.Database.EntityFramework;
 namespace RocketShop.Migration.Migrations
 {
     [DbContext(typeof(IdentityContext))]
-    partial class IdentityContextModelSnapshot : ModelSnapshot
+    [Migration("20240729083222_Add_User_Finance")]
+    partial class Add_User_Finance
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -582,50 +585,6 @@ namespace RocketShop.Migration.Migrations
                     b.HasKey("RoleId", "UserId");
 
                     b.ToTable("UserRoles");
-                });
-
-            modelBuilder.Entity("RocketShop.Database.Model.Identity.Views.UserFinancialView", b =>
-                {
-                    b.Property<string>("AccountNo")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<decimal>("AccumulatedProvidentFund")
-                        .HasColumnType("numeric");
-
-                    b.Property<string>("BanckName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<decimal>("ProvidentFundPerMonth")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal>("Salary")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal>("SocialSecurites")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal>("TotalAddiontialExpense")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal>("TotalPayment")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal>("TravelExpenses")
-                        .HasColumnType("numeric");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.ToTable((string)null);
-
-                    b.ToView("V_UFinacial", (string)null);
                 });
 
             modelBuilder.Entity("RocketShop.Database.Model.Identity.Views.UserView", b =>

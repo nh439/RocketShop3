@@ -59,14 +59,25 @@ namespace RocketShop.Database.EntityFramework
 
             builder.Entity<ChangePasswordHistory>().HasIndex(x => x.UserId);
             builder.Entity<ChangePasswordHistory>().HasIndex(x => x.Reset);
-            
+            builder.Entity<UserFinancal>().HasIndex(x => x.UserId);
+            builder.Entity<UserAddiontialExpense>().HasIndex(x => x.UserId);
+            builder.Entity<UserPayroll>().HasIndex(x => x.UserId);
+            builder.Entity<UserPayroll>().HasIndex(x => x.UserId);
+            builder.Entity<AdditionalPayroll>().HasIndex(x => x.PayrollId);
+            builder.Entity<UserFinancialView>().HasNoKey().ToView(TableConstraint.UserFinacialView);
             base.OnModelCreating(builder);
         }
         public DbSet<UserInformation> UserInformation { get; set; }
         public DbSet<UserRole> UserRole { get; set; }
         public DbSet<Role> Role { get; set; }
         public DbSet<ChangePasswordHistory> ChangePasswordHistory { get; set; }
+        public DbSet<UserFinancal> UserFinancal { get; set; }
+        public DbSet<UserAddiontialExpense> UserAddiontialExpense { get; set; }
+        public DbSet<UserProvidentFund> UserProvidentFund { get; set; }
+        public DbSet<UserPayroll> UserPayroll { get; set; }
+        public DbSet<AdditionalPayroll> AdditionalPayroll { get; set; }
 
         public virtual DbSet<UserView> UserViews { get; set; }
+        public virtual DbSet<UserFinancialView> UserFinancialView { get; set; }
     }
 }
