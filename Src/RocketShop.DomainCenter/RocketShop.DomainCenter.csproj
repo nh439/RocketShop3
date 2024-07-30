@@ -27,6 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="documents\packages\" />
     <Folder Include="wwwroot\js\" />
   </ItemGroup>
 

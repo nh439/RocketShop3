@@ -1,11 +1,14 @@
 ﻿@using RocketShop.HR.Components.Tools
 @using RocketShop.HR.ServicePermissions
+@using RocketShop.Shared.Helper
+@inject IConfiguration configuration;
 @code {
     [CascadingParameter]
     AuthenticationState? authState { get; set; }
     protected override async Task OnInitializedAsync()
     {
         authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        await InvokeAsync(StateHasChanged);
     }
 }
 <div class="top-row ps-3 navbar navbar-dark">
