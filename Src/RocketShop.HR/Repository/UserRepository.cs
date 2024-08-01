@@ -93,13 +93,19 @@ namespace RocketShop.HR.Repository
             await userView.Where(x => x.ManagerId == managerId)
             .GetLastpageAsync(per);
 
+        public async Task<IdentityResult> ResetPassword(string userId,string newPassword)
+        {
+            var user = (await FindById(userId)).Extract()!;
+            var token = await userManager.GeneratePasswordResetTokenAsync(user);
+            return await userManager.ResetPasswordAsync(user, token, newPassword);
+        }
+
         IQueryable<UserView> SearchUser(IQueryable<UserView> query, string? searchTerm) =>
            searchTerm.HasMessage() ? query.Where(x => x.EmployeeCode.Contains(searchTerm!) ||
                 x.Email.Contains(searchTerm!) ||
                 x.Firstname.Contains(searchTerm!) ||
                 x.Surname.Contains(searchTerm!) ||
                 x.EmployeeCode.Contains(searchTerm!)) : query;
-
 
     }
 }

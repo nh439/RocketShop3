@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using LanguageExt;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -32,16 +33,44 @@ namespace RocketShop.Test.HR.Services
             context.Database.EnsureCreated();
             return context;
         }
-         Mock<UserManager<TUser>> MockUserManager<TUser>(List<TUser> ls) where TUser : class
+         Mock<UserManager<User>> MockUserManager(List<User> ls)
         {
-            var store = new Mock<IUserStore<TUser>>();
-            var mgr = new Mock<UserManager<TUser>>(store.Object, null, null, null, null, null, null, null, null);
-            mgr.Object.UserValidators.Add(new UserValidator<TUser>());
-            mgr.Object.PasswordValidators.Add(new PasswordValidator<TUser>());
+            var store = new Mock<IUserStore<User>>();
+            var mgr = new Mock<UserManager<User>>(Mock.Of<IUserStore<User>>(), null, null, null, null, null, null, null, null);
+            mgr.Object.UserValidators.Add(new UserValidator<User>());
+            mgr.Object.PasswordValidators.Add(new PasswordValidator<User>());
 
-            mgr.Setup(x => x.DeleteAsync(It.IsAny<TUser>())).ReturnsAsync(IdentityResult.Success);
-            mgr.Setup(x => x.CreateAsync(It.IsAny<TUser>(), It.IsAny<string>())).ReturnsAsync(IdentityResult.Success).Callback<TUser, string>((x, y) => ls.Add(x));
-            mgr.Setup(x => x.UpdateAsync(It.IsAny<TUser>())).ReturnsAsync(IdentityResult.Success);
+            mgr.Setup(um => um.FindByIdAsync(It.IsAny<string>()))
+            .ReturnsAsync((string id) => ls.FirstOrDefault(x=>x.Id==id));
+
+            mgr.Setup(um => um.FindByNameAsync(It.IsAny<string>()))
+                .ReturnsAsync((string userName) => ls.FirstOrDefault(x => x.UserName ==userName));
+
+            mgr.Setup(um => um.CreateAsync(It.IsAny<User>(), It.IsAny<string>()))
+                .ReturnsAsync(IdentityResult.Success);
+
+            mgr.Setup(um => um.CreateAsync(It.IsAny<User>()))
+                .ReturnsAsync(IdentityResult.Success);
+
+            mgr.Setup(um => um.UpdateAsync(It.IsAny<User>()))
+                .ReturnsAsync(IdentityResult.Success);
+
+            mgr.Setup(um => um.DeleteAsync(It.IsAny<User>()))
+                .ReturnsAsync(IdentityResult.Success);
+
+            mgr.Setup(um => um.CheckPasswordAsync(It.IsAny<User>(), It.IsAny<string>()))
+                .ReturnsAsync(true);
+
+            mgr.Setup(um => um.HasPasswordAsync(It.IsAny<User>()))
+                .ReturnsAsync(true);
+
+            mgr.Setup(um => um.GeneratePasswordResetTokenAsync(It.IsAny<User>()))
+                .ReturnsAsync("token");
+
+            mgr.Setup(um => um.ResetPasswordAsync(It.IsAny<User>(),It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(IdentityResult.Success);
+
+
 
             return mgr;
         }
@@ -61,26 +90,55 @@ namespace RocketShop.Test.HR.Services
             return logger;
         }
 
+        UserServices SetUpUserService(IdentityContext context,UserManager<User> userMgr)
+        {
+            var newUser = new List<User>();
+            var userRepository = new UserRepository(context, userMgr);
+            var userInfoRepository = new UserInformationRepository(context);
+            var logger = MockLogger().Object;
+            var userService = new UserServices(logger, userRepository, userInfoRepository);
+            return userService;
+        }
+
         async Task<int> InsertData(IdentityContext context)
         {
             var data = UserInformationGenerator.GenerateFakeData();
-            await context.AddAsync(data);
+            var users = UserGenerator.GenerateFakeData();
+            foreach (var item in data) {
+                var existsItem = await context.UserInformation.FirstOrDefaultAsync(x => x.UserId == item.UserId);
+                if(existsItem.IsNull())
+                    context.UserInformation.Add(item);
+            }
+            foreach (var item in users) {
+                var existsItem = await context.Users.FirstOrDefaultAsync(x => x.Id == item.Id);
+                if (existsItem.IsNull())
+                    context.Users.Add(item);
+            }
             return await context.SaveChangesAsync();
         }
 
         [Fact]
-        public async Task Test_UserInformation_Create() {
+        public async Task UserInformation_Create_Success() {
             var data = UserInformationGenerator.GenerateFakeData();
-            var newUser = new List<User>();
             var context = SetupContext();
-            var userMgr = MockUserManager<User>(newUser);
-            var userRepository = new UserRepository(context, userMgr.Object);
-            var userInfoRepository = new UserInformationRepository(context);
-            var logger = MockLogger().Object;
-            var userService = new UserServices(logger, userRepository, userInfoRepository);
+            var userMgr = MockUserManager(new List<User>());
+            var userService = SetUpUserService(context, userMgr.Object);
             var result = await userService.CreateInformation(data.FirstOrDefault()!);
             result.GetRight().Should().BeTrue();
         }
+
+        [Fact]
+        public async Task UserInformation_Create_Failed() {
+            var data = UserInformationGenerator.GenerateFakeData();       
+            var context = SetupContext();
+            await InsertData(context);
+            var userMgr = MockUserManager(new List<User>());
+            var userService = SetUpUserService(context, userMgr.Object);
+            var result = await userService.CreateInformation(data.FirstOrDefault()!);
+            result.GetRight().Should().BeFalse();
+        }
+
+
         [InlineData("0001")]
         [InlineData("0002")]
         [InlineData("0003")]
@@ -89,17 +147,77 @@ namespace RocketShop.Test.HR.Services
         [Theory]
         public async Task Test_UserInformation_Get_HasData(string value)
         {
-            var newUser = new List<User>();
             var context = SetupContext();
             var inserted= await InsertData(context);
-            var s = context.UserInformation.ToList();
-            var userMgr = MockUserManager<User>(newUser);
-            var userRepository = new UserRepository(context, userMgr.Object);
-            var userInfoRepository = new UserInformationRepository(context);
-            var logger = MockLogger().Object;
-            var userService = new UserServices(logger, userRepository, userInfoRepository);
+            var userMgr = MockUserManager(new List<User>());
+            var userService = SetUpUserService(context, userMgr.Object);
             var result = await userService.GetInformation(value);
             result.GetRight().Extract().Should().NotBeNull();
         }
+        [Fact]
+        public async Task UserInformation_Update_Success()
+        {
+            var context = SetupContext();
+            var inserted = await InsertData(context);
+            var userMgr = MockUserManager(new List<User>());
+            var userService = SetUpUserService(context, userMgr.Object);
+            var informationToUpdate = await context.UserInformation.FirstOrDefaultAsync(x => x.UserId == "0001");
+            informationToUpdate!.CurrentPosition = "SIT";
+            var result = await userService.UpdateInformation(informationToUpdate);
+            var updatedUser = await context.UserInformation.FirstOrDefaultAsync(x => x.UserId == "0001");
+            Assert.True(updatedUser!.CurrentPosition =="SIT");
+        }
+        [Fact]
+        public async Task User_Create_Failed()
+        {
+            var users = UserGenerator.GenerateFakeData();
+            var information = UserInformationGenerator.GenerateFakeData();
+            var context = SetupContext();
+            var inserted = await InsertData(context);
+            var userMgr = MockUserManager(users);
+            var userService = SetUpUserService(context, userMgr.Object);
+            var result = await userService.CreateUser(users.FirstOrDefault()!, information.FirstOrDefault()!);
+            Assert.False(result.IsRight && result.GetRight());
+        }
+
+        [Fact]
+        public async Task User_Create_Success()
+        {
+            var users = UserGenerator.GenerateFakeData();
+            var information = UserInformationGenerator.GenerateFakeData();
+            var context = SetupContext();
+            var userMgr = MockUserManager(new List<User>());
+            var userService = SetUpUserService(context, userMgr.Object);
+            var result = await userService.CreateUser(users.FirstOrDefault()!, information.FirstOrDefault()!);
+            Assert.True(result.IsRight && result.GetRight());
+        }
+        [Fact]
+        public async Task User_ResetPassword_Success()
+        {
+            var users = UserGenerator.GenerateFakeData();
+            var information = UserInformationGenerator.GenerateFakeData();
+            var context = SetupContext();
+            await InsertData(context);
+            var userMgr = MockUserManager(new List<User>());
+            var userService = SetUpUserService(context, userMgr.Object);
+            var result = await userService.ResetPassword(users.FirstOrDefault()!.Id, "123456");
+            Assert.True(result.IsRight && result.GetRight()!);
+        }
+
+        [Fact]
+        public async Task User_FindById_Found()
+        {
+            var users = UserGenerator.GenerateFakeData();
+            var information = UserInformationGenerator.GenerateFakeData();
+            var context = SetupContext();
+            await InsertData(context);
+            var userMgr = MockUserManager(users);
+            var userService = SetUpUserService(context, userMgr.Object);
+            var result = await userService.FindById(users.FirstOrDefault()!.Id);
+            result.GetRight().Extract().Should().NotBeNull();
+        }
+
+        
+
     }
 }

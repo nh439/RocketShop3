@@ -5,6 +5,7 @@ using RocketShop.Database.Model.NonDatabaseModel;
 using RocketShop.Framework.Extension;
 using RocketShop.Framework.Services;
 using RocketShop.HR.Repository;
+using System.Diagnostics.CodeAnalysis;
 
 namespace RocketShop.HR.Services
 {
@@ -13,6 +14,7 @@ namespace RocketShop.HR.Services
         Task<Either<Exception, bool>> CreateUser(User user, UserInformation information);
         Task<Either<Exception, bool>> UpdateUser(User user, UserInformation information);
         Task<Either<Exception, bool>> DeleteUser(string userId);
+        Task<Either<Exception, bool>> ResetPassword(string userId, string newPassword);
         Task<Either<Exception, Option<User>>> FindById(string userId);
         Task<Either<Exception, Option<UserProfile>>> GetProfile(string userId);
         Task<Either<Exception, Option<UserProfile>>> FindProfile(string employeeCodeOrEmail);
@@ -42,7 +44,7 @@ namespace RocketShop.HR.Services
                 if (!createResult.Succeeded) return false;
                 return await userInformationRepository.Create(information);
             });
-
+        [ExcludeFromCodeCoverage]
         public async Task<Either<Exception, bool>> UpdateUser(User user, UserInformation information) =>
             await InvokeServiceAsync(async () =>
             {
@@ -50,7 +52,7 @@ namespace RocketShop.HR.Services
                 if (!updateResult.Succeeded) return false;
                 return await userInformationRepository.Update(information);
             });
-
+        [ExcludeFromCodeCoverage]
         public async Task<Either<Exception, bool>> DeleteUser(string userId) =>
             await InvokeServiceAsync(async () =>
             {
@@ -60,6 +62,9 @@ namespace RocketShop.HR.Services
                 if (!deleteResult.Succeeded) return false;
                 return await userInformationRepository.Delete(userId);
             });
+
+        public async Task<Either<Exception, bool>> ResetPassword(string userId,string newPassword) =>
+            await InvokeServiceAsync(async () => (await userRepository.ResetPassword(userId, newPassword)).Succeeded);
 
         public async Task<Either<Exception, Option<User>>> FindById(string userId) =>
             await InvokeServiceAsync(async () => await userRepository.FindById(userId));
