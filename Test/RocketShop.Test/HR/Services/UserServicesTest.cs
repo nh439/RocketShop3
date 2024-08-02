@@ -46,6 +46,9 @@ namespace RocketShop.Test.HR.Services
             mgr.Setup(um => um.FindByNameAsync(It.IsAny<string>()))
                 .ReturnsAsync((string userName) => ls.FirstOrDefault(x => x.UserName ==userName));
 
+            mgr.Setup(um => um.FindByEmailAsync(It.IsAny<string>()))
+                .ReturnsAsync((string email) => ls.FirstOrDefault(x => x.Email == email));
+
             mgr.Setup(um => um.CreateAsync(It.IsAny<User>(), It.IsAny<string>()))
                 .ReturnsAsync(IdentityResult.Success);
 
@@ -214,6 +217,19 @@ namespace RocketShop.Test.HR.Services
             var userMgr = MockUserManager(users);
             var userService = SetUpUserService(context, userMgr.Object);
             var result = await userService.FindById(users.FirstOrDefault()!.Id);
+            result.GetRight().Extract().Should().NotBeNull();
+        }
+        [Fact]
+        public async Task User_FindByEmail_Found()
+        {
+            var users = UserGenerator.GenerateFakeData();
+            var information = UserInformationGenerator.GenerateFakeData();
+            var context = SetupContext();
+            await InsertData(context);
+            var userMgr = MockUserManager(users);
+            var userService = SetUpUserService(context, userMgr.Object);
+            var email = users.FirstOrDefault()!.Email;
+            var result = await userService.FindByEmail(email);
             result.GetRight().Extract().Should().NotBeNull();
         }
 

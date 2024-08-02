@@ -70,7 +70,7 @@ namespace RocketShop.HR.Services
             await InvokeServiceAsync(async () => await userRepository.FindById(userId));
 
          public async Task<Either<Exception, Option<User>>> FindByEmail(string email) =>
-            await InvokeServiceAsync(async () => await userRepository.FindById(email));
+            await InvokeServiceAsync(async () => await userRepository.FindByEmail(email));
 
         public async Task<Either<Exception, Option<UserProfile>>> GetProfile(string userId) =>
             await InvokeServiceAsync(async () =>
