@@ -233,7 +233,37 @@ namespace RocketShop.Test.HR.Services
             result.GetRight().Extract().Should().NotBeNull();
         }
 
-        
+        [Fact]
+        public async Task User_GetProfile_Found()
+        {
+            var users = UserGenerator.GenerateFakeData();
+            var information = UserInformationGenerator.GenerateFakeData();
+            var context = SetupContext();
+            await InsertData(context);
+            var userMgr = MockUserManager(users);
+            var userService = SetUpUserService(context, userMgr.Object);
+            var result = await userService.GetProfile(users.FirstOrDefault()!.Id);
+            result.GetRight().Extract().Should().NotBeNull();
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task User_FindProfile_Found(bool isEmail)
+        {
+            var users = UserGenerator.GenerateFakeData();
+            var information = UserInformationGenerator.GenerateFakeData();
+            var context = SetupContext();
+            await InsertData(context);
+            var userMgr = MockUserManager(users);
+            var userService = SetUpUserService(context, userMgr.Object);
+            var result = isEmail ?
+                await userService.FindProfile(users.FirstOrDefault()!.Email!)
+               : await userService.FindProfile(users.FirstOrDefault()!.EmployeeCode);
+            result.GetRight().Extract().Should().NotBeNull();
+        }
+
+
 
     }
 }
