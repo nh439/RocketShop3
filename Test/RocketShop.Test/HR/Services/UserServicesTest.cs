@@ -262,7 +262,20 @@ namespace RocketShop.Test.HR.Services
                : await userService.FindProfile(users.FirstOrDefault()!.EmployeeCode);
             result.GetRight().Extract().Should().NotBeNull();
         }
-
+        
+        [Theory]
+        [InlineData(3,13,0)]
+        public async Task User_ListUsers_Found(int page,int per,int expected)
+        {
+            var users = UserGenerator.GenerateFakeData();
+            var information = UserInformationGenerator.GenerateFakeData();
+            var context = SetupContext();
+            await InsertData(context);
+            var userMgr = MockUserManager(users);
+            var userService = SetUpUserService(context, userMgr.Object);
+            var result = await userService.ListUsers(null,page, per);
+            Assert.True(result.GetRight()!.Count == expected);
+        }
 
 
     }

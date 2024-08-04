@@ -27,7 +27,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RocketShop.HR", "Src\Rocket
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{F405D7CF-29F6-45F7-B3EB-CA6214A8B285}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RocketShop.Test", "Test\RocketShop.Test\RocketShop.Test.csproj", "{12F28E5B-9284-4F56-BA3D-90BF1F25AB60}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RocketShop.Test", "Test\RocketShop.Test\RocketShop.Test.csproj", "{12F28E5B-9284-4F56-BA3D-90BF1F25AB60}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

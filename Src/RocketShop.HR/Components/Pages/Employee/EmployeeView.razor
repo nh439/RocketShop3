@@ -1,0 +1,143 @@
+﻿@page "/employee"
+@using RocketShop.Database.Model.Identity.Views
+@using RocketShop.Framework.Extension
+@using RocketShop.HR.ServicePermissions
+@using RocketShop.HR.Services
+@inject IUserServices userServices
+@rendermode InteractiveServer
+
+@code {
+    int count = 0,
+        lastPage = 1,
+        currentPage = 1;
+    string countMsg = string.Empty,
+    lastPageMsg = string.Empty,
+    queryMsg = string.Empty;
+
+    List<UserView>? users = new List<UserView>();
+    const string Headers = "Employee Id;Firstname;Lastname;Email;Position;Department;Status;";
+    int length = Headers.Split(";").Length;
+    [CascadingParameter]
+    public AuthenticationState? state { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        state.If(x => x.IsNotNull() && x!.User.Identity!.IsAuthenticated, x =>
+        {
+            FetchData();
+        });
+    }
+
+    async void FetchData()
+    {
+        var userResult = await userServices.ListUsers(null, currentPage);
+        var countResult = await userServices.GetCount(null);
+        var lastPageResult = await userServices.GetLastpage(null, currentPage);
+
+        await Task.WhenAll(
+            Task.Factory.StartNew(() =>
+            {
+                if (userResult.IsLeft)
+                    queryMsg = userResult.GetLeft()!.Message;
+                else
+                    users = userResult.GetRight();
+
+            }),
+            Task.Factory.StartNew(() =>
+            {
+                if (countResult.IsLeft)
+                    countMsg = countResult.GetLeft()!.Message;
+                else
+                    count = countResult.GetRight();
+
+            }),
+             Task.Factory.StartNew(() =>
+            {
+                if (lastPageResult.IsLeft)
+                    lastPageMsg = lastPageResult.GetLeft()!.Message;
+                else
+                    lastPage = lastPageResult.GetRight();
+
+            })
+        );
+
+        await InvokeAsync(StateHasChanged);
+    }
+}
+<CascadingAuthenticationState>
+    <AuthorizeView Policy="@ServicePermission.AllHRServiceName">
+        <Authorized>
+            <center>
+                <h2 class="text-4xl font-extrabold ">Employee List</h2>
+            </center>
+            <br />
+            <br />
+            <br />
+            <div>
+                <div Class="row">
+                    <div Class="col-5">
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" placeholder="Actvity Name" aria-label="Recipient's username" aria-describedby="basic-addon2">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-info" type="button"><i class="search icon"></i> Search</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="bg-blue-600 hover:bg-blue-800 text-white font-bold py-1 px-4 rounded-full">
+                <i class="plus icon" />  Add Employee
+            </button>
+            <button class="bg-green-600 hover:bg-green-800 text-white font-bold py-1 px-4 rounded-full">
+                <i class="table icon" /> Export
+            </button>
+            <br />
+            <br />
+            <table class="table table-hover table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        @foreach (var header in Headers.Split(";"))
+                        {
+                            <th>@header</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody class="table-striped">
+                    @if (!users.HasData())
+                    {
+                        <tr>
+                            <td colspan="@length">No Employees</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var user in users!)
+                        {
+                            <tr>
+                                <td>@user.EmployeeCode</td>
+                                <td>@user.Firstname</td>
+                                <td>@user.Surname</td>
+                                <td>@user.Email</td>
+                                <td>@user.Position</td>
+                                <td>@user.Department</td>
+                                <td>@(user.Active ? "Active" : "Inactive")</td>
+                                <td>
+                                    <button class="bg-teal-600 hover:bg-teal-800 text-white font-bold py-1 px-2 rounded-full">
+                                        <i class="eye icon" />
+                                    </button>
+                                    <button class="bg-red-600 hover:bg-red-800 text-white font-bold py-1 px-2 rounded-full">
+                                        <i class="trash icon" />
+                                    </button>
+
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </Authorized>
+        <NotAuthorized>
+            Not Authorized
+        </NotAuthorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>
