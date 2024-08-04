@@ -1,0 +1,18 @@
+﻿
+@code{
+    [Parameter]
+    public string Headers { get; set; }
+    [Parameter]
+    public string CSSClass { get; set; }
+    [Parameter]
+    public char Sperator { get; set; } = ';';
+}
+
+<thead class="@CSSClass">
+    <tr>
+        @foreach(var header in Headers.Split(Sperator))
+        {
+            <th>@header</th>
+        }
+    </tr>
+</thead>

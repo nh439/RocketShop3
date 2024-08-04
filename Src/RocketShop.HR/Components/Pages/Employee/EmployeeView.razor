@@ -3,6 +3,7 @@
 @using RocketShop.Framework.Extension
 @using RocketShop.HR.ServicePermissions
 @using RocketShop.HR.Services
+@using RocketShop.SharedBlazor.Table
 @inject IUserServices userServices
 @rendermode InteractiveServer
 
@@ -94,14 +95,7 @@
             <br />
             <br />
             <table class="table table-hover table-bordered">
-                <thead class="table-dark">
-                    <tr>
-                        @foreach (var header in Headers.Split(";"))
-                        {
-                            <th>@header</th>
-                        }
-                    </tr>
-                </thead>
+                <TableHeader CSSClass="table-dark" Headers="@Headers" />
                 <tbody class="table-striped">
                     @if (!users.HasData())
                     {

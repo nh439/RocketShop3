@@ -1,0 +1,39 @@
+﻿@code {
+    [Parameter]
+    public string? Title { get; set; }
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+    bool isShow = false;
+    const string OnShowCSS =
+        @"display: block;
+     padding-right: 22px;
+     background-color: rgba(0, 0, 0, 0.4);
+     backdrop-filter: blur(15px);
+    overflow-y: auto;";
+    public void Show()
+    {
+        isShow = true;
+        StateHasChanged();
+    }
+    public void Close()
+    {
+        isShow = false;
+        StateHasChanged();
+    }
+}
+
+<!-- Modal -->
+<div class="modal fade @(isShow ? "show bg" : "")" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="@(isShow ? "false":"true")"
+     style="@(isShow ? OnShowCSS :"display:none;")">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">@Title</h5>
+                <button type="button" class="close" @onclick="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            @ChildContent
+        </div>
+    </div>
+</div>
