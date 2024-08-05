@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Razor">
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -13,6 +13,12 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.7" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RocketShop.Database\RocketShop.Database.csproj" />
+    <ProjectReference Include="..\RocketShop.Framework\RocketShop.Framework.csproj" />
+    <ProjectReference Include="..\RocketShop.Shared\RocketShop.Shared.csproj" />
   </ItemGroup>
 
 </Project>

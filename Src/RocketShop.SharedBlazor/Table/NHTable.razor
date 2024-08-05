@@ -1,0 +1,49 @@
+﻿
+@code {
+    [Parameter]
+    public string Columns { get; set; }
+    [Parameter]
+    public char ColumnSperator { get; set; } = ';';
+    [Parameter]
+    public string? TableClass { get; set; }
+    [Parameter]
+    public string? TableHeaderClass { get; set; }
+    [Parameter]
+    public string? TableBodyClass { get; set; }
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+    [Parameter]
+    public bool LoadingFlagment { get; set; } = false;
+    [Parameter]
+    public string LoadingDisplayText { get; set; } = "Loading...";
+    [Parameter]
+    public string NoDataDisplayText { get; set; } = "No Data";
+    [Parameter]
+    public bool HasDataFlagment { get; set; } = true;
+
+}
+
+<table class="@TableClass">
+    <TableHeader CSSClass="@TableHeaderClass" Headers="@Columns" Sperator="@ColumnSperator" />
+    <tbody class="@TableBodyClass">
+        @if (LoadingFlagment)
+        {
+            <tr>
+                <td colspan="@Columns.Split(ColumnSperator).Length">@LoadingDisplayText</td>
+            </tr>
+        }
+        else
+        {
+            @if (HasDataFlagment)
+            {
+                @ChildContent
+            }
+            else
+            {
+                <tr>
+                    <td colspan="@Columns.Split(ColumnSperator).Length">@NoDataDisplayText</td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

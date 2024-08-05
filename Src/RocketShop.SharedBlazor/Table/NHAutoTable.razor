@@ -1,0 +1,43 @@
+﻿@using RocketShop.Framework.Extension
+@using System.Reflection
+@typeparam TItem
+@code {
+    [Parameter]
+    public string? TableClass { get; set; }
+    [Parameter]
+    public string? TableHeaderClass { get; set; }
+    [Parameter]
+    public string? TableBodyClass { get; set; }
+    [Parameter]
+    public bool LoadingFlagment { get; set; } = false;
+    [Parameter]
+    public string LoadingDisplayText { get; set; } = "Loading...";
+    [Parameter]
+    public string NoDataDisplayText { get; set; } = "No Data";
+    [Parameter]
+    public IEnumerable<TItem>? Items { get; set; }
+
+}
+
+<NHTable Columns="@(string.Join( ";",typeof(TItem).GetProperties().Select(s=>s.Name)))"
+    HasDataFlagment="@Items.HasData()"
+    LoadingDisplayText="@LoadingDisplayText"
+    LoadingFlagment="@LoadingFlagment"
+    TableBodyClass="@TableBodyClass"
+    NoDataDisplayText="@NoDataDisplayText"
+    TableClass="@TableClass"
+    TableHeaderClass="@TableHeaderClass">
+    @code{
+        PropertyInfo[] properties = typeof(TItem).GetProperties();
+    }
+    @foreach(var item in Items!)
+    {
+        <tr>
+            @foreach(var property in properties)
+            {
+                <td>@property.GetValue(item)</td>
+            }
+        </tr>
+    }
+</NHTable>
+    

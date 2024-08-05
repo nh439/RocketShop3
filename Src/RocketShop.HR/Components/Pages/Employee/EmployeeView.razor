@@ -17,7 +17,7 @@
 
     List<UserView>? users = new List<UserView>();
     const string Headers = "Employee Id;Firstname;Lastname;Email;Position;Department;Status;";
-    int length = Headers.Split(";").Length;
+    bool isLoading = true;
     [CascadingParameter]
     public AuthenticationState? state { get; set; }
     protected override async Task OnInitializedAsync()
@@ -61,7 +61,7 @@
 
             })
         );
-
+        isLoading=false;
         await InvokeAsync(StateHasChanged);
     }
 }
@@ -94,41 +94,37 @@
             </button>
             <br />
             <br />
-            <table class="table table-hover table-bordered">
-                <TableHeader CSSClass="table-dark" Headers="@Headers" />
-                <tbody class="table-striped">
-                    @if (!users.HasData())
-                    {
-                        <tr>
-                            <td colspan="@length">No Employees</td>
-                        </tr>
-                    }
-                    else
-                    {
-                        @foreach (var user in users!)
-                        {
-                            <tr>
-                                <td>@user.EmployeeCode</td>
-                                <td>@user.Firstname</td>
-                                <td>@user.Surname</td>
-                                <td>@user.Email</td>
-                                <td>@user.Position</td>
-                                <td>@user.Department</td>
-                                <td>@(user.Active ? "Active" : "Inactive")</td>
-                                <td>
-                                    <button class="bg-teal-600 hover:bg-teal-800 text-white font-bold py-1 px-2 rounded-full">
-                                        <i class="eye icon" />
-                                    </button>
-                                    <button class="bg-red-600 hover:bg-red-800 text-white font-bold py-1 px-2 rounded-full">
-                                        <i class="trash icon" />
-                                    </button>
+            <NHTable 
+                TableClass="table table-hover table-bordered"
+                TableHeaderClass="table-dark"
+                TableBodyClass="table-info" 
+                Columns="@Headers" 
+                NoDataDisplayText="No Employees" 
+                HasDataFlagment="@users.HasData()"
+                LoadingFlagment="@isLoading"
+                LoadingDisplayText="Loading...">
+                @foreach (var user in users!)
+                {
+                    <tr>
+                        <td>@user.EmployeeCode</td>
+                        <td>@user.Firstname</td>
+                        <td>@user.Surname</td>
+                        <td>@user.Email</td>
+                        <td>@user.Position</td>
+                        <td>@user.Department</td>
+                        <td>@(user.Active ? "Active" : "Inactive")</td>
+                        <td>
+                            <button class="bg-teal-600 hover:bg-teal-800 text-white font-bold py-1 px-2 rounded-full">
+                                <i class="eye icon" />
+                            </button>
+                            <button class="bg-red-600 hover:bg-red-800 text-white font-bold py-1 px-2 rounded-full">
+                                <i class="trash icon" />
+                            </button>
 
-                                </td>
-                            </tr>
-                        }
-                    }
-                </tbody>
-            </table>
+                        </td>
+                    </tr>
+                }
+            </NHTable>            
         </Authorized>
         <NotAuthorized>
             Not Authorized

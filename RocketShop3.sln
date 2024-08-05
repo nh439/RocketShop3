@@ -29,7 +29,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{F405D7CF-2
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RocketShop.Test", "Test\RocketShop.Test\RocketShop.Test.csproj", "{12F28E5B-9284-4F56-BA3D-90BF1F25AB60}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RocketShop.SharedBlazor", "Src\RocketShop.SharedBlazor\RocketShop.SharedBlazor.csproj", "{A2EDB4D5-3791-4F4D-9C24-335937D86E43}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RocketShop.SharedBlazor", "Src\RocketShop.SharedBlazor\RocketShop.SharedBlazor.csproj", "{A2EDB4D5-3791-4F4D-9C24-335937D86E43}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
