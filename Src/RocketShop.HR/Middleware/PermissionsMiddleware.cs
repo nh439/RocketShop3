@@ -14,24 +14,29 @@ namespace RocketShop.HR.Middleware
 
         public async Task Invoke(HttpContext httpContext)
         {
-            var permissions = httpContext.User.Claims.Where(x => x.Type == "Permission").ToList();
-            var role = httpContext.User.Claims.Where(x => x.Type == "Role").ToList();           
-            if (!permissions.HasData() || !role.HasData())
-            {
-                var token = getRoleAndPermissionService.BuildToken(httpContext).GetRight();
-                if (!permissions.HasData())
-                {
-                    var newPermissions = await getRoleAndPermissionService.GetMyPermissions(token!);
-                    var newClaims = newPermissions.GetRight()!.Select(s => new Claim("Permission", s));
-                    httpContext.User.AddIdentity(new ClaimsIdentity(newClaims));
-                }
-                if (!role.HasData())
-                {
-                    var newPermissions = await getRoleAndPermissionService.GetMyRoles(token!);
-                    var newClaims = newPermissions.GetRight()!.Select(s => new Claim("Role", s));
-                    httpContext.User.AddIdentity(new ClaimsIdentity(newClaims));
-                }
 
+            if (httpContext.User.Identity.IsNotNull() && httpContext.User.Identity.IsAuthenticated)
+            {
+
+                var permissions = httpContext.User.Claims.Where(x => x.Type == "Permission").ToList();
+                var role = httpContext.User.Claims.Where(x => x.Type == "Role").ToList();
+                if (!permissions.HasData() || !role.HasData())
+                {
+                    var token = getRoleAndPermissionService.BuildToken(httpContext).GetRight();
+                    if (!permissions.HasData())
+                    {
+                        var newPermissions = await getRoleAndPermissionService.GetMyPermissions(token!);
+                        var newClaims = newPermissions.GetRight()!.Select(s => new Claim("Permission", s));
+                        httpContext.User.AddIdentity(new ClaimsIdentity(newClaims));
+                    }
+                    if (!role.HasData())
+                    {
+                        var newPermissions = await getRoleAndPermissionService.GetMyRoles(token!);
+                        var newClaims = newPermissions.GetRight()!.Select(s => new Claim("Role", s));
+                        httpContext.User.AddIdentity(new ClaimsIdentity(newClaims));
+                    }
+
+                }
             }
             await next(httpContext);
         }

@@ -1,14 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
-using RocketShop.Database;
 using RocketShop.Database.EntityFramework;
-using RocketShop.Database.Extension;
-using RocketShop.Database.Model.Identity;
 using RocketShop.Database.Model.Identity.Views;
-using RocketShop.Database.NonEntityFramework.QueryGenerator;
-using RocketShop.Framework.ControllerFunction;
+using RocketShop.Identity.IdentityBaseServices;
 
 namespace RocketShop.Identity.Controllers
 {
@@ -17,7 +11,7 @@ namespace RocketShop.Identity.Controllers
     public class ConnectController(ILogger<ConnectController> logger,
         IConfiguration configuration,
         IdentityContext context) : 
-        APIControllerServices(logger)
+        ControllerFunction(logger)
     {
 
         [HttpGet] 

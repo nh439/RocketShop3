@@ -4,6 +4,7 @@
 @using RocketShop.HR.ServicePermissions
 @using RocketShop.HR.Services
 @using RocketShop.SharedBlazor.Table
+@using Blazored.Typeahead
 @inject IUserServices userServices
 @rendermode InteractiveServer
 
@@ -86,10 +87,10 @@
                     </div>
                 </div>
             </div>
-            <button class="bg-blue-600 hover:bg-blue-800 text-white font-bold py-1 px-4 rounded-full">
+            <a href="/employee/create" class="bg-blue-600 hover:bg-blue-800 text-white font-bold py-1 px-4 rounded-full mx-1">
                 <i class="plus icon" />  Add Employee
-            </button>
-            <button class="bg-green-600 hover:bg-green-800 text-white font-bold py-1 px-4 rounded-full">
+            </a>
+            <button class="bg-green-600 hover:bg-green-800 text-white font-bold py-1 px-4 rounded-full mx-1">
                 <i class="table icon" /> Export
             </button>
             <br />

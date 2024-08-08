@@ -1,10 +1,7 @@
 ﻿using LanguageExt;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json.Linq;
-using RocketShop.Framework.ControllerFunction;
 using RocketShop.Framework.Extension;
 using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 
 namespace RocketShop.Identity.IdentityBaseServices
 {

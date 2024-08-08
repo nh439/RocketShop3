@@ -19,7 +19,7 @@
     <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="8.0.6" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.20.1" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.4" />
-    <PackageReference Include="Serilog" Version="4.0.0" />
+    <PackageReference Include="Serilog" Version="4.0.1" />
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
@@ -28,6 +28,7 @@
   <ItemGroup>
     <ProjectReference Include="..\RocketShop.Database\RocketShop.Database.csproj" />
     <ProjectReference Include="..\RocketShop.Framework\RocketShop.Framework.csproj" />
+    <ProjectReference Include="..\RocketShop.SharedBlazor\RocketShop.SharedBlazor.csproj" />
     <ProjectReference Include="..\RocketShop.Shared\RocketShop.Shared.csproj" />
   </ItemGroup>
 

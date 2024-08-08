@@ -1,0 +1,133 @@
+﻿@page "/employee/create"
+@using Blazored.Typeahead
+@using RocketShop.Database.Model.Identity.Views
+@using RocketShop.HR.Services
+@using RocketShop.HR.ServicePermissions
+@using RocketShop.Database.Model.Identity
+@using RocketShop.Framework.Extension
+@inject NavigationManager navigationManager;
+@inject IUserServices userService
+@rendermode InteractiveServer
+
+@code {
+    [CascadingParameter]
+    public AuthenticationState? state { get; set; }
+    User newUser = new User();
+    UserInformation newInformation = new UserInformation();
+    List<UserView> users = new List<UserView>();
+    List<Role> roles = new List<Role>();
+    UserView? selectedManager;
+    protected override async Task OnInitializedAsync()
+    {
+        state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        state.If(x => x!.User.Identity!.IsAuthenticated,
+         _ =>
+        {
+        },
+        _ => navigationManager.NavigateTo("/login", true));
+        await InvokeAsync(StateHasChanged);
+    }
+    public async Task<IEnumerable<UserView>> SearchUsers(string searchTerm)
+    {
+        var result = await userService.ListUsers(searchTerm);
+        return result.GetRight()!;
+    }
+
+}
+<CascadingAuthenticationState>
+    <AuthorizeView Policy="@ServicePermission.AllHRServiceName">
+        <Authorized Context="authContext">
+            <center>
+                <h2 class="text-4xl font-extrabold dark:text-black">Create Employee</h2>
+            </center>
+            <br />
+            <br />
+            <br />
+            <h3 class="text-3xl font-bold dark:text-black">General Information</h3>
+            <hr />
+            <br />
+            <div class="form-group">
+                <label for="text">Employee Code</label>
+                <input id="text" name="text" @bind-value="newUser.EmployeeCode" type="text" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="text4">Prefix</label>
+                <input id="text4" name="text4" @bind-value="newUser.Prefix" type="text" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="text1">Firstname</label>
+                <input id="text1" name="text1" @bind-value="newUser.Firstname" type="text" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="text2">Surname</label>
+                <input id="text2" name="text2" @bind-value="newUser.Surname" type="text" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="text3">Username</label>
+                <input id="text3" name="text3" @bind-value="newUser.UserName" type="text" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="select">Gender</label>
+                <div>
+                    <select id="select" name="select" @bind="newInformation.Gender" class="form-select">
+                        <option value="M">Male</option>
+                        <option value="F">Female</option>
+                        <option value="">Other</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="text5">Email</label>
+                <input id="text5" name="text5" @bind-value="newUser.Email" type="text" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="text6">Phone Number</label>
+                <input id="text6" name="text6" @bind-value="newUser.PhoneNumber" type="text" class="form-control">
+            </div>
+            <br />
+            <br />
+            <h3 class="text-3xl font-bold dark:text-black">Employee Information</h3>
+            <hr />
+            <div class="form-group">
+                <label for="text2">Position</label>
+                <input id="text2" name="text2" type="text" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="text3">Department</label>
+                <input id="text3" name="text3" type="text" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="text4">Manager</label>
+                <BlazoredTypeahead SearchMethod="SearchUsers"
+                                   @bind-Value="selectedManager"
+                EnableDropDown="true" Context="userContext">
+                    <SelectedTemplate>
+                        @userContext.Firstname @userContext.Surname
+                    </SelectedTemplate>
+                    <ResultTemplate>
+                        @userContext.Firstname @userContext.Surname
+                    </ResultTemplate>
+                </BlazoredTypeahead>
+            </div>
+            <div class="form-group">
+                <label for="text">Brith Date</label>
+                <input id="text" name="text" type="date" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="text1">Start Work Date</label>
+                <input id="text1" name="text1" type="date" class="form-control">
+            </div>
+            <br />
+            <br />
+            <br />
+            <button type="button" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 "><i class="plus icon" /> Create Employee</button>
+            <br />
+            <br />
+            <br />
+
+        </Authorized>
+        <NotAuthorized>
+            <h2 class="text-4xl font-extrabold dark:text-black">Access Deined</h2>
+        </NotAuthorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>

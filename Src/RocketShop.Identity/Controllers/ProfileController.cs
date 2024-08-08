@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
-using RocketShop.Framework.ControllerFunction;
 using RocketShop.Framework.Extension;
 using RocketShop.Identity.IdentityBaseServices;
 using RocketShop.Identity.Service;

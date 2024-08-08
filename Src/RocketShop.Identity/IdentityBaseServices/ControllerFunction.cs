@@ -1,22 +1,11 @@
 ﻿using LanguageExt;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using RocketShop.Framework.Extension;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace RocketShop.Framework.ControllerFunction
+namespace RocketShop.Identity.IdentityBaseServices
 {
-    public class APIControllerServices : ControllerBase
+    public class ControllerFunction(ILogger<ControllerFunction> logger) : Controller
     {
-        readonly ILogger logger;
-        public APIControllerServices(ILogger<APIControllerServices> logger)
-        {
-            this.logger = logger;
-        }
         protected IActionResult Respond<T>(Func<T> handler,
             Action<Exception>? catchOperation = null,
             int returnCodeWhenServerError = 500,
@@ -27,7 +16,7 @@ namespace RocketShop.Framework.ControllerFunction
             try
             {
                 var result = handler();
-                if(result.IsNull())
+                if (result.IsNull())
                     return NoContent();
                 if (result is IActionResult)
                     return (result as IActionResult)!;
@@ -46,7 +35,7 @@ namespace RocketShop.Framework.ControllerFunction
                 return StatusCode(returnCodeWhenServerError, errorObject);
             }
         }
-        protected async Task< IActionResult> RespondAsync<T>(Func<Task<T>> handler,
+        protected async Task<IActionResult> RespondAsync<T>(Func<Task<T>> handler,
             Action<Exception>? catchOperation = null,
             int returnCodeWhenServerError = 500,
             string? returnErrorMessage = null,
@@ -74,6 +63,5 @@ namespace RocketShop.Framework.ControllerFunction
             }
 
         }
-
     }
 }
