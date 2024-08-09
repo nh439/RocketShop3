@@ -1,0 +1,61 @@
+﻿@using RocketShop.Framework.Extension
+@using RocketShop.SharedBlazor.Modal
+@using RocketShop.SharedBlazor.SharedBlazorService.Scope
+@inject IDialogServices dialogService
+
+
+@code {
+    Modal? modal;
+    [Parameter]
+    public string LoadingTitle { get; set; } = "Loading...";
+    [Parameter]
+    public string LoadingMessage { get; set; } = "Loading...";
+    public void Open(string? loadingMessage = null,string? loadingTitle= null)
+    {
+        if (loadingMessage.HasMessage())
+            LoadingMessage = loadingMessage!;
+        if (loadingTitle.HasData())
+            LoadingTitle = loadingTitle!;
+        StateHasChanged();
+        modal!.Show();
+    }
+    public void SetText(string newMessage,string? newTitle = null)
+    {
+        LoadingMessage = newMessage;
+        if(newTitle.HasMessage())
+            LoadingTitle = newTitle!;
+        StateHasChanged();
+    }
+    public void Close() => modal!.Close();
+
+    public async Task Then(bool success, string detail, string? header = null, string? navigate = null)
+    {
+        Close();
+        if (navigate.HasMessage())
+            await dialogService.CustomWithNavigate(success, detail, header ?? string.Empty, navigate!);
+        else
+        {
+            if (success)
+                await dialogService.Success(detail, header);
+            else
+                await dialogService.Failed(detail, header);
+        }
+    }
+
+
+}
+<link rel="stylesheet" href="./CSS/Loading.css" />
+<Modal @ref="modal" Center="true" Title="@LoadingTitle">
+    <RocketShop.SharedBlazor.Modal.ModalCompenment.ModalBody>
+        <center>
+            <br />
+            <br />
+            <div class="loader" style="width:150px;height:150px;"></div>
+            <br />
+            <br />
+            <h2 class="text-3xl font-bold"><b>@LoadingMessage</b></h2>
+            <br />
+            <br />
+        </center>
+    </RocketShop.SharedBlazor.Modal.ModalCompenment.ModalBody>
+</Modal>

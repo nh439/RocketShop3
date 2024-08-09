@@ -3,6 +3,8 @@
     public string? Title { get; set; }
     [Parameter]
     public RenderFragment ChildContent { get; set; }
+    [Parameter]
+    public bool Center { get; set; } = false;
     bool isShow = false;
     const string OnShowCSS =
         @"display: block;
@@ -25,7 +27,7 @@
 <!-- Modal -->
 <div class="modal fade @(isShow ? "show bg" : "")" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="@(isShow ? "false":"true")"
      style="@(isShow ? OnShowCSS :"display:none;")">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog @(Center ? "modal-dialog-centered":string.Empty)" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="exampleModalLabel">@Title</h5>

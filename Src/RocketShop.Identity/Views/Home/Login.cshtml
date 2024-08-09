@@ -6,6 +6,7 @@
 *@
 @{
     Option<string> errorMsg = ViewBag.Err;
+    string? returnUrl = ViewBag.ReturnUrl;
 }
 <div class="row">
     <div class="col"></div>
@@ -47,8 +48,8 @@
                     </div>
                     <div class="form-group">
                         <button name="submit" type="submit" class="btn btn-primary btn-block" asp-controller="home" asp-action="Login">Sign In</button>
-                        <a name="btn" class="btn btn-warning btn-block" href="/home/GoogleLogin?returnUrl=" @ViewBag.ReturnUrl"><i class="google icon"></i>Sign In With Google</a>
-                    <a name="btn" class="btn btn-secondary btn-block" href="/forgotpassword" @ViewBag.ReturnUrl">Forgot Password</a>
+                        <a name="btn" class="btn btn-warning btn-block" href="/home/GoogleLogin?returnUrl=@ViewBag.ReturnUrl"><i class="google icon"></i>Sign In With Google</a>
+                    <a name="btn" class="btn btn-secondary btn-block" href="/forgotpassword">Forgot Password</a>
                     </div>
                 </!form>
             </div>

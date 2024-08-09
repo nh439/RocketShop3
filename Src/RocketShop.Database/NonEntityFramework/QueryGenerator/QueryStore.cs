@@ -44,7 +44,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         public object? Value { get; set; }
         public string ColumnName { get; set; }
         public bool RelatedOrCondition { get; set; } = false;
-        public object[]? ValueIn { get; set; }
+        public IEnumerable<object>? ValueIn { get; set; }
         public object? ValueMin { get; set; }
         public object? ValueMax { get; set; }
         internal QueryStore queryStore { get; set; }

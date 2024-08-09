@@ -21,4 +21,8 @@
     <ProjectReference Include="..\RocketShop.Shared\RocketShop.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="wwwroot\CSS\Loading.css" />
+  </ItemGroup>
+
 </Project>

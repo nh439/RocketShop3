@@ -13,7 +13,7 @@ namespace RocketShop.HR.Repository
             .Select(nameof(UserRole.UserId))
             .ToArrayAsync<string>(transaction);
 
-        public async Task<int[]> GetRoleIdByUsers(int userId, IDbConnection connection, IDbTransaction? transaction = null) =>
+        public async Task<int[]> GetRoleIdByUsers(string userId, IDbConnection connection, IDbTransaction? transaction = null) =>
             await connection.CreateQueryStore(TableConstraint.UserRole)
             .Where (nameof(UserRole.UserId), userId)
             .Select(nameof(UserRole.RoleId))
@@ -51,7 +51,7 @@ namespace RocketShop.HR.Repository
             IDbTransaction? transaction = null) =>
             await connection.CreateQueryStore(TableConstraint.UserRole)
             .Where(x=>x.Where(nameof(UserRole.UserId),userId)
-            .WhereIn(nameof(UserRole.UserId),roleIds))
+            .WhereIn(nameof(UserRole.RoleId),roleIds))
             .DeleteAsync(transaction, 200);
 
         public async Task<int> RemoveUsersByRole(int roleId,

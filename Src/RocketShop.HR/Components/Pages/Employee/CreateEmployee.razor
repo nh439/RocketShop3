@@ -5,8 +5,14 @@
 @using RocketShop.HR.ServicePermissions
 @using RocketShop.Database.Model.Identity
 @using RocketShop.Framework.Extension
+@using RocketShop.SharedBlazor.Modal
+@using RocketShop.SharedBlazor.SharedBlazorService.Scope
+@using RocketShop.SharedBlazor.SharedFunction
+@using RocketShop.SharedBlazor.Tools
 @inject NavigationManager navigationManager;
 @inject IUserServices userService
+@inject IRoleServices roleService
+@inject IDialogServices dialogServices;
 @rendermode InteractiveServer
 
 @code {
@@ -15,15 +21,24 @@
     User newUser = new User();
     UserInformation newInformation = new UserInformation();
     List<UserView> users = new List<UserView>();
-    List<Role> roles = new List<Role>();
+    IList<Role> selectedRoles = new List<Role>();
     UserView? selectedManager;
+    LoadingModal loading = new LoadingModal();
+    bool employeeCodeInvaild = false,
+    firstNameInvaild = false,
+    surNameInvaild = false,
+    emailInvaild = false,
+    startWorkInvaild = false;
+
     protected override async Task OnInitializedAsync()
     {
         state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         state.If(x => x!.User.Identity!.IsAuthenticated,
          _ =>
-        {
-        },
+         {
+             newUser.EmployeeCode = newUser.Id;
+             newInformation.StartWorkDate = DateTime.Now.Date;
+         },
         _ => navigationManager.NavigateTo("/login", true));
         await InvokeAsync(StateHasChanged);
     }
@@ -32,7 +47,63 @@
         var result = await userService.ListUsers(searchTerm);
         return result.GetRight()!;
     }
-
+    public async Task<IEnumerable<Role>> SearchRole(string searchTerm)
+    {
+        var result = await roleService.ListRoles(searchTerm);
+        return result.GetRight()!;
+    }
+    async void Submit()
+    {
+        employeeCodeInvaild = !newUser.EmployeeCode.HasMessage();
+        firstNameInvaild = !newUser.Firstname.HasMessage();
+        surNameInvaild = !newUser.Surname.HasMessage();
+        emailInvaild = !newUser.Email.HasMessage() || !newUser.Email!.Contains("@");
+        startWorkInvaild = !newInformation.StartWorkDate.HasValue;
+        if (employeeCodeInvaild ||
+        firstNameInvaild ||
+        surNameInvaild ||
+        emailInvaild ||
+        startWorkInvaild)
+            return;
+        loading.Open("Creating Employee...", "Create Employee");
+        try
+        {
+            newInformation.UserId = newUser.Id;
+            if (!newUser.UserName.HasMessage())
+                newUser.UserName = newUser.Email;
+            if (selectedManager.IsNotNull())
+                newInformation.ManagerId = selectedManager!.UserId;
+            newInformation.StartWorkDate = newInformation.StartWorkDate!.Value.Date.ToUniversalTime();
+            if (newInformation.BrithDay.HasValue)
+                newInformation.BrithDay = newInformation.BrithDay.Value.ToUniversalTime();
+            var result = await userService.CreateUser(newUser, newInformation);
+            if(result.IsLeft || !result.GetRight())
+            {
+                if (result.IsLeft)
+                    throw result.GetLeft()!;
+                throw new Exception("Error While Creating Employees");
+            }
+            if (selectedRoles.HasData())
+            {
+                loading.SetText("Assigning Roles...");
+                await Task.Delay(10);
+                var assignResult = await roleService.SetRoleByUser(newUser.Id,
+                     selectedRoles.Select(s => s.Id).ToArray());
+                if (assignResult.IsLeft)
+                    throw assignResult.GetLeft();
+            }
+            await loading.Then(true, $"Create Employee '{newUser.EmployeeCode}' Success", "Success", "/employee");
+        }
+        catch(Exception x)
+        {
+            await userService.DeleteUser(newUser.Id);
+            await loading.Then(false, x.Message, "Failed");
+        }
+        finally
+        {
+            
+        }
+    }
 }
 <CascadingAuthenticationState>
     <AuthorizeView Policy="@ServicePermission.AllHRServiceName">
@@ -48,24 +119,29 @@
             <br />
             <div class="form-group">
                 <label for="text">Employee Code</label>
-                <input id="text" name="text" @bind-value="newUser.EmployeeCode" type="text" class="form-control">
+                <input id="text" name="text" @bind-value="newUser.EmployeeCode" type="text" class="form-control @TextValidator.InvalidDisplay(employeeCodeInvaild)">
             </div>
+            <br />
             <div class="form-group">
                 <label for="text4">Prefix</label>
                 <input id="text4" name="text4" @bind-value="newUser.Prefix" type="text" class="form-control">
             </div>
+            <br />
             <div class="form-group">
                 <label for="text1">Firstname</label>
-                <input id="text1" name="text1" @bind-value="newUser.Firstname" type="text" class="form-control">
+                <input id="text1" name="text1" @bind-value="newUser.Firstname" type="text" class="form-control @TextValidator.InvalidDisplay(firstNameInvaild)">
             </div>
+            <br />
             <div class="form-group">
                 <label for="text2">Surname</label>
-                <input id="text2" name="text2" @bind-value="newUser.Surname" type="text" class="form-control">
+                <input id="text2" name="text2" @bind-value="newUser.Surname" type="text" class="form-control @TextValidator.InvalidDisplay(surNameInvaild)">
             </div>
+            <br />
             <div class="form-group">
                 <label for="text3">Username</label>
                 <input id="text3" name="text3" @bind-value="newUser.UserName" type="text" class="form-control">
             </div>
+            <br />
             <div class="form-group">
                 <label for="select">Gender</label>
                 <div>
@@ -76,10 +152,12 @@
                     </select>
                 </div>
             </div>
+            <br />
             <div class="form-group">
                 <label for="text5">Email</label>
-                <input id="text5" name="text5" @bind-value="newUser.Email" type="text" class="form-control">
+                <input id="text5" name="text5" @bind-value="newUser.Email" type="text" class="form-control @TextValidator.InvalidDisplay(emailInvaild)">
             </div>
+            <br />
             <div class="form-group">
                 <label for="text6">Phone Number</label>
                 <input id="text6" name="text6" @bind-value="newUser.PhoneNumber" type="text" class="form-control">
@@ -88,19 +166,22 @@
             <br />
             <h3 class="text-3xl font-bold dark:text-black">Employee Information</h3>
             <hr />
+            <br />
             <div class="form-group">
                 <label for="text2">Position</label>
-                <input id="text2" name="text2" type="text" class="form-control">
+                <input id="text2" name="text2" type="text" class="form-control" @bind-value="newInformation.CurrentPosition">
             </div>
+            <br />
             <div class="form-group">
                 <label for="text3">Department</label>
-                <input id="text3" name="text3" type="text" class="form-control">
+                <input id="text3" name="text3" type="text" class="form-control" @bind-value="newInformation.Department">
             </div>
+            <br />
             <div class="form-group">
                 <label for="text4">Manager</label>
                 <BlazoredTypeahead SearchMethod="SearchUsers"
                                    @bind-Value="selectedManager"
-                EnableDropDown="true" Context="userContext">
+                                   EnableDropDown="true" Context="userContext">
                     <SelectedTemplate>
                         @userContext.Firstname @userContext.Surname
                     </SelectedTemplate>
@@ -109,18 +190,34 @@
                     </ResultTemplate>
                 </BlazoredTypeahead>
             </div>
+            <br />
             <div class="form-group">
                 <label for="text">Brith Date</label>
-                <input id="text" name="text" type="date" class="form-control">
+                <input id="text" name="text" type="date" class="form-control" @bind-value="newInformation.BrithDay">
             </div>
+            <br />
             <div class="form-group">
                 <label for="text1">Start Work Date</label>
-                <input id="text1" name="text1" type="date" class="form-control">
+                <input id="text1" name="text1" type="date" class="form-control @TextValidator.InvalidDisplay(startWorkInvaild)" @bind-value="newInformation.StartWorkDate">
+            </div>
+            <br />
+            <div class="form-group">
+                <label for="text4">User Roles</label>
+                <BlazoredTypeahead SearchMethod="SearchRole"
+                                   @bind-Values="selectedRoles"
+                                   EnableDropDown="true" Context="roleContext">
+                    <SelectedTemplate>
+                        @roleContext.RoleName
+                    </SelectedTemplate>
+                    <ResultTemplate>
+                        @roleContext.RoleName
+                    </ResultTemplate>
+                </BlazoredTypeahead>
             </div>
             <br />
             <br />
             <br />
-            <button type="button" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 "><i class="plus icon" /> Create Employee</button>
+            <button type="button" @onclick="Submit" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 "><i class="plus icon" /> Create Employee</button>
             <br />
             <br />
             <br />
@@ -131,3 +228,6 @@
         </NotAuthorized>
     </AuthorizeView>
 </CascadingAuthenticationState>
+<LoadingModal @ref="loading">
+
+</LoadingModal>

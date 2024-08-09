@@ -20,6 +20,70 @@
     <link href="_content/Blazored.Typeahead/blazored-typeahead.css" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/png" href="favicon.png" />
+    <script>
+        function Failed(message, header = 'Sorry...') {
+            Swal.fire({
+                icon: 'error',
+                title: header,
+                text: message,
+            });
+
+        }
+        function Success(message, header = 'congratulations') {
+            Swal.fire({
+                icon: 'success',
+                title: header,
+                text: message,
+            });
+        }
+        function Raw(icon, header, detail) {
+            Swal.fire({
+                icon: icon,
+                title: header,
+                text: detail
+            });
+        }
+        function Raw(icon, header, detail, footer) {
+            Swal.fire({
+                icon: icon,
+                title: header,
+                text: detail,
+                footer: footer
+            });
+        }
+        function RawWithHtml(icon, header, detail) {
+            Swal.fire({
+                title: header,
+                icon: icon,
+                html:
+                    detail
+            });
+        }
+        function RawWithTimer(icon, header, detail, timer) {
+            Swal.fire({
+                icon: icon,
+                title: header,
+                Text: detail,
+                showConfirmButton: false,
+                timer: timer
+            });
+        }
+        function RawWithNavigate(icon, header, detail, link, ButtonColor = '#3085d6', ButtonText = 'Ok') {
+            Swal.fire({
+                title: header,
+                text: detail,
+                icon: icon,
+                showCancelButton: false,
+                confirmButtonColor: ButtonColor,
+                confirmButtonText: ButtonText
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = link;
+                }
+            })
+        }
+
+    </script>
     <style>
         .table {
             text-align: center;

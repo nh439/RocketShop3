@@ -54,14 +54,14 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
             return query;
         }
 
-        public static QueryStore WhereIn(this QueryStore query, string column, params object[] values)
+        public static QueryStore WhereIn<T>(this QueryStore query, string column,IEnumerable<T> values)
         {
             query.conditions.SafeAdd(new QueryCondition
             {
                 ColumnName = column,
                 Operator = SqlOperator.In,
                 RelatedOrCondition = false,
-                ValueIn = values
+                ValueIn = values.Select(s=> s as object)!
             });
             return query;
         }
