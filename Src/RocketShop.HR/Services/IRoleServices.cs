@@ -17,6 +17,7 @@ namespace RocketShop.HR.Services
         Task<Either<Exception, List<Role>>> ListRoles(string? searchName = null, int? page = null, int per = 20);
         Task<Either<Exception, List<Role>>> ListRoleByUsers(string userId, int? page = null, int per = 20);
         Task<Either<Exception, Option<Role>>> GetRole(int roleId);
+        Task<Either<Exception, int>> RevokeAllRolesByUser(string userId);
     }
     public class RoleServices(Serilog.ILogger logger,
         IConfiguration configuration,
@@ -58,8 +59,7 @@ namespace RocketShop.HR.Services
             await InvokeDapperServiceAsync(async con => { 
                 con.Open();
                 using var transaction = con.BeginTransaction();
-                var deletedResult = await userRoleRepository.RemoveRoleByUser(userId, roleIds, con, transaction);
-                Console.WriteLine(deletedResult);
+                var deletedResult = await userRoleRepository.RevokeRoles(userId, con, transaction);
                 var result =  await userRoleRepository.AddRoleByUser(userId, roleIds, con,transaction);
                 transaction.Commit();
                 con.Close();
@@ -78,6 +78,9 @@ namespace RocketShop.HR.Services
 
         public async Task<Either<Exception,Option<Role>>> GetRole(int roleId)=>
             await InvokeServiceAsync(async () => await roleRepository.GetById(roleId));
+
+        public async Task<Either<Exception, int>> RevokeAllRolesByUser(string userId) =>
+            await InvokeDapperServiceAsync(async con => await userRoleRepository.RevokeRoles(userId, con));
 
 
     }

@@ -3,8 +3,10 @@
 @using RocketShop.Framework.Extension
 @using RocketShop.HR.ServicePermissions
 @using RocketShop.HR.Services
+@using RocketShop.HR.Components.Pages.Employee.Modal
 @using RocketShop.SharedBlazor.Table
 @using Blazored.Typeahead
+@using System.Security.Claims
 @inject IUserServices userServices
 @rendermode InteractiveServer
 
@@ -16,25 +18,30 @@
     lastPageMsg = string.Empty,
     queryMsg = string.Empty;
 
+    string? searchQuery, _searchQuery;
+
     List<UserView>? users = new List<UserView>();
     const string Headers = "Employee Id;Firstname;Lastname;Email;Position;Department;Status;";
     bool isLoading = true;
     [CascadingParameter]
     public AuthenticationState? state { get; set; }
+    DeleteEmployeeModal? deleteModal;
+    string? currentUser;
     protected override async Task OnInitializedAsync()
     {
         state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         state.If(x => x.IsNotNull() && x!.User.Identity!.IsAuthenticated, x =>
         {
+            currentUser = state.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)!.Value;
             FetchData();
         });
     }
 
     async void FetchData()
     {
-        var userResult = await userServices.ListUsers(null, currentPage);
-        var countResult = await userServices.GetCount(null);
-        var lastPageResult = await userServices.GetLastpage(null, currentPage);
+        var userResult = await userServices.ListUsers(searchQuery, currentPage);
+        var countResult = await userServices.GetCount(searchQuery);
+        var lastPageResult = await userServices.GetLastpage(searchQuery);
 
         await Task.WhenAll(
             Task.Factory.StartNew(() =>
@@ -62,8 +69,24 @@
 
             })
         );
-        isLoading=false;
+        isLoading = false;
         await InvokeAsync(StateHasChanged);
+    }
+    void DeleteBtnClicked(UserView user)
+    {
+        deleteModal!.AfterDeletedSuccessAction = () => FetchData();
+        deleteModal!.Open(user.UserId, user.EmployeeCode);
+    }
+    void SetPage(int newPage)
+    {
+        currentPage = newPage;
+        FetchData();
+    }
+    void SetSearch()
+    {
+        currentPage = 1;
+        searchQuery = _searchQuery;
+        FetchData();
     }
 }
 <CascadingAuthenticationState>
@@ -79,15 +102,19 @@
                 <div Class="row">
                     <div Class="col-5">
                         <div class="input-group mb-3">
-                            <input type="text" class="form-control" placeholder="Actvity Name" aria-label="Recipient's username" aria-describedby="basic-addon2">
+                            <input type="text" class="form-control" @bind-value="_searchQuery" placeholder="Employee Name" aria-label="Recipient's username" aria-describedby="basic-addon2">
                             <div class="input-group-append">
-                                <button class="btn btn-outline-info" type="button"><i class="search icon"></i> Search</button>
+                                <button class="btn btn-outline-info" type="button"@onclick="SetSearch" ><i class="search icon"></i> Search</button>
                             </div>
                         </div>
                     </div>
+                    <div class="col-5"></div>
+                    <div class="col-2">
+                        <h3 class="text-2xl font-semibold">Count : @count</h3>
+                    </div>
                 </div>
             </div>
-            <a href="/employee/create" class="bg-blue-600 hover:bg-blue-800 text-white font-bold py-1 px-4 rounded-full mx-1">
+            <a href="/employee/create" class="bg-blue-600 hover:bg-blue-800 text-white font-bold py-1.5 px-4 rounded-full mx-1">
                 <i class="plus icon" />  Add Employee
             </a>
             <button class="bg-green-600 hover:bg-green-800 text-white font-bold py-1 px-4 rounded-full mx-1">
@@ -95,15 +122,14 @@
             </button>
             <br />
             <br />
-            <NHTable 
-                TableClass="table table-hover table-bordered"
-                TableHeaderClass="table-dark"
-                TableBodyClass="table-info" 
-                Columns="@Headers" 
-                NoDataDisplayText="No Employees" 
-                HasDataFlagment="@users.HasData()"
-                LoadingFlagment="@isLoading"
-                LoadingDisplayText="Loading...">
+            <NHTable TableClass="table table-hover table-bordered"
+                     TableHeaderClass="table-dark"
+                     TableBodyClass="table-info"
+                     Columns="@Headers"
+                     NoDataDisplayText="No Employees"
+                     HasDataFlagment="@users.HasData()"
+                     LoadingFlagment="@isLoading"
+                     LoadingDisplayText="Loading...">
                 @foreach (var user in users!)
                 {
                     <tr>
@@ -118,17 +144,46 @@
                             <button class="bg-teal-600 hover:bg-teal-800 text-white font-bold py-1 px-2 rounded-full">
                                 <i class="eye icon" />
                             </button>
-                            <button class="bg-red-600 hover:bg-red-800 text-white font-bold py-1 px-2 rounded-full">
-                                <i class="trash icon" />
-                            </button>
-
+                            @if (user.UserId != currentUser)
+                            {
+                                <button class="bg-red-600 hover:bg-red-800 text-white font-bold py-1 px-2 rounded-full" @onclick="()=>DeleteBtnClicked(user)">
+                                    <i class="trash icon" />
+                                </button>
+                            }
                         </td>
                     </tr>
                 }
-            </NHTable>            
+            </NHTable>
+            <br />
+            <nav aria-label="Page navigation example">
+                <ul class="pagination justify-content-center">
+                    @if (currentPage > 1)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" @onclick="()=>SetPage(currentPage-1)" tabindex="-1">Previous</a>
+                        </li>
+                    }
+                    @for (int idx = -5; idx <= 5; idx++)
+                    {
+                        var destional = currentPage + idx;
+                        @if (destional > 0 && destional <= lastPage)
+                        {
+                            <li class="page-item @(idx==0 ? "active":"")"><a class="page-link" @onclick="()=>SetPage(destional)">@destional</a></li>
+                        }
+                    }
+                    @if (currentPage < lastPage)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" @onclick="()=>SetPage(currentPage+1)">Next</a>
+                        </li>
+                    }
+                </ul>
+            </nav>
         </Authorized>
         <NotAuthorized>
             Not Authorized
         </NotAuthorized>
     </AuthorizeView>
 </CascadingAuthenticationState>
+
+<DeleteEmployeeModal @ref="deleteModal" />

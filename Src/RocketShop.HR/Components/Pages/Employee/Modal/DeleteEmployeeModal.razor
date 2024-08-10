@@ -1,0 +1,65 @@
+﻿@using RocketShop.Framework.Extension
+@using RocketShop.HR.Services
+@using RocketShop.SharedBlazor.Modal
+@using RocketShop.SharedBlazor.Modal.ModalCompenment
+@using RocketShop.SharedBlazor.Tools
+@inject IUserServices userService
+@inject IRoleServices roleService
+
+@code {
+    public Action? AfterDeletedSuccessAction;
+    Modal? e;
+    string userId = string.Empty,
+    employeeCode =string.Empty;
+    LoadingModal? loading;
+    public void Open(string _userId,string _empCode)
+    {
+        userId = _userId;
+        employeeCode = _empCode;
+        e!.Show();
+    }
+    public async void DeleteAccepted()
+    {
+        e!.Close();
+        loading!.Open("Revoking User Roles...","User Deleting");
+        bool isSuccess = false;
+        string message = string.Empty;
+        try
+        {
+            var revoked = await roleService.RevokeAllRolesByUser(userId);
+            if (revoked.IsLeft)
+                throw revoked.GetLeft()!;
+            loading.SetText("Deleting User..");
+            await Task.Delay(10);
+            var result = await userService.DeleteUser(userId);
+            if (result.IsLeft)
+                throw result.GetLeft()!;
+            if (!result.GetRight()!)
+                throw new Exception("Error While Delete User");
+            message = "User Deleted";
+            isSuccess = true;
+            if (AfterDeletedSuccessAction.IsNotNull())
+                AfterDeletedSuccessAction!();
+        }
+        catch(Exception x)
+        {
+            isSuccess=false;
+            message = x.Message;
+        }
+        finally
+        {
+            await loading.Then(isSuccess, message, (isSuccess ? "Success" : "Failed"));
+        }
+    }
+}
+
+<Modal @ref="e" Title="Delete Users Confirmation">
+    <ModalBody>
+        <h2 class="text-2xl">Are You Sure TO Delete Employee : '@employeeCode'</h2>
+    </ModalBody>
+    <ModalFooter>
+        <button type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-3 py-1.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mx-1" @onclick="DeleteAccepted"><i class="check icon" /> Yes</button>
+        <button type="button" class="text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-full text-sm px-3 py-1.5 me-2 mb-2 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700 dark:border-gray-700 mx-1" @onclick="()=>e!.Close()"><i class="x icon" /> No</button>
+    </ModalFooter>
+</Modal>
+<LoadingModal @ref="loading" LoadingTitle="Deleting User" />
