@@ -1,0 +1,287 @@
+﻿@page "/employee/{id}"
+@using LanguageExt
+@using RocketShop.Database.Model.Identity
+@using RocketShop.Database.Model.Identity.Views
+@using RocketShop.Framework.Extension
+@using RocketShop.HR.ServicePermissions
+@using RocketShop.HR.Services
+@using System.Security.Claims
+@using Blazored.Typeahead
+@using RocketShop.SharedBlazor.SharedFunction
+@using RocketShop.SharedBlazor.Tools
+@inject NavigationManager navigationManager;
+@inject IUserServices userServices
+@inject IRoleServices roleServices
+@rendermode InteractiveServer
+@code {
+    [Parameter]
+    public string id { get; set; }
+    [CascadingParameter]
+    public AuthenticationState? state { get; set; }
+    User user = new User();
+    UserView? manager;
+    UserInformation information = new UserInformation();
+    IList<Role> selectedRole = new List<Role>();
+    LoadingModal? loading;
+    string currentUser = string.Empty;
+    bool notFound = false,
+    alreadyResign = false,
+    firstnameInvalid = false,
+    surnameInvalid = false,
+    emailInvalid = false,
+    usernameInvalid =false;
+    protected override async Task OnInitializedAsync()
+    {
+        state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (state!.User.IsNotNull() && state.User.Identity!.IsAuthenticated)
+        {
+            currentUser = state!.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)!.Value;
+            var userResult = await userServices.FindById(id);
+            var informationResult = await userServices.GetInformation(id);
+            await Task.WhenAll(
+            Task.Run(() =>
+            {
+                if (userResult.IsLeft || userResult.GetRight().IsNone)
+                    notFound = true;
+                else
+                {
+                    notFound = false;
+                    user = userResult.GetRight().Extract()!;
+                }
+            }),
+            Task.Run(() => information = informationResult.GetRight().Extract()!),
+            Task.Run(async () =>
+            {
+                var selectedRoleResult = await roleServices.ListRoleByUsers(id);
+                selectedRole = selectedRoleResult.GetRight()!;
+            }
+            )
+            );
+            if (information.ManagerId.HasMessage())
+            {
+                var managerResult = await userServices.GetUserViewById(information.ManagerId!);
+                if (managerResult.IsLeft || managerResult.GetRight().IsNone)
+                    manager = new UserView
+                        {
+                            UserId = information.ManagerId!,
+                            EmployeeCode = "000",
+                            Firstname = "Unknown",
+                            Surname = "Manager"
+                        };
+                else
+                    manager = managerResult.GetRight()!.Extract();
+            }
+            alreadyResign = user.Resigned;
+            await InvokeAsync(StateHasChanged);
+        }
+        else
+            navigationManager.NavigateTo("/login");
+    }
+    public async Task<IEnumerable<Role>?> RoleSearch(string searchTerm)
+    {
+        var searchResult = await roleServices.ListRoles(searchTerm, 1, 10);
+        return searchResult.GetRight();
+    }
+    public async Task<IEnumerable<UserView>> SearchManager(string searchTerm)
+    {
+        var searchResult = await userServices.ListUsers(searchTerm, 1, 10);
+        return searchResult.GetRight()!.Where(x=>x.Active);
+    }
+    public async void Submit()
+    {
+        firstnameInvalid = user.Firstname.IsNullOrEmpty();
+        surnameInvalid = user.Surname.IsNullOrEmpty();
+        emailInvalid = user.Email.IsNullOrEmpty() || !user.Email!.Contains("@");
+        usernameInvalid = user.UserName.IsNullOrEmpty();
+        if (!alreadyResign && user.Resigned)
+            information.ResignDate = DateTime.UtcNow.Date;
+        else if (alreadyResign && !user.Resigned)
+            information.ResignDate = null;
+        bool isSuccess = false;
+        string message = string.Empty;
+        loading!.Open("Saving...");
+        try
+        {
+            user.LastUpdateBy = currentUser;
+            information.LastUpdateBy = currentUser;
+            information.ManagerId = manager.IsNotNull() ? manager!.UserId : null;
+            if (information.BrithDay.HasValue)
+                information.BrithDay = information.BrithDay.Value.Date.ToUniversalTime();
+            var updateResult = await userServices.UpdateUser(user, information);
+            if (updateResult.IsLeft)
+                throw updateResult.GetLeft()!;
+            if (!updateResult.GetRight())
+                throw new Exception("Error While Updating User");
+            loading.SetText("Assigning User Roles...");
+            var updateRoleResult = await roleServices.SetRoleByUser(id, selectedRole.Select(s => s.Id).ToArray());
+            if (updateRoleResult.IsLeft)
+                throw updateRoleResult.GetLeft()!;
+            message = "Update Successful";
+            isSuccess = true;
+        }
+        catch(Exception x)
+        {
+            isSuccess = false;
+            message = x.Message;
+        }
+        finally
+        {
+            await loading.Then(isSuccess, message, isSuccess ? "Success":"Error");
+        }
+    }
+}
+<CascadingAuthenticationState>
+    <AuthorizeView Policy="@ServicePermission.AllHRServiceName">
+        <Authorized>
+            <center>
+                <div class="text-4xl">
+                    Employee Detail
+                </div>
+            </center>
+            <br />
+            <button type="button" class="text-purple bg-yellow-400 hover:bg-yellow-500 focus:outline-none focus:ring-4 focus:ring-yellow-300 font-medium rounded-full text-sm px-3 py-1.5 text-center me-2 mb-2 dark:focus:ring-yellow-900"><i class="key icon" /> Reset Password</button>
+            <br />
+            <div class="form-group">
+                <label for="text">Employee Id</label>
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            <i class="fa fa-address-card"></i>
+                        </div>
+                    </div>
+                    <input id="text" @bind-value="user.EmployeeCode" readonly name="text" type="text" class="form-control">
+                </div>
+            </div>
+            <br />
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label for="text1">Prefix</label>
+                        <input id="text1" @bind-value="user.Prefix" name="text1" type="text" class="form-control">
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group">
+                        <label for="text2">Firstname</label>
+                        <input id="text2" @bind-value="user.Firstname" name="text2" type="text" class="form-control @TextValidator.InvalidDisplay(firstnameInvalid)">
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group">
+                        <label for="text3">Lastname</label>
+                        <input id="text3" @bind-value="user.Surname" name="text3" type="text" class="form-control @TextValidator.InvalidDisplay(surnameInvalid)">
+                    </div>
+                </div>
+            </div>
+            <br />
+            <div class="form-group">
+                <label for="text4">Email</label>
+                <input id="text4" name="text4" @bind-value="user.Email" type="text" class="form-control @TextValidator.InvalidDisplay(emailInvalid)">
+            </div>
+            <br />
+            <div class="form-group">
+                <label for="text5">Username</label>
+                <input id="text5" name="text5" @bind-value="user.UserName" type="text" class="form-control @TextValidator.InvalidDisplay(usernameInvalid)">
+            </div>
+            <br />
+            <div class="form-group">
+                <label for="text6">Phone Number</label>
+                <input id="text6" name="text6" @bind-value="user.PhoneNumber" type="text" class="form-control">
+            </div>
+            <br />
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label for="text7">Brith Day</label>
+                        <input id="text7" name="text7" @bind-value="information.BrithDay" type="date" class="form-control">
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group">
+                        <label for="text8">Start Work Date</label>
+                        <input id="text8" name="text8" @bind-value="information.StartWorkDate" readonly type="date" class="form-control">
+                    </div>
+                </div>
+                <div class="col">
+                    @if (information.ResignDate.HasValue)
+                    {
+                        <div class="form-group">
+                            <label for="text9">Resigned Date</label>
+                            <input id="text9" name="text9" @bind-value="information.ResignDate" readonly type="date" class="form-control">
+                        </div>
+                    }
+                </div>
+            </div>
+            <br />
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label for="text10">Department</label>
+                        <input id="text10" name="text10" @bind-value="information.Department" type="text" class="form-control">
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group">
+                        <label for="text11">Position</label>
+                        <input id="text11" name="text11" type="text" @bind-value="information.CurrentPosition" class="form-control">
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group">
+                        <label for="text12">Manager</label>
+                        <BlazoredTypeahead @bind-Value="manager"
+                                           SearchMethod="SearchManager"
+                                           EnableDropDown="true"
+                                           Context="managerContext">
+                            <ResultTemplate>
+                                @managerContext.EmployeeCode - @managerContext.Firstname @managerContext.Surname
+                                <br />
+                                @managerContext.Position
+                                <br />
+                                @managerContext.Department
+                            </ResultTemplate>
+                            <SelectedTemplate>@managerContext?.EmployeeCode - @managerContext?.Firstname @managerContext?.Surname</SelectedTemplate>
+                        </BlazoredTypeahead>
+                    </div>
+                </div>
+            </div>
+            <br />
+            <div class="form-group">
+                <label for="text13">Roles</label>
+                <BlazoredTypeahead Context="roleContext"
+                                   SearchMethod="RoleSearch"
+                                   @bind-Values="selectedRole">
+                    <ResultTemplate>
+                        @roleContext.RoleName
+                    </ResultTemplate>
+                    <SelectedTemplate>
+                        @roleContext.RoleName
+                    </SelectedTemplate>
+                    <NotFoundTemplate>
+                        No Selected Role
+                    </NotFoundTemplate>
+                </BlazoredTypeahead>
+            </div>
+            <br />
+            <div class="form-group">
+                <label for="sex">Gender</label>
+                <select id="sex" class="form-select" aria-label="Default select example" @bind="information.Gender">
+                    <option value="M" selected="@(information.Gender=='M')">Male</option>
+                    <option value="F" selected="@(information.Gender=='F')">Female</option>
+                    <option value="" selected="@(information.Gender.IsNull())">Other</option>
+                </select>
+            </div>
+            <br />
+            <div class="ui toggle checkbox">
+                <input type="checkbox" name="public" @bind-value="user.Resigned" checked="@user.Resigned">
+                <label>Resigned Employee</label>
+            </div>
+            <br />
+            <br />
+            <br />
+            <button type="button" class="text-white text-lg bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-3 py-1.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mx-1" @onclick="Submit"><i class="save icon" /> Save Changes</button>
+        </Authorized>
+        <NotAuthorized>Access Deined</NotAuthorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>
+<LoadingModal @ref="loading" />

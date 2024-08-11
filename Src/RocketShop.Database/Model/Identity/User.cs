@@ -23,9 +23,10 @@ namespace RocketShop.Database.Model.Identity
         public bool EmailVerified { get; set; } = false;
         public DateTime CreateDate { get; set; } = DateTime.UtcNow;
         public DateTime? LastLoggedIn { get; set; }
-        public DateTime? LastLoggedOut { get; set; }
         public string? ProviderName { get; set; }
         public string? ProviderKey { get; set; }
+        public string CreateBy { get; set; }
+        public string? LastUpdateBy { get; set; }
     }
 }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.

@@ -20,6 +20,8 @@ namespace RocketShop.Database.Model.Identity
         public string? CurrentPosition { get; set; }
         public string? ManagerId { get; set; }
         public char? Gender { get; set; }
+        public string CreateBy { get; set; }
+        public string? LastUpdateBy { get; set; }
     }
 }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.

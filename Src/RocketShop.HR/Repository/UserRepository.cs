@@ -44,7 +44,8 @@ namespace RocketShop.HR.Repository
             var query = userView.AsQueryable();
             if (searchTerm.HasMessage())
                 query = SearchUser(query, searchTerm!);
-            query = query.OrderBy(x => x.EmployeeCode);
+            query = query.OrderBy(x => x.EmployeeCode)
+                .OrderByDescending(x=>x.Active);
             if (page.HasValue)
                 query = query.UsePaging(page.Value, pageSize);
             return await query.ToListAsync();
@@ -99,6 +100,9 @@ namespace RocketShop.HR.Repository
             var token = await userManager.GeneratePasswordResetTokenAsync(user);
             return await userManager.ResetPasswordAsync(user, token, newPassword);
         }
+
+        public async Task<UserView?> GetUserViewById(string userId) =>
+            await userView.FirstOrDefaultAsync(x => x.UserId == userId);
 
         IQueryable<UserView> SearchUser(IQueryable<UserView> query, string? searchTerm) =>
            searchTerm.HasMessage() ? query.Where(x => x.EmployeeCode.Contains(searchTerm!) ||

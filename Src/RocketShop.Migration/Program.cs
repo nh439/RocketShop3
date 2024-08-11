@@ -75,7 +75,8 @@ namespace RocketShop.Migration
                             Firstname = "Rocket",
                             UserName = startUser.Username,
                             Surname = "Admin",
-                            Resigned = false
+                            Resigned = false,
+                            CreateBy="SYSTEM"
                         };
                         await userManager.CreateAsync(user, startUser.Password);
                         context.UserRole.Add(new UserRole

@@ -21,7 +21,7 @@
     string? searchQuery, _searchQuery;
 
     List<UserView>? users = new List<UserView>();
-    const string Headers = "Employee Id;Firstname;Lastname;Email;Position;Department;Status;";
+    const string Headers = "Employee Id;Prefix;Firstname;Lastname;Email;Position;Department;Status;";
     bool isLoading = true;
     [CascadingParameter]
     public AuthenticationState? state { get; set; }
@@ -134,6 +134,7 @@
                 {
                     <tr>
                         <td>@user.EmployeeCode</td>
+                        <td>@user.Prefix</td>
                         <td>@user.Firstname</td>
                         <td>@user.Surname</td>
                         <td>@user.Email</td>
@@ -141,9 +142,9 @@
                         <td>@user.Department</td>
                         <td>@(user.Active ? "Active" : "Inactive")</td>
                         <td>
-                            <button class="bg-teal-600 hover:bg-teal-800 text-white font-bold py-1 px-2 rounded-full">
+                            <a href="/employee/@user.UserId" class="bg-teal-600 hover:bg-teal-800 text-white font-bold py-1 px-2 rounded-full">
                                 <i class="eye icon" />
-                            </button>
+                            </a>
                             @if (user.UserId != currentUser)
                             {
                                 <button class="bg-red-600 hover:bg-red-800 text-white font-bold py-1 px-2 rounded-full" @onclick="()=>DeleteBtnClicked(user)">

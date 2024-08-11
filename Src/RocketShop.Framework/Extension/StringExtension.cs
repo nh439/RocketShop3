@@ -18,7 +18,13 @@ namespace RocketShop.Framework.Extension
             string result = Encoding.UTF8.GetString(arr, 0, arr.Length);
             return JsonSerializer.Deserialize<T>(result);
         }
-            
+
+        public static bool IsNullOrEmpty(this string? s)  => string.IsNullOrEmpty(s);
+
+        public static async Task<bool> HasMessageAsync(this Task<string?> s) => (await s).HasMessage();
+        public static async Task<bool> IsNullOrEmptyAsync(this Task<string?> s) => (await s).IsNullOrEmpty();
+
+
 
     }
 }

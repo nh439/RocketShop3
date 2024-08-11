@@ -81,6 +81,8 @@ namespace RocketShop.Identity.Controllers
                         var permissions = await roleAndPermissionService.GetAuthoriozedPermissionList(user.Id);
                         var roleNames = roles.GetRight()?.Select(s => s.RoleName);
                         await signInManager.SignInWithClaimsAsync(user!, null, SetClaims(user!,roleNames,permissions.GetRight()));
+                        user.LastLoggedIn = DateTime.UtcNow;
+                        await userManager.UpdateAsync(user);
                         var token = BuildToken();
                         return Redirect(returnUrl.HasMessage() ? $"{returnUrl}?id_token={token}" : "/");
                     }
@@ -147,6 +149,8 @@ x-client-ver=7.1.2.0";
                 var roleNames = roles.GetRight()?.Select(s => s.RoleName);
                 var claims = SetClaims(user!,roleNames,permissions.GetRight());
                 await signInManager.SignInWithClaimsAsync(user!, null, claims);
+                user.LastLoggedIn= DateTime.UtcNow;
+                await userManager.UpdateAsync(user);
                 var token = BuildToken();
                 if (redirect.IsSome)
                     return Redirect(redirect.Extract().Tranform(r => $"{r}?id_token={token}")!);

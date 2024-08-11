@@ -9,6 +9,7 @@
 @using RocketShop.SharedBlazor.SharedBlazorService.Scope
 @using RocketShop.SharedBlazor.SharedFunction
 @using RocketShop.SharedBlazor.Tools
+@using System.Security.Claims
 @inject NavigationManager navigationManager;
 @inject IUserServices userService
 @inject IRoleServices roleService
@@ -29,15 +30,17 @@
     surNameInvaild = false,
     emailInvaild = false,
     startWorkInvaild = false;
+    string currentUser = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
         state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         state.If(x => x!.User.Identity!.IsAuthenticated,
-         _ =>
+         x =>
          {
              newUser.EmployeeCode = newUser.Id;
              newInformation.StartWorkDate = DateTime.Now.Date;
+             currentUser = x.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)!.Value;
          },
         _ => navigationManager.NavigateTo("/login", true));
         await InvokeAsync(StateHasChanged);
@@ -76,6 +79,7 @@
             newInformation.StartWorkDate = newInformation.StartWorkDate!.Value.Date.ToUniversalTime();
             if (newInformation.BrithDay.HasValue)
                 newInformation.BrithDay = newInformation.BrithDay.Value.ToUniversalTime();
+            newUser.CreateBy = currentUser;
             var result = await userService.CreateUser(newUser, newInformation);
             if(result.IsLeft || !result.GetRight())
             {
@@ -90,7 +94,7 @@
                 var assignResult = await roleService.SetRoleByUser(newUser.Id,
                      selectedRoles.Select(s => s.Id).ToArray());
                 if (assignResult.IsLeft)
-                    throw assignResult.GetLeft();
+                    throw assignResult.GetLeft()!;
             }
             await loading.Then(true, $"Create Employee '{newUser.EmployeeCode}' Success", "Success", "/employee");
         }

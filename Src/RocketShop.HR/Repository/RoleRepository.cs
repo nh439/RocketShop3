@@ -49,7 +49,7 @@ namespace RocketShop.HR.Repository
             
 
         IQueryable<Role> SearchQuery(string? searchName) =>
-            entity.Where(x => !searchName.HasMessage() || x.RoleName.Contains(searchName!));
+            entity.Where(x => !searchName.HasMessage() || x.RoleName.ToLower().Contains(searchName!.ToLower()));
 
 
     }
