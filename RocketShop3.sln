@@ -31,6 +31,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RocketShop.Test", "Test\Roc
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RocketShop.SharedBlazor", "Src\RocketShop.SharedBlazor\RocketShop.SharedBlazor.csproj", "{A2EDB4D5-3791-4F4D-9C24-335937D86E43}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RocketShop.IntegrationTest", "Test\RocketShop.IntegrationTest\RocketShop.IntegrationTest.csproj", "{12887B53-611B-4CDB-A591-E470D840A539}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -73,6 +75,10 @@ Global
 		{A2EDB4D5-3791-4F4D-9C24-335937D86E43}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A2EDB4D5-3791-4F4D-9C24-335937D86E43}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A2EDB4D5-3791-4F4D-9C24-335937D86E43}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12887B53-611B-4CDB-A591-E470D840A539}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12887B53-611B-4CDB-A591-E470D840A539}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12887B53-611B-4CDB-A591-E470D840A539}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12887B53-611B-4CDB-A591-E470D840A539}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -87,6 +93,7 @@ Global
 		{E088FA48-56E9-4777-9054-37CA1E13FC2E} = {62E552C3-BD37-4E7E-855A-34345833D260}
 		{12F28E5B-9284-4F56-BA3D-90BF1F25AB60} = {F405D7CF-29F6-45F7-B3EB-CA6214A8B285}
 		{A2EDB4D5-3791-4F4D-9C24-335937D86E43} = {62E552C3-BD37-4E7E-855A-34345833D260}
+		{12887B53-611B-4CDB-A591-E470D840A539} = {F405D7CF-29F6-45F7-B3EB-CA6214A8B285}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4D12E384-EE12-4581-B12B-F75B41D9F8C6}

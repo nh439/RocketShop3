@@ -15,8 +15,8 @@ namespace RocketShop.HR.Repository
         readonly DbSet<Role> entity = context.Role;
 
         public async Task<bool> Create(Role role) =>
-            (await entity.Add(role)
-            .Context.SaveChangesAsync()).Ge(0);
+            await entity.Add(role)
+            .Context.SaveChangesAsync().GeAsync(0);
 
         public async Task<bool> Update(Role role, IDbConnection connection, IDbTransaction? transaction = null) =>
             (await connection.CreateQueryStore(TableConstraint.Role)
