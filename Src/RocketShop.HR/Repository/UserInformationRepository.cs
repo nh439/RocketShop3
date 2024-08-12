@@ -14,13 +14,13 @@ namespace RocketShop.HR.Repository
         readonly DbSet<UserInformation> userInformationTbl = context.UserInformation;
 
         public async Task<bool> Create(UserInformation userInformation) =>
-            (await userInformationTbl.Add(userInformation)
+            await userInformationTbl.Add(userInformation)
             .Context
-            .SaveChangesAsync())
-            .Ge(0);
+            .SaveChangesAsync()
+            .GeAsync(0);
 
         public async Task<bool> Update(UserInformation userInformation) =>
-             (await userInformationTbl.Where(x => x.UserId == userInformation.UserId)
+             await userInformationTbl.Where(x => x.UserId == userInformation.UserId)
             .ExecuteUpdateAsync(s => s.SetProperty(t => t.BrithDay, userInformation.BrithDay)
             .SetProperty(t=>t.ResignDate,userInformation.ResignDate)
             .SetProperty(t=>t.StartWorkDate,userInformation.StartWorkDate)
@@ -28,13 +28,13 @@ namespace RocketShop.HR.Repository
             .SetProperty(t=>t.CurrentPosition,userInformation.CurrentPosition)
             .SetProperty(t=>t.ManagerId,userInformation.ManagerId)
             .SetProperty(t=>t.Gender,userInformation.Gender)
-            ))
-            .Ge(0);
+            )
+            .GeAsync(0);
 
         public async Task<bool> Delete(string userId)=>
-            (await userInformationTbl.Where (x => x.UserId == userId)
-            .ExecuteDeleteAsync())
-            .Ge(0);
+            await userInformationTbl.Where (x => x.UserId == userId)
+            .ExecuteDeleteAsync()
+            .GeAsync(0);
 
         public async Task<Option< UserInformation>> GetInformation(string userId) =>
             await userInformationTbl.FirstOrDefaultAsync(x => x.UserId == userId);

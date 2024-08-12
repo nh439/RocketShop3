@@ -19,16 +19,16 @@ namespace RocketShop.HR.Repository
             .Context.SaveChangesAsync().GeAsync(0);
 
         public async Task<bool> Update(Role role, IDbConnection connection, IDbTransaction? transaction = null) =>
-            (await connection.CreateQueryStore(TableConstraint.Role)
+            await connection.CreateQueryStore(TableConstraint.Role)
             .Where(nameof(Role.Id), role.Id)
-            .UpdateAsync(role, transaction))
-            .Ge(0);
+            .UpdateAsync(role, transaction)
+            .GeAsync(0);
 
         public async Task<bool> Delete(int roleId, IDbConnection connection, IDbTransaction? transaction = null) =>
-            (await connection.CreateQueryStore(TableConstraint.Role)
+            await connection.CreateQueryStore(TableConstraint.Role)
             .Where(nameof(Role.Id), roleId)
             .DeleteAsync(transaction)
-            ).Ge(0);
+            .GeAsync(0);
 
         public async Task<List<Role>> GetRoles(string? searchName = null,
             int? page = null,

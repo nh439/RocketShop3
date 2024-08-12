@@ -36,7 +36,8 @@ namespace RocketShop.HR.Services
     public class UserServices(
         Serilog.ILogger logger,
         UserRepository userRepository,
-        UserInformationRepository userInformationRepository) : BaseServices("User Service", logger), IUserServices
+        UserInformationRepository userInformationRepository,
+        ChangePasswordHistoryRepository changePasswordHistoryRepository) : BaseServices("User Service", logger), IUserServices
     {
         public async Task<Either<Exception, bool>> CreateUser(User user, UserInformation information) =>
             await InvokeServiceAsync(async () =>
@@ -64,8 +65,22 @@ namespace RocketShop.HR.Services
                 return await userInformationRepository.Delete(userId);
             });
 
-        public async Task<Either<Exception, bool>> ResetPassword(string userId,string newPassword) =>
-            await InvokeServiceAsync(async () => (await userRepository.ResetPassword(userId, newPassword)).Succeeded);
+        public async Task<Either<Exception, bool>> ResetPassword(string userId, string newPassword) =>
+            await InvokeServiceAsync(async () =>
+            {
+                var result = await userRepository.ResetPassword(userId, newPassword);
+                if (result.Succeeded)
+                {
+                    return await changePasswordHistoryRepository.CreateHistories(new ChangePasswordHistory
+                    {
+                        ChangeAt = DateTime.UtcNow,
+                        Reset = true,
+                        UserId = userId
+                    });
+
+                }
+                return false;
+            } );
 
         public async Task<Either<Exception, Option<User>>> FindById(string userId) =>
             await InvokeServiceAsync(async () => await userRepository.FindById(userId));

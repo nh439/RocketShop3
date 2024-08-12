@@ -55,7 +55,8 @@ builder.InstallSerilog()
         service.AddScoped<UserRepository>()
         .AddScoped<UserInformationRepository>()
         .AddScoped<RoleRepository>()
-        .AddScoped<UserRoleRepository>();
+        .AddScoped<UserRoleRepository>()
+        .AddScoped<ChangePasswordHistoryRepository>();
     })
     .InstallServices(service =>
     {

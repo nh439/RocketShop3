@@ -97,6 +97,8 @@ namespace RocketShop.HR.Repository
         public async Task<IdentityResult> ResetPassword(string userId,string newPassword)
         {
             var user = (await FindById(userId)).Extract()!;
+            if (!await userManager.HasPasswordAsync(user)) 
+                return await userManager.AddPasswordAsync(user, newPassword);
             var token = await userManager.GeneratePasswordResetTokenAsync(user);
             return await userManager.ResetPasswordAsync(user, token, newPassword);
         }
