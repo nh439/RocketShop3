@@ -13,6 +13,8 @@ using RocketShop.HR.ServicePermissions;
 using RocketShop.Shared.SharedService.Singletion;
 using RocketShop.HR.Middleware;
 using RocketShop.SharedBlazor.SharedBlazorService.Scope;
+using RocketShop.Shared.SharedService.Scoped;
+using RocketShop.SharedBlazor.SharedBlazorServices.Scope;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.InstallConfiguration();
@@ -64,7 +66,10 @@ builder.InstallSerilog()
         .AddScoped<IUserServices,UserServices>()
         .AddSingleton<IGetRoleAndPermissionService, GetRoleAndPermissionService>()
         .AddScoped<IRoleServices, RoleServices>()
-        .AddScoped<IDialogServices,DialogServices>();
+        .AddScoped<IDialogServices,DialogServices>()
+        .AddScoped<IImportExcelServices,ImportExcelServices>()
+        .AddScoped<IExportExcelServices,ExportExcelServices>()
+        .AddScoped<IDownloadServices,DownloadServices>();
     });
 // Add services to the container.
 

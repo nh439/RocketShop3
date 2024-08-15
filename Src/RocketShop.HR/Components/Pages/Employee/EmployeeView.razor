@@ -4,10 +4,15 @@
 @using RocketShop.HR.ServicePermissions
 @using RocketShop.HR.Services
 @using RocketShop.HR.Components.Pages.Employee.Modal
+@using RocketShop.Shared.SharedService.Scoped
+@using RocketShop.SharedBlazor.SharedBlazorServices.Scope
 @using RocketShop.SharedBlazor.Table
 @using Blazored.Typeahead
 @using System.Security.Claims
+@using RocketShop.SharedBlazor.Tools
 @inject IUserServices userServices
+@inject IExportExcelServices exportService
+@inject IDownloadServices downloadService
 @rendermode InteractiveServer
 
 @code {
@@ -26,6 +31,7 @@
     [CascadingParameter]
     public AuthenticationState? state { get; set; }
     DeleteEmployeeModal? deleteModal;
+    LoadingModal loading;
     string? currentUser;
     protected override async Task OnInitializedAsync()
     {
@@ -88,6 +94,26 @@
         searchQuery = _searchQuery;
         FetchData();
     }
+    async void Export()
+    {
+        loading.Open("Gethering User Data...");
+        var data = await userServices.ListUsers(searchQuery);
+        if(data.IsLeft)
+        {
+            await loading.Then(false, data.GetLeft()!.Message, "Export Failed");
+            return;
+        }
+        loading.SetText("Exporting...");
+        var table = await data.GetRight()!.ToDataTableAsync();
+        var encodedResult = exportService.ExportExcel(table);
+        if (encodedResult.IsLeft)
+        {
+            await loading.Then(false, encodedResult.GetLeft()!.Message, "Export Failed");
+            return;
+        }
+        await downloadService.DownloadAsync($"employees_{DateTime.Now.ToString("yyyyMMdd")}.xlsx",encodedResult.GetRight()! );
+        loading.Close();
+    }
 }
 <CascadingAuthenticationState>
     <AuthorizeView Policy="@ServicePermission.AllHRServiceName">
@@ -117,7 +143,7 @@
             <a href="/employee/create" class="bg-blue-600 hover:bg-blue-800 text-white font-bold py-1.5 px-4 rounded-full mx-1">
                 <i class="plus icon" />  Add Employee
             </a>
-            <button class="bg-green-600 hover:bg-green-800 text-white font-bold py-1 px-4 rounded-full mx-1">
+            <button class="bg-green-600 hover:bg-green-800 text-white font-bold py-1 px-4 rounded-full mx-1" @onclick="Export">
                 <i class="table icon" /> Export
             </button>
             <br />
@@ -142,12 +168,15 @@
                         <td>@user.Department</td>
                         <td>@(user.Active ? "Active" : "Inactive")</td>
                         <td>
-                            <a href="/employee/@user.UserId" class="bg-teal-600 hover:bg-teal-800 text-white font-bold py-1 px-2 rounded-full">
+                            <a href="/employee/@user.UserId" class="bg-teal-600 hover:bg-teal-800 text-white font-bold py-1 px-2 rounded-full mx-1" data-toggle="tooltip" data-placement="bottom" title="Edit User Data">
                                 <i class="eye icon" />
                             </a>
+                            <a href="/employee/@user.UserId/changepassword" class="text-purple bg-yellow-400 hover:bg-yellow-500 focus:outline-none focus:ring-4 focus:ring-yellow-300 font-medium rounded-full text-sm px-1.5 py-2 text-center me-2 mb-2 dark:focus:ring-yellow-900 mx-1" data-toggle="tooltip" data-placement="bottom" title="User Change Password">
+                                <i class="key icon" /> 
+                                </a>
                             @if (user.UserId != currentUser)
                             {
-                                <button class="bg-red-600 hover:bg-red-800 text-white font-bold py-1 px-2 rounded-full" @onclick="()=>DeleteBtnClicked(user)">
+                                <button class="bg-red-600 hover:bg-red-800 text-white font-bold py-1 px-2 rounded-full mx-1" @onclick="()=>DeleteBtnClicked(user)" data-toggle="tooltip" data-placement="bottom" title="Delete User">
                                     <i class="trash icon" />
                                 </button>
                             }
@@ -188,3 +217,4 @@
 </CascadingAuthenticationState>
 
 <DeleteEmployeeModal @ref="deleteModal" />
+<LoadingModal @ref="loading" />

@@ -98,8 +98,9 @@ namespace RocketShop.Test.HR.Services
             var newUser = new List<User>();
             var userRepository = new UserRepository(context, userMgr);
             var userInfoRepository = new UserInformationRepository(context);
+            var changePasswordHistoryRepository = new ChangePasswordHistoryRepository(context);
             var logger = MockLogger().Object;
-            var userService = new UserServices(logger, userRepository, userInfoRepository);
+            var userService = new UserServices(logger, userRepository, userInfoRepository,changePasswordHistoryRepository);
             return userService;
         }
 
