@@ -72,7 +72,8 @@ builder.InstallSerilog()
         .AddScoped<IDialogServices,DialogServices>()
         .AddScoped<IImportExcelServices,ImportExcelServices>()
         .AddScoped<IExportExcelServices,ExportExcelServices>()
-        .AddScoped<IDownloadServices,DownloadServices>();
+        .AddScoped<IDownloadServices,DownloadServices>()
+        .AddScoped<IFinacialServices,FinacialServices>();
     });
 // Add services to the container.
 

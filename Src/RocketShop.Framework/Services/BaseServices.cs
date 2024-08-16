@@ -239,6 +239,8 @@ namespace RocketShop.Framework.Services
 
         void IDisposable.Dispose()
         {
+            if(connection != null && connection?.State  != ConnectionState.Closed)
+                connection?.Close();
             connection?.Dispose();
         }
 

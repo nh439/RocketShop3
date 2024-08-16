@@ -16,9 +16,9 @@ namespace RocketShop.HR.Repository
         readonly string finacialTable = TableConstraint.UserFinancal,
             finacialView = TableConstraint.UserFinacialView;
 
-        public async Task<List<UserFinancialView>> ListFinancialData(IEnumerable<string>? userIn = null, int? page = null, int per = 20) =>
+        public async Task<List<UserFinancialView>> ListFinancialData(string? searchName = null, int? page = null, int per = 20) =>
             userIn.HasData() ?
-            await context.UserFinancialView.Where(x => userIn!.Contains(x.UserId))
+            await context.UserFinancialView.Where(x => searchName.IsNullOrEmpty() || x.EmployeeName.Contains(searchName!))
             .UsePaging(page, per)
             .ToListAsync() :
              await context.UserFinancialView
