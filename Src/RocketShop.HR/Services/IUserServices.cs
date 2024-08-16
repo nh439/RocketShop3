@@ -1,4 +1,6 @@
 ﻿using LanguageExt;
+using Npgsql;
+using RocketShop.Database.Extension;
 using RocketShop.Database.Model.Identity;
 using RocketShop.Database.Model.Identity.Views;
 using RocketShop.Database.Model.NonDatabaseModel;
@@ -35,9 +37,12 @@ namespace RocketShop.HR.Services
     }
     public class UserServices(
         Serilog.ILogger logger,
+        IConfiguration configuration,
         UserRepository userRepository,
         UserInformationRepository userInformationRepository,
-        ChangePasswordHistoryRepository changePasswordHistoryRepository) : BaseServices("User Service", logger), IUserServices
+        ChangePasswordHistoryRepository changePasswordHistoryRepository,
+        UserFinacialRepository userFinacialRepository,
+        ProvidentRepository userProvidentFundRepository) : BaseServices("User Service", logger,new NpgsqlConnection(configuration.GetIdentityConnectionString())), IUserServices
     {
         public async Task<Either<Exception, bool>> CreateUser(User user, UserInformation information) =>
             await InvokeServiceAsync(async () =>
@@ -56,13 +61,19 @@ namespace RocketShop.HR.Services
             });
         [ExcludeFromCodeCoverage]
         public async Task<Either<Exception, bool>> DeleteUser(string userId) =>
-            await InvokeServiceAsync(async () =>
+            await InvokeDapperServiceAsync(async con =>
             {
                 var user = await userRepository.FindById(userId);
-                if (user.IsNone) return false;
+                if (user.IsNone) return false;  
                 var deleteResult = await userRepository.Delete(user.Extract()!);
                 if (!deleteResult.Succeeded) return false;
-                return await userInformationRepository.Delete(userId);
+                con.Open();
+                using var transaction = con.BeginTransaction();
+                await userProvidentFundRepository.Delete(userId, con, transaction);
+                await userFinacialRepository.DeleteFinacialData(userId, con, transaction);
+                await userInformationRepository.Delete(userId, con, transaction);
+                transaction.Commit();
+                return true;
             });
 
         public async Task<Either<Exception, bool>> ResetPassword(string userId, string newPassword) =>

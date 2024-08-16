@@ -12,7 +12,7 @@ namespace RocketShop.Framework.Services
 {
     public class BaseServices(string serviceName,
             ILogger logger,
-            IDbConnection? connection = null)
+            IDbConnection? connection = null) : IDisposable
     {
 
         protected Either<Exception,T> InvokeService<T>(Func<T> operation,
@@ -236,6 +236,11 @@ namespace RocketShop.Framework.Services
 
         async Task DelayExponentialAsync(int retries) =>
             await Task.Delay((int)Math.Pow(2, retries)*1000);
+
+        void IDisposable.Dispose()
+        {
+            connection?.Dispose();
+        }
 
     }
 }

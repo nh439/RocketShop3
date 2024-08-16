@@ -36,6 +36,12 @@ namespace RocketShop.HR.Repository
             .ExecuteDeleteAsync()
             .GeAsync(0);
 
+        public async Task<bool> Delete(string userId,IDbConnection identityConnection,IDbTransaction? transaction = null)=>
+            await identityConnection.CreateQueryStore(TableConstraint.UserInformation)
+            .Where(nameof(UserInformation.UserId),userId)
+            .DeleteAsync(transaction)
+            .GeAsync(0);
+
         public async Task<Option< UserInformation>> GetInformation(string userId) =>
             await userInformationTbl.FirstOrDefaultAsync(x => x.UserId == userId);
 

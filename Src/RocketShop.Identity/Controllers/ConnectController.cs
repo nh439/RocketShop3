@@ -25,7 +25,7 @@ namespace RocketShop.Identity.Controllers
                     {
                         UserId = f.UserId,
                         AccountNo = f.AccountNo,
-                        BanckName = f.BanckName,
+                        BankName = f.BankName,
                         Currency = f.Currency,
                         ProvidentFundPerMonth = f.ProvidentFund,
                         AccumulatedProvidentFund=p.Balance,

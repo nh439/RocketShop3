@@ -19,7 +19,7 @@ namespace RocketShop.Database.Model.Identity
         public decimal TotalPayment { get; set; } = 0;
         public decimal TravelExpenses { get; set; } = 0;    
         public decimal TotalAddiontialExpense { get; set; } = 0;
-        public string BanckName { get; set; }
+        public string BankName { get; set; }
         public string AccountNo { get; set; }
         public string Currency { get; set; } = "THB";
     }
