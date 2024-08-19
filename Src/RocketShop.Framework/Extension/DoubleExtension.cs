@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using CurrentType = double;
 namespace RocketShop.Framework.Extension
 {
-    public static class DoubleHelper
+    public static class DoubleExtension
     {
         #region Not Nullable
         public static bool Eq(this CurrentType x, CurrentType y) =>

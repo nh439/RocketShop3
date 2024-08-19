@@ -1,0 +1,181 @@
+﻿@page "/EmployeeFinace"
+@using RocketShop.Database.Model.Identity.Views
+@using RocketShop.Database.Model.NonDatabaseModel
+@using RocketShop.Framework.Extension
+@using RocketShop.HR.Services
+@using RocketShop.SharedBlazor.Table
+@inject IFinacialServices finacialServices
+@inject NavigationManager navigationManager
+@rendermode InteractiveServer
+
+@code {
+    int count = 0,
+      lastPage = 1,
+      currentPage = 1;
+    string countMsg = string.Empty,
+    lastPageMsg = string.Empty,
+    queryMsg = string.Empty;
+
+    bool isLoading = true;
+    string? searchQuery, _searchQuery;
+    List<UserFinancialView>? userfinacialData = new List<UserFinancialView>();
+    [CascadingParameter]
+    public AuthenticationState state { get; set; }
+    const string Headers = "Employee Id;Employee Name;Bank Name;Account No;Currency;Base Salary;Collected Provident Fund;Socal Securites;Additional Expense;Travel Expense;Total Payment;";
+    protected override async Task OnInitializedAsync()
+    {
+        state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        state.If(x => x.IsNotNull() && x!.User.Identity!.IsAuthenticated, x =>
+        {
+            FetchData();
+        },
+        x => navigationManager.NavigateTo("/login"));
+
+    }
+    async void FetchData()
+    {
+        var dataResult = await finacialServices.ListFinacialData(searchQuery, currentPage);
+        var countResult = await finacialServices.ListFinacialViewCount(searchQuery);
+        var lastPageResult = await finacialServices.ListFinacialViewLastpage(searchQuery);
+        await Task.WhenAll(
+            Task.Factory.StartNew(() =>
+            {
+                if (dataResult.IsLeft)
+                    queryMsg = dataResult.GetLeft()!.Message;
+                else
+                    userfinacialData = dataResult.GetRight();
+
+            }),
+            Task.Factory.StartNew(() =>
+            {
+                if (countResult.IsLeft)
+                    countMsg = countResult.GetLeft()!.Message;
+                else
+                    count = countResult.GetRight();
+
+            }),
+             Task.Factory.StartNew(() =>
+            {
+                if (lastPageResult.IsLeft)
+                    lastPageMsg = lastPageResult.GetLeft()!.Message;
+                else
+                    lastPage = lastPageResult.GetRight();
+
+            })
+        );
+        isLoading = false;
+        await InvokeAsync(StateHasChanged);
+    }
+    void SetPage(int newPage)
+    {
+        currentPage = newPage;
+        FetchData();
+    }
+    void SetSearch()
+    {
+        currentPage = 1;
+        searchQuery = _searchQuery;
+        FetchData();
+    }
+}
+
+<CascadingAuthenticationState>
+    <AuthorizeView Policy="@ServicePermissions.ServicePermission.AllHRServiceName">
+        <Authorized>
+            <center>
+                <h1 class="text-4xl font-semibold">Employee Fincial Data</h1>
+            </center>
+            <br />
+            <br />
+            <br />
+            <div>
+                <div Class="row">
+                    <div Class="col-5">
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" @bind-value="_searchQuery" placeholder="Employee Name" aria-label="Recipient's username" aria-describedby="basic-addon2">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-info" type="button" @onclick="SetSearch"><i class="search icon"></i> Search</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-5"></div>
+                    <div class="col-2">
+                        <h3 class="text-2xl font-semibold">Count : @count</h3>
+                    </div>
+                </div>
+            </div>
+            <a href="/EmployeeFinace/create" class="bg-blue-600 hover:bg-blue-800 text-white font-bold py-1.5 px-4 rounded-full mx-1">
+                <i class="plus icon" />  Add Finacial Data
+            </a>
+            <button class="bg-green-600 hover:bg-green-800 text-white font-bold py-1 px-4 rounded-full mx-1">
+                <i class="table icon" /> Export
+            </button>
+            <button class="bg-yellow-600 hover:bg-yellow-800 text-purple font-bold py-1 px-4 rounded-full mx-1">
+                <i class="upload icon" /> Import
+            </button>
+            <button class="bg-teal-600 hover:bg-teal-800 text-white font-bold py-1 px-4 rounded-full mx-1">
+                <i class="table icon" /> Get Template
+            </button>
+            <br />
+            <br />
+            <NHTable Columns="@Headers"
+                     HasDataFlagment="@userfinacialData.HasData()"
+                     LoadingFlagment="@isLoading"
+                     TableClass="table table-hover"
+                     TableHeaderClass="table-dark"
+                     TableBodyClass="table-success"
+                     LoadingDisplayText="Loading..."
+                     NoDataDisplayText="No Data">
+                @foreach (var item in userfinacialData!)
+                {
+                    <tr>
+                        <td>@item.EmployeeCode</td>
+                        <td>@item.EmployeeName</td>
+                        <td>@item.BankName</td>
+                        <td>@item.AccountNo.SealMiddleCharacters()</td>
+                        <td>@item.Currency</td>
+                        <td>@item.Salary.ToMoneyFormat()</td>
+                        <td>@item.AccumulatedProvidentFund.ToMoneyFormat()</td>
+                        <td>@item.SocialSecurites.ToMoneyFormat()</td>
+                        <td>@item.TotalAddiontialExpense.ToMoneyFormat()</td>
+                        <td>@item.TravelExpenses.ToMoneyFormat()</td>
+                        <td>@item.TotalPayment.ToMoneyFormat()</td>
+                        <td>
+                            <a href="/EmployeeFinace/Data/@item.UserId" class="bg-teal-600 hover:bg-teal-800 text-white font-bold py-1 px-2 rounded-full mx-1" data-toggle="tooltip" data-placement="bottom" title="Edit User Data">
+                                <i class="eye icon" />
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </NHTable>
+            <br />
+            <nav aria-label="Page navigation example">
+                <ul class="pagination justify-content-center">
+                    @if (currentPage > 1)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" @onclick="()=>SetPage(currentPage-1)" tabindex="-1">Previous</a>
+                        </li>
+                    }
+                    @for (int idx = -5; idx <= 5; idx++)
+                    {
+                        var destional = currentPage + idx;
+                        @if (destional > 0 && destional <= lastPage)
+                        {
+                            <li class="page-item @(idx==0 ? "active":"")"><a class="page-link" @onclick="()=>SetPage(destional)">@destional</a></li>
+                        }
+                    }
+                    @if (currentPage < lastPage)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" @onclick="()=>SetPage(currentPage+1)">Next</a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        </Authorized>
+        <NotAuthorized>
+            <div class="text-xl">Access Deined</div>
+        </NotAuthorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>

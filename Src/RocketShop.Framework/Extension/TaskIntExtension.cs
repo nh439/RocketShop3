@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using CurrentType = long;
+using CurrentType = int;
 namespace RocketShop.Framework.Extension
 {
-    public static class TaskLongHelper
+    public static class TaskIntExtension
     {
         #region Not Nullable
         /// <summary>
@@ -65,14 +65,14 @@ namespace RocketShop.Framework.Extension
         /// <param name="x">First Operand</param>
         /// <param name="y">Second Operand</param>
         /// <returns>Math.AbsAsync(Async(x) - Async(y))</returns>
-        public static async Task<CurrentType> FindDistanceAsync(this Task<CurrentType> x, CurrentType y) =>
+        public static async Task< CurrentType> FindDistanceAsync(this Task<CurrentType> x, CurrentType y) =>
             (CurrentType)Math.Abs((await x) - (y));
         #endregion
         #region Nullable
-        public static async Task<bool> EqAsync(this Task<CurrentType?> x, CurrentType? y) =>
-           await x == y;
+        public static async Task<bool> EqAsync(this Task<CurrentType?> x, CurrentType? y)=>
+           await x==y;
 
-        public static async Task<bool> NotEqAsync(this Task<CurrentType?> x, CurrentType? y) =>
+        public static async Task<bool> NotEqAsync(this Task<CurrentType?> x, CurrentType? y)=>
             !(await EqAsync(x, y));
 
         public static async Task<bool> GeAsync(this Task<CurrentType?> x, CurrentType? y) =>
@@ -88,7 +88,7 @@ namespace RocketShop.Framework.Extension
            await x <= y;
 
         public static async Task<CurrentType> FindDistanceAsync(this Task<CurrentType?> x, CurrentType? y) =>
-            (CurrentType)Math.Abs((await x ?? 0) - (y ?? 0));
+            (CurrentType)Math.Abs((await x??0) - (y??0));
         #endregion
     }
 }

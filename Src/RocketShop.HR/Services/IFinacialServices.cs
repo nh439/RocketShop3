@@ -19,12 +19,16 @@ namespace RocketShop.HR.Services
         Task<Either<Exception, bool>> SetAdditionalExpense(string userId, IEnumerable<UserAddiontialExpense> expenses);
         Task<Either<Exception, bool>> AddProvidentFund(UserProvidentFund fund);
         Task<Either<Exception, bool>> UpdateProvidentFund(UserProvidentFund fund);
+        Task<Either<Exception, int>> ListFinacialViewCount(string? searchName = null);
+        Task<Either<Exception, int>> ListFinacialViewLastpage(string? searchName = null, int per = 20);
+        Task<Either<Exception, List<UserView>>> ListNoFinacialDataUsers(string? searchKeyword = null, int? take = null);
     }
     public class FinacialServices(
         Serilog.ILogger logger,
         UserFinacialRepository userFinacialRepository,
         ProvidentRepository providentRepository,
         UserAdditionalExpenseRepository userAdditionalExpenseRepository,
+        UserRepository userRepository,
         IConfiguration configuration
         ) : BaseServices("Finacial Service",logger,new NpgsqlConnection(configuration.GetIdentityConnectionString())), IFinacialServices
     {
@@ -85,7 +89,18 @@ namespace RocketShop.HR.Services
         public async Task<Either<Exception,bool>> UpdateProvidentFund(UserProvidentFund fund) =>
             await InvokeDapperServiceAsync(async con =>await  providentRepository.Update(fund,con));
 
+        public async Task<Either<Exception,int>> ListFinacialViewCount(string? searchName = null) =>
+            await InvokeServiceAsync(async () => await userFinacialRepository.ListFinacialCount(searchName));
 
+         public async Task<Either<Exception,int>> ListFinacialViewLastpage(string? searchName = null,int per =20) =>
+            await InvokeServiceAsync(async () => await userFinacialRepository.ListFinacialLastpage(searchName,per));
+
+        public async Task<Either<Exception, List<UserView>>> ListNoFinacialDataUsers(string? searchKeyword = null,int? take = null) =>
+            await InvokeServiceAsync(async () =>
+            {
+                var userId = await userFinacialRepository.ListUsersWhenHasFinacialData();
+                return await userRepository.ListUserNOTIn(userId,searchKeyword, true,take);
+            });
 
     }
 }
