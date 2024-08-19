@@ -17,8 +17,8 @@ namespace RocketShop.HR.Repository
             finacialView = TableConstraint.UserFinacialView;
 
         public async Task<List<UserFinancialView>> ListFinancialData(string? searchName = null, int? page = null, int per = 20) =>
-            userIn.HasData() ?
-            await context.UserFinancialView.Where(x => searchName.IsNullOrEmpty() || x.EmployeeName.Contains(searchName!))
+            searchName.HasMessage() ?
+            await context.UserFinancialView.Where(x => searchName.IsNullOrEmpty() || x.EmployeeName.Contains(searchName!) || x.BankName.Contains(searchName!))
             .UsePaging(page, per)
             .ToListAsync() :
              await context.UserFinancialView
@@ -41,5 +41,25 @@ namespace RocketShop.HR.Repository
 
         public async Task<UserFinancal?> GetUserFinancal(string userId) =>
             await context.UserFinancal.FirstOrDefaultAsync(x => x.UserId == userId);
+
+        public async Task<int> ListFinacialCount(string? searchName = null) =>
+            await context
+            .UserFinancialView
+            .Where(x=> searchName.IsNullOrEmpty() || x.EmployeeName.Contains(searchName!) || x.BankName.Contains(searchName!))
+            .CountAsync();
+
+        public async Task<int> ListFinacialLastpage(string? searchName = null,int per = 20)=>
+            await context
+            .UserFinancialView
+            .Where(x => searchName.IsNullOrEmpty() || x.EmployeeName.Contains(searchName!) || x.BankName.Contains(searchName!))
+            .GetLastpageAsync(per);
+
+        public async Task<string[]> ListUsersWhenHasFinacialData() =>
+            await context.UserFinancal
+            .Select(s => s.UserId)
+            .Distinct()
+            .ToArrayAsync();
+
+
     }
 }

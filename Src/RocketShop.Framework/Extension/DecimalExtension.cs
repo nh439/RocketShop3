@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using CurrentType = decimal;
 namespace RocketShop.Framework.Extension
 {
-    public static class DecimalHelper
+    public static class DecimalExtension
     {
         #region Not Nullable
         public static bool Eq(this CurrentType x, CurrentType y) =>
@@ -52,5 +52,7 @@ namespace RocketShop.Framework.Extension
         public static CurrentType FindDistance(this CurrentType? x, CurrentType? y) =>
             (CurrentType)Math.Abs((x ?? 0) - (y ?? 0));
         #endregion
+        public static string ToMoneyFormat(this decimal d) =>
+            d.ToString("#,##0.00");
     }
 }

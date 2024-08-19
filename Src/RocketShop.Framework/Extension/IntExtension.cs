@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using CurrentType = int;
 namespace RocketShop.Framework.Extension
 {
-    public static class IntHelper
+    public static class IntExtension
     {
         #region Not Nullable
         /// <summary>

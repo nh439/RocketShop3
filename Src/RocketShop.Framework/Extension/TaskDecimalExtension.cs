@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using CurrentType = int;
+using CurrentType = decimal;
 namespace RocketShop.Framework.Extension
 {
-    public static class TaskIntHelper
+    public static class TaskDecimalExtension
     {
         #region Not Nullable
         /// <summary>
@@ -90,5 +90,7 @@ namespace RocketShop.Framework.Extension
         public static async Task<CurrentType> FindDistanceAsync(this Task<CurrentType?> x, CurrentType? y) =>
             (CurrentType)Math.Abs((await x??0) - (y??0));
         #endregion
+        public static async Task<string> ToMoneyFormatAsync(this Task< decimal> d) =>
+         (await  d).ToString("#,##0.00");
     }
 }

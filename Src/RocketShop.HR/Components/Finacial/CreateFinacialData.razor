@@ -1,0 +1,31 @@
+﻿@page "/EmployeeFinace/create"
+@using RocketShop.Database.Model.Identity
+@using RocketShop.Database.Model.Identity.Views
+@using RocketShop.Framework.Extension
+@using RocketShop.HR.Services
+@inject IFinacialServices finacialServices
+@inject NavigationManager navigationManager
+@code {
+    [CascadingParameter]
+    public AuthenticationState state { get; set; }
+    UserView selectedUser = new UserView();
+    UserFinancal newData = new UserFinancal();
+    UserProvidentFund? newProvidentFund;
+    List<UserAddiontialExpense> addiontialExpenses = new List<UserAddiontialExpense>();
+    protected override async Task OnInitializedAsync()
+    {
+        state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (state.User.Identity.IsAuthenticated)
+        {
+
+        }
+        else
+            navigationManager.NavigateTo("/login");
+    }
+
+    async Task<IEnumerable<UserView>?> SearchUser(string searchKeyword)
+    {
+        var result=  await finacialServices.ListNoFinacialDataUsers(searchKeyword, 10);
+        return result.GetRight();
+    }
+}

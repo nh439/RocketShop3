@@ -106,6 +106,21 @@ namespace RocketShop.HR.Repository
         public async Task<UserView?> GetUserViewById(string userId) =>
             await userView.FirstOrDefaultAsync(x => x.UserId == userId);
 
+        public async Task<List<UserView>> ListUserIn(string[] userIds, string? searchKeyword = null, bool? isActive = null,int? take = null) =>
+            await userView.Where(x=>userIds.Contains(x.UserId) && (isActive.IsNull() || isActive!.Value )
+            && (searchKeyword.IsNullOrEmpty() || string.Join(" ", x.EmployeeCode, x.Prefix,x.Firstname,x.Surname).Contains(searchKeyword!) )
+            )
+            .UsePaging(take.HasValue ? 1 : null, take ?? 10)
+            .ToListAsync();
+
+        public async Task<List<UserView>> ListUserNOTIn(string[] userIds,string? searchKeyword = null, bool? isActive = null, int? take = null) =>
+            await userView
+            .Where(x=>!userIds.Contains(x.UserId) && (isActive.IsNull() || isActive!.Value)
+            && (searchKeyword.IsNullOrEmpty() || string.Join(" ",x.EmployeeCode, x.Prefix, x.Firstname, x.Surname).Contains(searchKeyword!))
+            )
+            .UsePaging(take.HasValue ? 1 : null,take ?? 10)
+            .ToListAsync();
+
         IQueryable<UserView> SearchUser(IQueryable<UserView> query, string? searchTerm) =>
            searchTerm.HasMessage() ? query.Where(x => x.EmployeeCode.Contains(searchTerm!) ||
                 x.Email.Contains(searchTerm!) ||

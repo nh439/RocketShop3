@@ -155,7 +155,8 @@
                      NoDataDisplayText="No Employees"
                      HasDataFlagment="@users.HasData()"
                      LoadingFlagment="@isLoading"
-                     LoadingDisplayText="Loading...">
+                     LoadingDisplayText="Loading..."
+            draggable>
                 @foreach (var user in users!)
                 {
                     <tr>
