@@ -17,6 +17,7 @@ namespace RocketShop.Database.Model.Identity
         [Key]
         public string Id { get; set; } = Guid.NewGuid().ToString();
         public string UserId { get; set; }
+        public string ExpenseName { get; set; }
         /// <summary>
         /// จ่ายครั้งเดียว
         /// </summary>
@@ -32,7 +33,7 @@ namespace RocketShop.Database.Model.Identity
         /// <summary>
         /// รอบการจ่้าย เช่น รายเดือน รายปี หรือ ครั้งเดียว
         /// </summary>
-        public string PreiodType { get; set; }
+        public string PreiodType { get; set; } = "Monthly";
         /// <summary>
         /// จำนวนเงิน (ถ้าติดลบ จะหักจาก Total Payment)
         /// </summary>

@@ -1,0 +1,43 @@
+﻿@using RocketShop.Framework.Extension
+@using System.Reflection
+@using RocketShop.SharedBlazor.Loop
+@typeparam TItem
+@code {
+    [Parameter]
+    public string? Columns { get; set; }
+    [Parameter]
+    public string? TableClass { get; set; }
+    [Parameter]
+    public string? TableHeaderClass { get; set; }
+    [Parameter]
+    public string? TableBodyClass { get; set; }
+    [Parameter]
+    public bool LoadingFlagment { get; set; } = false;
+    [Parameter]
+    public string LoadingDisplayText { get; set; } = "Loading...";
+    [Parameter]
+    public string NoDataDisplayText { get; set; } = "No Data";
+    [Parameter]
+    public IEnumerable<TItem>? Items { get; set; }
+    [Parameter]
+    public RenderFragment<TItem>? ChildContent { get; set; }
+    [Parameter]
+    public char ColumnSperator { get; set; } = ';';
+}
+<NHTable Columns="@(Columns.HasMessage() ? Columns : string.Join( ";",typeof(TItem).GetProperties().Select(s=>s.Name)))"
+         HasDataFlagment="@Items.HasData()"
+         LoadingDisplayText="@LoadingDisplayText"
+         LoadingFlagment="@LoadingFlagment"
+         TableBodyClass="@TableBodyClass"
+         NoDataDisplayText="@NoDataDisplayText"
+         TableClass="@TableClass"
+         TableHeaderClass="@TableHeaderClass"
+            ColumnSperator="@ColumnSperator">
+    <NHForeach TItem="TItem"
+               Items="Items">
+        @if (ChildContent.IsNotNull())
+        {
+            @ChildContent!(context)
+        }
+    </NHForeach>
+</NHTable>

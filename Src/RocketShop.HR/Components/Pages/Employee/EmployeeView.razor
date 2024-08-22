@@ -5,6 +5,7 @@
 @using RocketShop.HR.Services
 @using RocketShop.HR.Components.Pages.Employee.Modal
 @using RocketShop.Shared.SharedService.Scoped
+@using RocketShop.SharedBlazor.Loop
 @using RocketShop.SharedBlazor.SharedBlazorServices.Scope
 @using RocketShop.SharedBlazor.Table
 @using Blazored.Typeahead
@@ -148,17 +149,16 @@
             </button>
             <br />
             <br />
-            <NHTable TableClass="table table-hover table-bordered"
+            <NHTypeTable TableClass="table table-hover table-bordered"
                      TableHeaderClass="table-dark"
                      TableBodyClass="table-info"
                      Columns="@Headers"
                      NoDataDisplayText="No Employees"
-                     HasDataFlagment="@users.HasData()"
                      LoadingFlagment="@isLoading"
                      LoadingDisplayText="Loading..."
-            draggable>
-                @foreach (var user in users!)
-                {
+                     TItem="UserView"
+                     Items="users"
+                     Context="user">     
                     <tr>
                         <td>@user.EmployeeCode</td>
                         <td>@user.Prefix</td>
@@ -173,8 +173,8 @@
                                 <i class="eye icon" />
                             </a>
                             <a href="/employee/@user.UserId/changepassword" class="text-purple bg-yellow-400 hover:bg-yellow-500 focus:outline-none focus:ring-4 focus:ring-yellow-300 font-medium rounded-full text-sm px-1.5 py-2 text-center me-2 mb-2 dark:focus:ring-yellow-900 mx-1" data-toggle="tooltip" data-placement="bottom" title="User Change Password">
-                                <i class="key icon" /> 
-                                </a>
+                                <i class="key icon" />
+                            </a>
                             @if (user.UserId != currentUser)
                             {
                                 <button class="bg-red-600 hover:bg-red-800 text-white font-bold py-1 px-2 rounded-full mx-1" @onclick="()=>DeleteBtnClicked(user)" data-toggle="tooltip" data-placement="bottom" title="Delete User">
@@ -183,8 +183,7 @@
                             }
                         </td>
                     </tr>
-                }
-            </NHTable>
+            </NHTypeTable>
             <br />
             <nav aria-label="Page navigation example">
                 <ul class="pagination justify-content-center">

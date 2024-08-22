@@ -118,16 +118,16 @@
             </button>
             <br />
             <br />
-            <NHTable Columns="@Headers"
-                     HasDataFlagment="@userfinacialData.HasData()"
+            <NHTypeTable Columns="@Headers"
                      LoadingFlagment="@isLoading"
                      TableClass="table table-hover"
                      TableHeaderClass="table-dark"
                      TableBodyClass="table-success"
                      LoadingDisplayText="Loading..."
-                     NoDataDisplayText="No Data">
-                @foreach (var item in userfinacialData!)
-                {
+                     NoDataDisplayText="No Data"
+                    TItem="UserFinancialView"
+                         Items="userfinacialData"
+            Context="item">
                     <tr>
                         <td>@item.EmployeeCode</td>
                         <td>@item.EmployeeName</td>
@@ -145,9 +145,8 @@
                                 <i class="eye icon" />
                             </a>
                         </td>
-                    </tr>
-                }
-            </NHTable>
+                    </tr>   
+            </NHTypeTable>
             <br />
             <nav aria-label="Page navigation example">
                 <ul class="pagination justify-content-center">
