@@ -1,13 +1,17 @@
 ﻿@page "/EmployeeFinace/create"
 @using Blazored.Typeahead
+@using LanguageExt
 @using RocketShop.Database.Model.Identity
 @using RocketShop.Database.Model.Identity.Views
+@using RocketShop.Database.Model.NonDatabaseModel
 @using RocketShop.Framework.Extension
 @using RocketShop.HR.ServicePermissions
 @using RocketShop.HR.Services
 @using RocketShop.SharedBlazor.Loop
+@using RocketShop.SharedBlazor.SharedFunction
 @using RocketShop.SharedBlazor.Table
 @using System.Text.Json
+@using RocketShop.SharedBlazor.Tools
 @inject IFinacialServices finacialServices
 @inject NavigationManager navigationManager
 @rendermode InteractiveServer
@@ -17,8 +21,13 @@
     UserView selectedUser = new UserView();
     UserFinancal newData = new UserFinancal();
     UserProvidentFund? newProvidentFund;
+    LoadingModal loading;
     List<UserAddiontialExpense> addiontialExpenses = new List<UserAddiontialExpense>();
     const string AdditionalHeaders = "Name;One Time;Month;Year;Type;Balance;";
+    bool userInvalid = false,
+    bankNameInvalid = false,
+    accountNoInvalid = false,
+    totalCalculate = false;
     protected override async Task OnInitializedAsync()
     {
         state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -42,17 +51,61 @@
                 Balance = 0,
                 Paid = false
             });
+        totalCalculate = false;
         StateHasChanged();
     }
     void DeleteAdditionExpense(string id)
     {
         addiontialExpenses = addiontialExpenses.Where(x => x.Id != id).ToList();
+        totalCalculate = false;
         StateHasChanged();
+    }
+    void Calculate()
+    {
+        if (addiontialExpenses.HasData())
+        {
+            newData.TotalAddiontialExpense = addiontialExpenses.Where(x => !x.OneTimePay && x.PreiodType == "Monthly").Select(x => x.Balance).Sum();
+        }
+        else
+        {
+            newData.TotalAddiontialExpense = 0;
+        }
+        var fixPayment = newData.SocialSecurites + newData.ProvidentFund;
+        newData.TotalPayment = newData.Salary - fixPayment + (newData.TravelExpenses + newData.TotalAddiontialExpense);
+        totalCalculate = true;
+        StateHasChanged();
+
     }
     async void Submit()
     {
-        var json = JsonSerializer.Serialize(addiontialExpenses);
-        Console.WriteLine(json);
+        userInvalid = selectedUser.IsNull() || selectedUser.UserId.IsNullOrEmpty();
+        bankNameInvalid = newData.BankName.IsNullOrEmpty();
+        accountNoInvalid = newData.AccountNo.IsNullOrEmpty();
+        if (userInvalid ||
+        bankNameInvalid ||
+        accountNoInvalid)
+            return;
+        loading.Open("Creating...", "Create Finacial Data");
+        try
+        {
+            newData.UserId = selectedUser.UserId;
+            addiontialExpenses.HasDataAndForEach(f => f.UserId = newData.UserId);
+            var result = await finacialServices.CreateFinacialData(
+                new UserFinacialData(newData, addiontialExpenses),
+                new UserProvidentFund
+                    {
+                        Balance = 0,
+                        UserId = newData.UserId
+                    }
+            );
+            if (result.IsLeft)
+                throw result.GetLeft()!;
+            await loading.Then(true, "Create Finacial Data Success", "Success", "/EmployeeFinace");
+        }
+        catch (Exception x)
+        {
+            await loading.Then(false, x.Message, "Failed");
+        }
     }
 }
 <CascadingAuthenticationState>
@@ -64,13 +117,17 @@
                     <div class='col'>
                         <div class="form-group">
                             <label for="UserId">User</label>
-                            <BlazoredTypeahead 
-                               SearchMethod="SearchUser"
-                               Context="user"
-                            @bind-Value="selectedUser">
-                            <SelectedTemplate>@user.EmployeeCode @user.Firstname @user.Surname</SelectedTemplate>
+                            <BlazoredTypeahead SearchMethod="SearchUser"
+                                               Context="user"
+                                               @bind-Value="selectedUser"
+                                               EnableDropDown="true">
+                                <SelectedTemplate>@user.EmployeeCode @user.Firstname @user.Surname</SelectedTemplate>
                                 <ResultTemplate>@user.EmployeeCode @user.Firstname @user.Surname</ResultTemplate>
                             </BlazoredTypeahead>
+                            @if (userInvalid)
+                            {
+                                <small style="color:red">User Required</small>
+                            }
                         </div>
                     </div>
                     <div class='col'>
@@ -98,13 +155,13 @@
                     <div class='col'>
                         <div class="form-group">
                             <label for="BankName">Bank Name</label>
-                            <input id="BankName" @bind-value="newData.BankName" name="BankName" type="text" class="form-control">
+                            <input id="BankName" @bind-value="newData.BankName" name="BankName" type="text" class="form-control @TextValidator.InvalidDisplay(bankNameInvalid)">
                         </div>
                     </div>
                     <div class='col'>
                         <div class="form-group">
                             <label for="AccountNo">Account No</label>
-                            <input id="AccountNo" @bind-value=newData.AccountNo name="AccountNo" type="text" class="form-control">
+                            <input id="AccountNo" @bind-value=newData.AccountNo name="AccountNo" type="text" class="form-control @TextValidator.InvalidDisplay(accountNoInvalid)">
                         </div>
                     </div>
                 </div>
@@ -149,26 +206,26 @@
                             <select class="form-select" aria-label="Default select example" @bind="expense.Month">
                                 <option selected>No Month Selected</option>
                                 <NHFor From="1"
-                                                                    To="13"
-                                                                    Context="i">
+                                       To="13"
+                                       Context="i">
                                     <option value="@i">@i</option>
                                 </NHFor>
                             </select>
                         </td>
-                         <td>
+                        <td>
                             <select class="form-select" aria-label="Default select example" @bind="expense.Year">
                                 <option selected>No Month Selected</option>
                                 <NHFor From="2000"
-                                                                    To="3000"
-                                                                    Context="i">
+                                       To="3000"
+                                       Context="i">
                                     <option value="@i">@i</option>
                                 </NHFor>
                             </select>
                         </td>
-                         <td>
+                        <td>
                             <select class="form-select" aria-label="Default select example" @bind="expense.PreiodType" disabled="@expense.OneTimePay">
                                 <NHForeach TItem="string" Items="@(new[] {"Monthly","Yearly"})"
-                                Context="mode">
+                                           Context="mode">
                                     <option value="@mode" selected="@(mode == expense.PreiodType)">@mode</option>
                                 </NHForeach>
                             </select>
@@ -179,13 +236,13 @@
                             </div>
                         </td>
                         <td>
-                            <button class="btn btn-danger text-white font-bold" @onclick="()=>DeleteAdditionExpense(expense.Id)"><i class="trash icon"/></button>
+                            <button class="btn btn-danger text-white font-bold" @onclick="()=>DeleteAdditionExpense(expense.Id)"><i class="trash icon" /></button>
                         </td>
                     </tr>
                 </NHTypeTable>
                 <br />
                 <div class="form-group">
-                    <label for="text">Total Additional Expenses</label>
+                    <label for="text">Total Additional Expenses (Monthly Only)</label>
                     <input id="text" value="@newData.TotalAddiontialExpense.ToMoneyFormat()" type="text" readonly class="form-control">
                 </div>
                 <div class="form-group">
@@ -195,8 +252,16 @@
                 <br />
                 <br />
                 <div class="form-group">
-                    <button name="submit" @onclick="Submit" class="btn btn-primary rounded-full text-white font-bold"><i class="save icon" /> Save</button>
+                    <button name="submit" class="btn btn-primary rounded-full text-white font-bold" @onclick="Calculate"><i class="calculator icon" /> Calculate Total</button>
                 </div>
+                <br />
+                <br />
+                @if (totalCalculate)
+                {
+                    <div class="form-group">
+                        <button name="submit" @onclick="Submit" class="btn btn-primary rounded-full text-white font-bold"><i class="save icon" /> Save</button>
+                    </div>
+                }
                 <br />
                 <br />
             </div>
@@ -204,3 +269,4 @@
         </div>
     </AuthorizeView>
 </CascadingAuthenticationState>
+<LoadingModal @ref="loading" />
