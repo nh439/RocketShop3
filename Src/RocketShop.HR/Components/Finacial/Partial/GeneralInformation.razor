@@ -1,0 +1,112 @@
+﻿@using RocketShop.Database.Model.Identity.Views
+@using RocketShop.Database.Model.NonDatabaseModel
+@using RocketShop.Framework.Extension
+@using RocketShop.HR.Services
+@using RocketShop.SharedBlazor.Condition
+@using RocketShop.SharedBlazor.SharedFunction
+@inject IUserServices userService;
+@inject IFinacialServices finacialServices;
+@inject ILogger<GeneralInformation> logger;
+@code {
+    [Parameter]
+    public string userId { get; set; }
+    UserView user = new UserView();
+    UserFinacialData data = new UserFinacialData();
+    bool bankNameInvalid = false,
+    accountNoInvalid = false,
+    userRight = false,
+    dataRight = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var userResult = await userService.GetUserViewById(userId);
+        var dataResult = await finacialServices.GetFinacialData(userId);
+        if(userResult.IsRight)
+        {
+            userRight = true;
+            user = userResult.GetRight().Extract()!;
+        }
+        else
+        {
+            logger.LogError(userResult.GetLeft()!, userResult.GetLeft()!.Message);
+            return;
+        }
+        if (dataResult.IsRight)
+        {
+            dataRight = true;
+            data = dataResult.GetRight().Extract()!;
+        }
+        else
+        {
+            logger.LogError(dataResult.GetLeft()!, dataResult.GetLeft()!.Message);
+            return;
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+}
+<NHIF Condition="@(userRight && dataRight)">
+<YesOperation>
+        <div class="row font-semibold text-xl">
+            <div class="col-1"></div>
+            <div class="col-10">
+                <div class='row'>
+                    <div class='col'>
+                        <div class="form-group">
+                            <label for="UserId">User</label>
+                            <input id="AccountNo" value="@($"{user.Firstname} {user.Surname}")" name="AccountNo" type="text" class="form-control" readonly>
+                        </div>
+                    </div>
+                    <div class='col'>
+                        <div class="form-group">
+                            <label for="Salary">Salary</label>
+                            <input id="Salary" @bind-value="data.Salary" name="Salary" type="number" class="form-control">
+                        </div>
+                    </div>
+                </div>
+                <br />
+                <div class='row'>
+                    <div class='col'>
+                        <div class="form-group">
+                            <label for="SocialSecurites">Social Securites</label>
+                            <input id="SocialSecurites" @bind-value="data.SocialSecurites" name="SocialSecurites" type="number" class="form-control">
+                        </div>
+                    </div>
+                    <div class='col'>
+                        <div class="form-group">
+                            <label for="TravelExpenses">Travel Expenses</label>
+                            <input id="TravelExpenses" @bind-value="data.TravelExpenses" name="TravelExpenses" type="number" class="form-control">
+                        </div>
+                    </div>
+                </div>
+                <br />
+                <div class='row'>
+                    <div class='col'>
+                        <div class="form-group">
+                            <label for="BankName">Bank Name</label>
+                            <input id="BankName" @bind-value="data.BankName" name="BankName" type="text" class="form-control @TextValidator.InvalidDisplay(bankNameInvalid)">
+                        </div>
+                    </div>
+                    <div class='col'>
+                        <div class="form-group">
+                            <label for="AccountNo">Account No</label>
+                            <input id="AccountNo" @bind-value=data.AccountNo name="AccountNo" type="text" class="form-control @TextValidator.InvalidDisplay(accountNoInvalid)">
+                        </div>
+                    </div>
+                </div>
+                <br />
+                <div class='row'>
+                    <div class='col'>
+                        <div class="form-group">
+                            <label for="Currency">Currency</label>
+                            <input id="Currency" @bind-value="data.Currency" name="Currency" type="text" class="form-control">
+                        </div>
+                    </div>
+                    <div class="col"></div>
+                </div>
+            </div>
+        </div>
+</YesOperation>
+<NoOperation>
+<div class="text-2xl">Error While Getting Data</div>
+</NoOperation>
+</NHIF>

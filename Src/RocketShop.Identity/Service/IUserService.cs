@@ -19,8 +19,8 @@ namespace RocketShop.Identity.Service
         Task<Either<Exception, UserView>> GetByEmpCode(string employeeCode);
         Task<Either<Exception, UserView>> GetByEmail(string email);
     }
-    public class UserService (IdentityContext context, Serilog.ILogger logger)
-        : BaseServices("User Service", logger)
+    public class UserService (IdentityContext context, ILogger<UserService> logger)
+        : BaseServices<UserService>("User Service", logger)
         ,IUserService
     {
         readonly DbSet<User> entity = context.Users;

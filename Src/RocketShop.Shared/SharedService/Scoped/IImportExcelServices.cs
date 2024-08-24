@@ -1,5 +1,6 @@
 ﻿using ClosedXML.Excel;
 using LanguageExt;
+using Microsoft.Extensions.Logging;
 using RocketShop.Framework.Extension;
 using RocketShop.Framework.Services;
 using System;
@@ -16,7 +17,8 @@ namespace RocketShop.Shared.SharedService.Scoped
         Either<Exception, DataTable> ReadExcel(byte[] data);
         Task<Either<Exception, DataTable>> ReadExcelAsync(byte[] data);
     }
-    public class ImportExcelServices(Serilog.ILogger logger) : BaseServices("Import Excel Services",logger), IImportExcelServices
+    public class ImportExcelServices(ILogger<ImportExcelServices> logger) : 
+        BaseServices<ImportExcelServices>("Import Excel Services",logger), IImportExcelServices
     {
         public Either<Exception, DataTable> ReadExcel(byte[] data) =>
             InvokeService(() =>

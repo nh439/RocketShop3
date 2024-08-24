@@ -1,5 +1,6 @@
 ﻿using LanguageExt;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using RocketShop.Framework.Extension;
 using RocketShop.Framework.Services;
 using RocketShop.Shared.GlobalConfiguration;
@@ -17,7 +18,8 @@ namespace RocketShop.Shared.SharedService.Singletion
     {
         Task<Either<Exception, ConfigurationCenter>> GetUrls();
     }
-    public class UrlIndeiceServices(IConfiguration configuration, Serilog.ILogger logger) : BaseServices("Url Indeice Services", logger), IUrlIndeiceServices
+    public class UrlIndeiceServices(IConfiguration configuration, ILogger<UrlIndeiceServices> logger) : 
+        BaseServices<UrlIndeiceServices>("Url Indeice Services", logger), IUrlIndeiceServices
     {
         ConfigurationCenter? center;
         public async Task<Either<Exception, ConfigurationCenter>> GetUrls() =>

@@ -1,5 +1,6 @@
 ﻿using LanguageExt;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using RocketShop.Framework.Extension;
 using RocketShop.Framework.Services;
@@ -18,8 +19,8 @@ namespace RocketShop.Shared.SharedService.Singletion
         Task<Either<Exception, string[]>> GetMyPermissions(string token);
         Either<Exception, string> BuildToken(HttpContext httpContext);
     }
-    public class GetRoleAndPermissionService(Serilog.ILogger logger,
-        IUrlIndeiceServices urlIndeiceServices) : BaseServices("Get Role And Permission Service", logger),
+    public class GetRoleAndPermissionService(ILogger<GetRoleAndPermissionService> logger,
+        IUrlIndeiceServices urlIndeiceServices) : BaseServices<GetRoleAndPermissionService>("Get Role And Permission Service", logger),
         IGetRoleAndPermissionService
     {
 

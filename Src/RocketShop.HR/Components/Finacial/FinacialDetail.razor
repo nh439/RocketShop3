@@ -1,0 +1,70 @@
+﻿@page "/EmployeeFinace/Data/{userId}"
+@using RocketShop.HR.ServicePermissions
+@using RocketShop.SharedBlazor.Condition
+@inject NavigationManager navigationManager
+@rendermode InteractiveServer
+
+@code {
+    [Parameter]
+    public string userId { get; set; }
+    int mode = 1;
+    protected override async Task OnInitializedAsync()
+    {
+       var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (state.User.Identity!.IsAuthenticated)
+        {
+
+        }
+        else
+            navigationManager.NavigateTo("/login");
+    }
+    void ModeChange(int newMode)
+    {
+        mode = newMode;
+        StateHasChanged();
+    }
+}
+<CascadingAuthenticationState >
+    <AuthorizeView Policy="@ServicePermission.AllHRServiceName">
+        <Authorized>
+            <h1 class="text-3xl font-bold">User Finacial Detail</h1>
+            <br />
+            <hr />
+            <br />
+            <br />
+            <div class="card bg-blue-50">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link @(mode==1 ? "active":"")" @onclick="() =>ModeChange(1)">General Information</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(mode==2 ? "active":"")" @onclick="() =>ModeChange(2)">Additional Expenses</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(mode==3 ? "active":"")" @onclick="() =>ModeChange(3)">Payroll Histories</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body ">
+                    @if (mode == 1)
+                    {
+                        <RocketShop.HR.Components.Finacial.Partial.GeneralInformation userId="@userId" />
+                    }
+                    else if (mode == 2)
+                    {
+                        <h1 class="text-3xl gont-bold">2</h1>
+                    }
+                    else if (mode == 3)
+                    {
+                        <h1 class="text-3xl gont-bold">3</h1>
+                    }
+
+                </div>
+            </div>
+        </Authorized>
+        <NotAuthorized>
+            <div class="text-3xl">Access Deined</div>
+        </NotAuthorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>

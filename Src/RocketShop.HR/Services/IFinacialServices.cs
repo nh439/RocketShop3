@@ -24,13 +24,13 @@ namespace RocketShop.HR.Services
         Task<Either<Exception, List<UserView>>> ListNoFinacialDataUsers(string? searchKeyword = null, int? take = null);
     }
     public class FinacialServices(
-        Serilog.ILogger logger,
+        ILogger<FinacialServices> logger,
         UserFinacialRepository userFinacialRepository,
         ProvidentRepository providentRepository,
         UserAdditionalExpenseRepository userAdditionalExpenseRepository,
         UserRepository userRepository,
         IConfiguration configuration
-        ) : BaseServices("Finacial Service",logger,new NpgsqlConnection(configuration.GetIdentityConnectionString())), IFinacialServices
+        ) : BaseServices<FinacialServices>("Finacial Service",logger,new NpgsqlConnection(configuration.GetIdentityConnectionString())), IFinacialServices
     {
         public async Task<Either<Exception, List<UserFinancialView>>> ListFinacialData(string? searchName = null, int? page = null, int per = 20) =>
             await InvokeServiceAsync(async () => await userFinacialRepository.ListFinancialData(searchName, page, per));

@@ -17,8 +17,8 @@ namespace RocketShop.Identity.Service
     }
     public class ProfileServices(IdentityContext identityContext,
             UserManager<User> userManager,
-            Serilog.ILogger logger)
-        : BaseServices("Profile Service", logger), 
+            ILogger<ProfileServices> logger)
+        : BaseServices<ProfileServices>("Profile Service", logger), 
         IProfileServices
     {
 

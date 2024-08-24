@@ -36,13 +36,13 @@ namespace RocketShop.HR.Services
         Task<Either<Exception, Option<UserView>>> GetUserViewById(string userId);
     }
     public class UserServices(
-        Serilog.ILogger logger,
+        ILogger<UserServices> logger,
         IConfiguration configuration,
         UserRepository userRepository,
         UserInformationRepository userInformationRepository,
         ChangePasswordHistoryRepository changePasswordHistoryRepository,
         UserFinacialRepository userFinacialRepository,
-        ProvidentRepository userProvidentFundRepository) : BaseServices("User Service", logger,new NpgsqlConnection(configuration.GetIdentityConnectionString())), IUserServices
+        ProvidentRepository userProvidentFundRepository) : BaseServices<UserServices>("User Service", logger,new NpgsqlConnection(configuration.GetIdentityConnectionString())), IUserServices
     {
         public async Task<Either<Exception, bool>> CreateUser(User user, UserInformation information) =>
             await InvokeServiceAsync(async () =>
