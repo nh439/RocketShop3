@@ -1,6 +1,7 @@
 ﻿@page "/logout"
 @using Microsoft.AspNetCore.Identity
 @using RocketShop.Database.Model.Identity
+@using RocketShop.Framework.Extension
 @using RocketShop.Shared.SharedService;
 @using RocketShop.Shared.SharedService.Singletion
 @inject NavigationManager navigationManager
@@ -14,6 +15,8 @@
     {
 
         await signInManager.SignOutAsync();
-        navigationManager.NavigateTo("/", true);
+        var uris = (await urlIndeiceServices.GetUrls()).GetRight();
+        string redirectUrl = navigationManager.BaseUri;
+        navigationManager.NavigateTo($"{uris!.IdentityUrl}/home/Logout?redirectUrl={redirectUrl}", true);
     }
 }

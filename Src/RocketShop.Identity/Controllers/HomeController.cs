@@ -166,10 +166,12 @@ x-client-ver=7.1.2.0";
             });
 
         [HttpGet]
-        public async Task<IActionResult> Logout() =>
+        public async Task<IActionResult> Logout(string? redirectUrl) =>
             await InvokeControllerServiceAsync(async () =>
             {
                 await signInManager.SignOutAsync();
+                if (redirectUrl.HasMessage())
+                    return Redirect(redirectUrl!);
                 return Redirect("/");
             });
 

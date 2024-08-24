@@ -43,6 +43,19 @@
         }
         await InvokeAsync(StateHasChanged);
     }
+    void CalculateTotalPayment()
+    {
+        var fixPayment = data.SocialSecurites + data.ProvidentFundPerMonth;
+        data.TotalPayment = data.Salary - fixPayment + (data.TravelExpenses + data.TotalAddiontialExpense);
+        StateHasChanged();
+
+    }
+    async void Submit()
+    {
+        bankNameInvalid = newData.BankName.IsNullOrEmpty();
+        accountNoInvalid = newData.AccountNo.IsNullOrEmpty();
+
+    }
 }
 <NHIF Condition="@(userRight && dataRight)">
 <YesOperation>
@@ -102,6 +115,9 @@
                         </div>
                     </div>
                     <div class="col"></div>
+                </div>
+                <div class="form-group">
+                    <button name="submit" @onclick="Submit" class="btn btn-primary rounded-full text-white font-bold"><i class="save icon" /> Save</button>
                 </div>
             </div>
         </div>
