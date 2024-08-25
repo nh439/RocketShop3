@@ -13,7 +13,7 @@ namespace RocketShop.HR.Services
     public interface IFinacialServices
     {
         Task<Either<Exception, List<UserFinancialView>>> ListFinacialData(string? searchName = null, int? page = null, int per = 20);
-        Task<Either<Exception, Option<UserFinacialData>>> GetFinacialData(string userId);
+        Task<Either<Exception, Option<UserFinacialData>>> GetFinacialData(string userId, bool includedAdditionalExpense = true);
         Task<Either<Exception, bool>> CreateFinacialData(UserFinacialData data, UserProvidentFund? userProvidentFund = null);
         Task<Either<Exception, bool>> UpdateFinacialData(UserFinancal financal);
         Task<Either<Exception, bool>> SetAdditionalExpense(string userId, IEnumerable<UserAddiontialExpense> expenses);
@@ -35,12 +35,16 @@ namespace RocketShop.HR.Services
         public async Task<Either<Exception, List<UserFinancialView>>> ListFinacialData(string? searchName = null, int? page = null, int per = 20) =>
             await InvokeServiceAsync(async () => await userFinacialRepository.ListFinancialData(searchName, page, per));
 
-        public async Task<Either<Exception, Option<UserFinacialData>>> GetFinacialData(string userId) =>
+        public async Task<Either<Exception, Option<UserFinacialData>>> GetFinacialData(string userId,bool includedAdditionalExpense = true) =>
             await InvokeServiceAsync(async () =>
             {
                 var finacial = await userFinacialRepository.GetUserFinancal(userId);
-                var expenses = await userAdditionalExpenseRepository.ListAdditionalExpenseByUserId(userId);
-                return new UserFinacialData(finacial!, expenses).AsOptional();
+                if (includedAdditionalExpense)
+                {
+                    var expenses = await userAdditionalExpenseRepository.ListAdditionalExpenseByUserId(userId);
+                    return new UserFinacialData(finacial!, expenses).AsOptional();
+                }
+                return new UserFinacialData(finacial!).AsOptional();
             });
 
         public async Task<Either<Exception, bool>> CreateFinacialData(UserFinacialData data, UserProvidentFund? userProvidentFund = null) =>

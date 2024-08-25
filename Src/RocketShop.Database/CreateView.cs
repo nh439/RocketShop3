@@ -77,6 +77,42 @@ inner join ""AspNetUsers"" s on s.""Id""=u.""UserId"";");
             create or replace view ""{TableConstraint.UserView}"" as SELECT a.""Id"", a.""EmployeeCode"", a.""Email"", a.""Firstname"", a.""Surname"", a.""Prefix"", u.""Department"", u.""CurrentPosition"", u.""ManagerId"", NOT (a.""Resigned"") as ""Active"" FROM ""AspNetUsers"" AS a LEFT JOIN ""UserInformations"" AS u ON a.""Id"" = u.""UserId""
             "
             );
+
+        public static CreateViewSql UserViewV3 = new CreateViewSql($@"
+  create or replace view ""{TableConstraint.UserView}"" as SELECT a.""Id"",
+    a.""EmployeeCode"",
+    a.""Email"",
+    a.""Firstname"",
+    a.""Surname"",
+    a.""Prefix"",
+    u.""Department"",
+    u.""CurrentPosition"",
+    u.""ManagerId"",
+    NOT a.""Resigned"" AS ""Active"",
+	(CURRENT_TIMESTAMP < a.""LockoutEnd"" and a.""LockoutEnd"" is not null ) as ""Lock"",
+	case  
+	WHEN CURRENT_TIMESTAMP < a.""LockoutEnd"" AND a.""LockoutEnd"" IS NOT NULL = True
+	then a.""LockoutEnd"" - CURRENT_TIMESTAMP
+	ELSE null
+	end as ""LockRemaining""
+   FROM ""AspNetUsers"" a
+     LEFT JOIN ""UserInformations"" u ON a.""Id"" = u.""UserId"";
+",
+            $@"
+  create or replace view ""{TableConstraint.UserView}"" as SELECT a.""Id"",
+    a.""EmployeeCode"",
+    a.""Email"",
+    a.""Firstname"",
+    a.""Surname"",
+    a.""Prefix"",
+    u.""Department"",
+    u.""CurrentPosition"",
+    u.""ManagerId"",
+    NOT a.""Resigned"" AS ""Active"",
+	(CURRENT_TIMESTAMP < a.""LockoutEnd"" and a.""LockoutEnd"" is not null ) as ""Lock""
+   FROM ""AspNetUsers"" a
+     LEFT JOIN ""UserInformations"" u ON a.""Id"" = u.""UserId"";
+");
         #endregion
 
     }

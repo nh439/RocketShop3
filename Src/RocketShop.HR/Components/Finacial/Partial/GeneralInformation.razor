@@ -4,6 +4,7 @@
 @using RocketShop.HR.Services
 @using RocketShop.SharedBlazor.Condition
 @using RocketShop.SharedBlazor.SharedFunction
+@using RocketShop.SharedBlazor.Tools
 @inject IUserServices userService;
 @inject IFinacialServices finacialServices;
 @inject ILogger<GeneralInformation> logger;
@@ -12,6 +13,7 @@
     public string userId { get; set; }
     UserView user = new UserView();
     UserFinacialData data = new UserFinacialData();
+    LoadingModal? loading;
     bool bankNameInvalid = false,
     accountNoInvalid = false,
     userRight = false,
@@ -20,8 +22,8 @@
     protected override async Task OnInitializedAsync()
     {
         var userResult = await userService.GetUserViewById(userId);
-        var dataResult = await finacialServices.GetFinacialData(userId);
-        if(userResult.IsRight)
+        var dataResult = await finacialServices.GetFinacialData(userId, false);
+        if (userResult.IsRight)
         {
             userRight = true;
             user = userResult.GetRight().Extract()!;
@@ -52,13 +54,43 @@
     }
     async void Submit()
     {
-        bankNameInvalid = newData.BankName.IsNullOrEmpty();
-        accountNoInvalid = newData.AccountNo.IsNullOrEmpty();
-
+        bankNameInvalid = data.BankName.IsNullOrEmpty();
+        accountNoInvalid = data.AccountNo.IsNullOrEmpty();
+        if (bankNameInvalid || accountNoInvalid) return;
+        loading?.Open("Updating...");
+        try
+        {
+            CalculateTotalPayment();
+            var result = await finacialServices.UpdateFinacialData(data.GetUserFinancal);
+            if (result.IsLeft)
+                throw result.GetLeft()!;
+            loading?.Then(true, "Update Success", "Success");
+        }
+        catch (Exception x)
+        {
+            logger.LogError(x, x.Message);
+            loading?.Then(false, "Update Failed", "Failed");
+        }
     }
+    void SalaryChange(ChangeEventArgs e)
+    {
+        data.Salary = e.Value!.ToString().ToDecimal();
+        CalculateTotalPayment();
+    }
+     void SocialSecuritesChange(ChangeEventArgs e)
+    {
+        data.SocialSecurites= e.Value!.ToString().ToDecimal();
+        CalculateTotalPayment();
+    }
+     void TravelExpenseChange(ChangeEventArgs e)
+    {
+        data.SocialSecurites= e.Value!.ToString().ToDecimal();
+        CalculateTotalPayment();
+    }
+
 }
 <NHIF Condition="@(userRight && dataRight)">
-<YesOperation>
+    <YesOperation>
         <div class="row font-semibold text-xl">
             <div class="col-1"></div>
             <div class="col-10">
@@ -72,7 +104,7 @@
                     <div class='col'>
                         <div class="form-group">
                             <label for="Salary">Salary</label>
-                            <input id="Salary" @bind-value="data.Salary" name="Salary" type="number" class="form-control">
+                            <input id="Salary" value="@data.Salary" @onchange="SalaryChange" name="Salary" type="number" class="form-control">
                         </div>
                     </div>
                 </div>
@@ -81,13 +113,13 @@
                     <div class='col'>
                         <div class="form-group">
                             <label for="SocialSecurites">Social Securites</label>
-                            <input id="SocialSecurites" @bind-value="data.SocialSecurites" name="SocialSecurites" type="number" class="form-control">
+                            <input id="SocialSecurites" value="@data.SocialSecurites" @onchange="SocialSecuritesChange" name="SocialSecurites" type="number" class="form-control">
                         </div>
                     </div>
                     <div class='col'>
                         <div class="form-group">
                             <label for="TravelExpenses">Travel Expenses</label>
-                            <input id="TravelExpenses" @bind-value="data.TravelExpenses" name="TravelExpenses" type="number" class="form-control">
+                            <input id="TravelExpenses" value="@data.TravelExpenses" @onchange="TravelExpenseChange" name="TravelExpenses" type="number" class="form-control">
                         </div>
                     </div>
                 </div>
@@ -116,13 +148,30 @@
                     </div>
                     <div class="col"></div>
                 </div>
+                <br />
+                <div class='row'>
+                    <div class='col'>
+                        <div class="form-group">
+                            <label for="text">Total Additional Expenses (Monthly Only)</label>
+                            <input id="text" value="@data.TotalAddiontialExpense.ToMoneyFormat()" type="text" readonly class="form-control">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="text1">Total Payment</label>
+                            <input id="text1" value="@data.TotalPayment.ToMoneyFormat()" name="text1" type="text" readonly class="form-control">
+                        </div>
+                    </div>
+                </div>
+                <br />
                 <div class="form-group">
                     <button name="submit" @onclick="Submit" class="btn btn-primary rounded-full text-white font-bold"><i class="save icon" /> Save</button>
                 </div>
             </div>
         </div>
-</YesOperation>
-<NoOperation>
-<div class="text-2xl">Error While Getting Data</div>
-</NoOperation>
+    </YesOperation>
+    <NoOperation>
+        <div class="text-2xl">Error While Getting Data</div>
+    </NoOperation>
 </NHIF>
+<LoadingModal @ref="loading" />
