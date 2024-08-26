@@ -1,0 +1,26 @@
+﻿@using RocketShop.Framework.Extension
+
+
+@code {
+    [Parameter]
+    public bool Condition { get; set; }
+    [Parameter]
+    public RenderFragment? YesOperation{ get; set; }
+    [Parameter]
+    public RenderFragment? NoOperation{ get; set; }
+}
+
+@if(Condition)
+{
+    if (YesOperation.IsNotNull())
+    {
+        @YesOperation
+    }
+}
+else
+{
+    if (NoOperation.IsNotNull())
+    {
+        @NoOperation
+    }
+}

@@ -14,6 +14,6 @@ namespace RocketShop.Database.Model.Identity
         [Key]
         public string UserId { get; set; }
         public decimal Balance { get; set; }
-        public string Currenct { get; set; } = "THB";
+        public string Currency { get; set; } = "THB";
     }
 }

@@ -13,11 +13,11 @@ namespace RocketShop.Identity.Service
         Task<Either<Exception, IdentityResult>> ResetPassword(string userId, string token, string password);
         Task<Either<Exception, string>> GenerateResetPasswordToken(string userId);
     }
-    public class PasswordServices : BaseServices, IPasswordServices
+    public class PasswordServices : BaseServices<PasswordServices>, IPasswordServices
     {
         readonly UserManager<User> _userManager;
         readonly DbSet<ChangePasswordHistory> _changePasswordHistory;
-        public PasswordServices(UserManager<User> userManager, Serilog.ILogger logger, IdentityContext context) : base("Password", logger)
+        public PasswordServices(UserManager<User> userManager, ILogger<PasswordServices> logger, IdentityContext context) : base("Password", logger)
         {
             _userManager = userManager;
             _changePasswordHistory = context.ChangePasswordHistory;

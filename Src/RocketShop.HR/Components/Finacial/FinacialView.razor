@@ -25,14 +25,14 @@
     protected override async Task OnInitializedAsync()
     {
         state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        state.If(x => x.IsNotNull() && x!.User.Identity!.IsAuthenticated, x =>
+        state.If(x => x.IsNotNull() && x!.User.Identity!.IsAuthenticated, async x =>
         {
-            FetchData();
+            await FetchData();
         },
         x => navigationManager.NavigateTo("/login"));
 
     }
-    async void FetchData()
+    async Task FetchData()
     {
         var dataResult = await finacialServices.ListFinacialData(searchQuery, currentPage);
         var countResult = await finacialServices.ListFinacialViewCount(searchQuery);
@@ -66,16 +66,16 @@
         isLoading = false;
         await InvokeAsync(StateHasChanged);
     }
-    void SetPage(int newPage)
+    async Task SetPage(int newPage)
     {
         currentPage = newPage;
-        FetchData();
+        await FetchData();
     }
-    void SetSearch()
+    async Task SetSearch()
     {
         currentPage = 1;
         searchQuery = _searchQuery;
-        FetchData();
+        await FetchData();
     }
 }
 
@@ -118,16 +118,16 @@
             </button>
             <br />
             <br />
-            <NHTable Columns="@Headers"
-                     HasDataFlagment="@userfinacialData.HasData()"
+            <NHTypeTable Columns="@Headers"
                      LoadingFlagment="@isLoading"
                      TableClass="table table-hover"
                      TableHeaderClass="table-dark"
                      TableBodyClass="table-success"
                      LoadingDisplayText="Loading..."
-                     NoDataDisplayText="No Data">
-                @foreach (var item in userfinacialData!)
-                {
+                     NoDataDisplayText="No Data"
+                    TItem="UserFinancialView"
+                         Items="userfinacialData"
+            Context="item">
                     <tr>
                         <td>@item.EmployeeCode</td>
                         <td>@item.EmployeeName</td>
@@ -145,9 +145,8 @@
                                 <i class="eye icon" />
                             </a>
                         </td>
-                    </tr>
-                }
-            </NHTable>
+                    </tr>   
+            </NHTypeTable>
             <br />
             <nav aria-label="Page navigation example">
                 <ul class="pagination justify-content-center">

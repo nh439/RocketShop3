@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using RocketShop.Database.EntityFramework;
@@ -11,9 +12,11 @@ using RocketShop.Database.EntityFramework;
 namespace RocketShop.Migration.Migrations
 {
     [DbContext(typeof(IdentityContext))]
-    partial class IdentityContextModelSnapshot : ModelSnapshot
+    [Migration("20240824152429_Add_UserLock")]
+    partial class Add_UserLock
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -673,9 +676,6 @@ namespace RocketShop.Migration.Migrations
 
                     b.Property<bool>("Lock")
                         .HasColumnType("boolean");
-
-                    b.Property<TimeSpan>("LockRemaining")
-                        .HasColumnType("interval");
 
                     b.Property<string>("ManagerId")
                         .HasColumnType("text");

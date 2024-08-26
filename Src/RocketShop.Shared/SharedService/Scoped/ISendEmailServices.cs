@@ -1,5 +1,6 @@
 ﻿using LanguageExt;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using RocketShop.Framework.Extension;
 using RocketShop.Framework.Services;
 using RocketShop.Shared.Helper;
@@ -17,8 +18,8 @@ namespace RocketShop.Shared.SharedService.Scoped
     {
         Task<Either<Exception, string>> SendEmailAsync(MailRequest request);
     }
-    public class SendEmailServices(IConfiguration configuration, Serilog.ILogger logger) :
-        BaseServices("Send Email Service", logger), ISendEmailServices
+    public class SendEmailServices(IConfiguration configuration,ILogger<SendEmailServices> logger) :
+        BaseServices<SendEmailServices>("Send Email Service", logger), ISendEmailServices
     {
         public async Task<Either<Exception, string>> SendEmailAsync(MailRequest request) =>
             await InvokeServiceAsync(async () =>

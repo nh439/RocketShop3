@@ -116,10 +116,18 @@ namespace RocketShop.HR.Repository
         public async Task<List<UserView>> ListUserNOTIn(string[] userIds,string? searchKeyword = null, bool? isActive = null, int? take = null) =>
             await userView
             .Where(x=>!userIds.Contains(x.UserId) && (isActive.IsNull() || isActive!.Value)
-            && (searchKeyword.IsNullOrEmpty() || string.Join(" ",x.EmployeeCode, x.Prefix, x.Firstname, x.Surname).Contains(searchKeyword!))
+            && (searchKeyword.IsNullOrEmpty() || string.Join(" ",x.EmployeeCode, x.Prefix, x.Firstname, x.Surname).ToLower().Contains(searchKeyword!.ToLower()))
             )
             .UsePaging(take.HasValue ? 1 : null,take ?? 10)
             .ToListAsync();
+
+        public async Task<bool> LockedUser(string userId, DateTime lockUntil) =>
+            await context.Users.Where(x => x.Id == userId)
+            .ExecuteUpdateAsync(s => s.SetProperty(t => t.LockoutEnd, lockUntil)).GeAsync(0);
+
+        public async Task<bool> UnlockUser(string userId) =>
+            await context.Users.Where(x => x.Id == userId)
+            .ExecuteUpdateAsync(s => s.SetProperty(t => t.LockoutEnd,l=> null)).GeAsync(0);
 
         IQueryable<UserView> SearchUser(IQueryable<UserView> query, string? searchTerm) =>
            searchTerm.HasMessage() ? query.Where(x => x.EmployeeCode.Contains(searchTerm!) ||

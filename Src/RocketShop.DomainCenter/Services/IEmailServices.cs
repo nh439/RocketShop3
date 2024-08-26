@@ -12,7 +12,7 @@ namespace RocketShop.DomainCenter.Services
     {
         Task<Either<Exception, string>> SendAsync(MailRequest request);
     }
-    public class EmailServices(Serilog.ILogger logger,IConfiguration configuration) : BaseServices("Email Service",logger), IEmailServices
+    public class EmailServices(ILogger<EmailServices> logger,IConfiguration configuration) : BaseServices<EmailServices>("Email Service",logger), IEmailServices
     {
         readonly string username = configuration.GetSection("Email:Name").Value ??"",
             password = configuration.GetSection("Email:Password").Value ?? "", 

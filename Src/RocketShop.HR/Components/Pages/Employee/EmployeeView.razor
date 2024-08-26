@@ -5,14 +5,18 @@
 @using RocketShop.HR.Services
 @using RocketShop.HR.Components.Pages.Employee.Modal
 @using RocketShop.Shared.SharedService.Scoped
+@using RocketShop.SharedBlazor.Condition
+@using RocketShop.SharedBlazor.Loop
 @using RocketShop.SharedBlazor.SharedBlazorServices.Scope
 @using RocketShop.SharedBlazor.Table
 @using Blazored.Typeahead
 @using System.Security.Claims
 @using RocketShop.SharedBlazor.Tools
+@using System.Timers
 @inject IUserServices userServices
 @inject IExportExcelServices exportService
 @inject IDownloadServices downloadService
+@implements IDisposable
 @rendermode InteractiveServer
 
 @code {
@@ -26,13 +30,17 @@
     string? searchQuery, _searchQuery;
 
     List<UserView>? users = new List<UserView>();
-    const string Headers = "Employee Id;Prefix;Firstname;Lastname;Email;Position;Department;Status;";
+    const string Headers = "Employee Id;Prefix;Firstname;Lastname;Email;Position;Department;Status;Locked Remaining;";
     bool isLoading = true;
     [CascadingParameter]
     public AuthenticationState? state { get; set; }
     DeleteEmployeeModal? deleteModal;
-    LoadingModal loading;
+    LoadingModal? loading;
+    UnlockConfirmation? unlock;
+    LockConfirmation? locked;
     string? currentUser;
+    System.Timers.Timer timer = new System.Timers.Timer();
+    bool isFetching = false;
     protected override async Task OnInitializedAsync()
     {
         state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -40,11 +48,20 @@
         {
             currentUser = state.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)!.Value;
             FetchData();
+            timer = new Timer(1000);
+            timer.Elapsed += Ticking;
+            timer.Enabled = true;
         });
+    }
+    void Ticking(object? src, ElapsedEventArgs e)
+    {
+        if (!isFetching)
+            FetchData();
     }
 
     async void FetchData()
     {
+        isFetching = true;
         var userResult = await userServices.ListUsers(searchQuery, currentPage);
         var countResult = await userServices.GetCount(searchQuery);
         var lastPageResult = await userServices.GetLastpage(searchQuery);
@@ -76,6 +93,7 @@
             })
         );
         isLoading = false;
+        isFetching = false;
         await InvokeAsync(StateHasChanged);
     }
     void DeleteBtnClicked(UserView user)
@@ -96,24 +114,34 @@
     }
     async void Export()
     {
-        loading.Open("Gethering User Data...");
+        loading?.Open("Gethering User Data...");
         var data = await userServices.ListUsers(searchQuery);
-        if(data.IsLeft)
+        if (data.IsLeft)
         {
-            await loading.Then(false, data.GetLeft()!.Message, "Export Failed");
+            await loading?.Then(false, data.GetLeft()!.Message, "Export Failed");
             return;
         }
-        loading.SetText("Exporting...");
+        loading?.SetText("Exporting...");
         var table = await data.GetRight()!.ToDataTableAsync();
         var encodedResult = exportService.ExportExcel(table);
         if (encodedResult.IsLeft)
         {
-            await loading.Then(false, encodedResult.GetLeft()!.Message, "Export Failed");
+            await loading!.Then(false, encodedResult.GetLeft()!.Message, "Export Failed");
             return;
         }
-        await downloadService.DownloadAsync($"employees_{DateTime.Now.ToString("yyyyMMdd")}.xlsx",encodedResult.GetRight()! );
-        loading.Close();
+        await downloadService.DownloadAsync($"employees_{DateTime.Now.ToString("yyyyMMdd")}.xlsx", encodedResult.GetRight()!);
+        loading?.Close();
     }
+    void IDisposable.Dispose()
+    {
+        timer?.Dispose();
+    }
+    void UnlockBtnClicked(string userId, string employeeCode) =>
+    unlock!.Open(userId, employeeCode);
+
+    void LockBtnClicked(string userId, string employeeCode) =>
+    locked!.Open(userId, employeeCode);
+
 }
 <CascadingAuthenticationState>
     <AuthorizeView Policy="@ServicePermission.AllHRServiceName">
@@ -130,7 +158,7 @@
                         <div class="input-group mb-3">
                             <input type="text" class="form-control" @bind-value="_searchQuery" placeholder="Employee Name" aria-label="Recipient's username" aria-describedby="basic-addon2">
                             <div class="input-group-append">
-                                <button class="btn btn-outline-info" type="button"@onclick="SetSearch" ><i class="search icon"></i> Search</button>
+                                <button class="btn btn-outline-info" type="button" @onclick="SetSearch"><i class="search icon"></i> Search</button>
                             </div>
                         </div>
                     </div>
@@ -148,43 +176,63 @@
             </button>
             <br />
             <br />
-            <NHTable TableClass="table table-hover table-bordered"
-                     TableHeaderClass="table-dark"
-                     TableBodyClass="table-info"
-                     Columns="@Headers"
-                     NoDataDisplayText="No Employees"
-                     HasDataFlagment="@users.HasData()"
-                     LoadingFlagment="@isLoading"
-                     LoadingDisplayText="Loading..."
-            draggable>
-                @foreach (var user in users!)
-                {
-                    <tr>
-                        <td>@user.EmployeeCode</td>
-                        <td>@user.Prefix</td>
-                        <td>@user.Firstname</td>
-                        <td>@user.Surname</td>
-                        <td>@user.Email</td>
-                        <td>@user.Position</td>
-                        <td>@user.Department</td>
-                        <td>@(user.Active ? "Active" : "Inactive")</td>
-                        <td>
-                            <a href="/employee/@user.UserId" class="bg-teal-600 hover:bg-teal-800 text-white font-bold py-1 px-2 rounded-full mx-1" data-toggle="tooltip" data-placement="bottom" title="Edit User Data">
-                                <i class="eye icon" />
-                            </a>
-                            <a href="/employee/@user.UserId/changepassword" class="text-purple bg-yellow-400 hover:bg-yellow-500 focus:outline-none focus:ring-4 focus:ring-yellow-300 font-medium rounded-full text-sm px-1.5 py-2 text-center me-2 mb-2 dark:focus:ring-yellow-900 mx-1" data-toggle="tooltip" data-placement="bottom" title="User Change Password">
-                                <i class="key icon" /> 
-                                </a>
-                            @if (user.UserId != currentUser)
-                            {
+            <NHTypeTable TableClass="table table-hover table-bordered"
+                         TableHeaderClass="table-dark"
+                         TableBodyClass="table-info"
+                         Columns="@Headers"
+                         NoDataDisplayText="No Employees"
+                         LoadingFlagment="@isLoading"
+                         LoadingDisplayText="Loading..."
+                         TItem="UserView"
+                         Items="users"
+                         Context="user">
+                <tr>
+                    <td>@user.EmployeeCode</td>
+                    <td>@user.Prefix</td>
+                    <td>@user.Firstname</td>
+                    <td>@user.Surname</td>
+                    <td>@user.Email</td>
+                    <td>@user.Position</td>
+                    <td>@user.Department</td>
+                    <td>@(user.Active ? (user.Lock ? "Temporary Locked" : "Active") : "Inactive")</td>
+                    <td>
+                        <NHIF Condition="user.Lock">
+                            <YesOperation>@user.LockRemaining.ToRemainingFormat()</YesOperation>
+                        </NHIF>
+                    </td>
+                    <td>
+                        <a href="/employee/@user.UserId" class="bg-teal-600 hover:bg-teal-800 text-white font-bold py-1 px-2 rounded-full mx-1" data-toggle="tooltip" data-placement="bottom" title="Edit User Data">
+                            <i class="eye icon" />
+                        </a>
+                        <a href="/employee/@user.UserId/changepassword" class="text-purple bg-yellow-400 hover:bg-yellow-500 focus:outline-none focus:ring-4 focus:ring-yellow-300 font-medium rounded-full text-sm px-1.5 py-2 text-center me-2 mb-2 dark:focus:ring-yellow-900 mx-1" data-toggle="tooltip" data-placement="bottom" title="User Change Password">
+                            <i class="key icon" />
+                        </a>
+                        <NHIF Condition="@(user.UserId != currentUser)">
+                            <YesOperation>
                                 <button class="bg-red-600 hover:bg-red-800 text-white font-bold py-1 px-2 rounded-full mx-1" @onclick="()=>DeleteBtnClicked(user)" data-toggle="tooltip" data-placement="bottom" title="Delete User">
                                     <i class="trash icon" />
                                 </button>
-                            }
-                        </td>
-                    </tr>
-                }
-            </NHTable>
+                            </YesOperation>
+                        </NHIF>
+                        <NHIF Condition="@user.Active">
+                            <YesOperation>
+                                <NHIF Condition="user.Lock">
+                                    <YesOperation>
+                                        <button class="bg-gray-600 hover:bg-gray-800 text-white font-bold py-1 px-2 rounded-full mx-1" data-toggle="tooltip" data-placement="bottom" title="Unlock User" @onclick="()=>UnlockBtnClicked(user.UserId,user.EmployeeCode)">
+                                            <i class="lock open icon"></i>
+                                        </button>
+                                    </YesOperation>
+                                    <NoOperation>
+                                        <button class="bg-gray-600 hover:bg-gray-800 text-white font-bold py-1 px-2 rounded-full mx-1" data-toggle="tooltip" data-placement="bottom" title="Temporary Lock User" @onclick="()=>LockBtnClicked(user.UserId,user.EmployeeCode)">
+                                            <i class="lock icon"></i>
+                                        </button>
+                                    </NoOperation>
+                                </NHIF>
+                            </YesOperation>
+                        </NHIF>                   
+                    </td>
+                </tr>
+            </NHTypeTable>
             <br />
             <nav aria-label="Page navigation example">
                 <ul class="pagination justify-content-center">
@@ -218,4 +266,6 @@
 </CascadingAuthenticationState>
 
 <DeleteEmployeeModal @ref="deleteModal" />
+<UnlockConfirmation @ref="unlock" />
+<LockConfirmation @ref="locked" />
 <LoadingModal @ref="loading" />

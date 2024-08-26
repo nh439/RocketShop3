@@ -1,6 +1,6 @@
 ﻿using LanguageExt;
+using Microsoft.Extensions.Logging;
 using RocketShop.Framework.Extension;
-using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -10,8 +10,8 @@ using System.Threading.Tasks;
 
 namespace RocketShop.Framework.Services
 {
-    public class BaseServices(string serviceName,
-            ILogger logger,
+    public class BaseServices<TService>(string serviceName,
+            ILogger<TService> logger,
             IDbConnection? connection = null) : IDisposable
     {
 
@@ -32,7 +32,7 @@ namespace RocketShop.Framework.Services
                 }
                 catch (Exception x)
                 {
-                    logger.Error(x, "Service : {ServiceName} Error : {Message}", serviceName, errorMessage ?? x.Message);
+                    logger.LogError(x, "Service : {ServiceName} Error : {Message}", serviceName, errorMessage ?? x.Message);
                     if (catchOperation.IsNotNull())
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
                         catchOperation(x);
@@ -60,7 +60,7 @@ namespace RocketShop.Framework.Services
                 }
                 catch (Exception x)
                 {
-                    logger.Error(x, "Service : {ServiceName} Error : {Message}", serviceName, errorMessage ?? x.Message);
+                    logger.LogError(x, "Service : {ServiceName} Error : {Message}", serviceName, errorMessage ?? x.Message);
                     if (catchOperation.IsNotNull())
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
                         catchOperation(x);
@@ -88,7 +88,7 @@ namespace RocketShop.Framework.Services
                 }
                 catch (Exception x)
                 {
-                    logger.Error(x, "Service : {ServiceName} Error : {Message}", serviceName, errorMessage ?? x.Message);
+                    logger.LogError(x, "Service : {ServiceName} Error : {Message}", serviceName, errorMessage ?? x.Message);
                     if (catchOperation.IsNotNull())
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
                         catchOperation(x);
@@ -116,7 +116,7 @@ namespace RocketShop.Framework.Services
                 }
                 catch (Exception x)
                 {
-                    logger.Error(x, "Service : {ServiceName} Error : {Message}", serviceName, errorMessage ?? x.Message);
+                    logger.LogError(x, "Service : {ServiceName} Error : {Message}", serviceName, errorMessage ?? x.Message);
                     if (catchOperation.IsNotNull())
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
                         catchOperation(x);
@@ -147,7 +147,7 @@ namespace RocketShop.Framework.Services
                 }
                 catch (Exception x)
                 {
-                    logger.Error(x, "Service : {ServiceName} Error : {Message}", serviceName, errorMessage ?? x.Message);
+                    logger.LogError(x, "Service : {ServiceName} Error : {Message}", serviceName, errorMessage ?? x.Message);
                     if (catchOperation.IsNotNull())
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
                         catchOperation(x);
@@ -187,7 +187,7 @@ namespace RocketShop.Framework.Services
                 }
                 catch (Exception x)
                 {
-                    logger.Error(x, errorMessage ?? x.Message);
+                    logger.LogError(x, errorMessage ?? x.Message);
                     if (catchOperation.IsNotNull())
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
                         catchOperation(x);

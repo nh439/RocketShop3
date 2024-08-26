@@ -40,7 +40,7 @@ services:
     ports :
       - "12002:8080"
     env_file:
-      - .env
+      - hr.env
     depends_on :
       - migration
     networks :

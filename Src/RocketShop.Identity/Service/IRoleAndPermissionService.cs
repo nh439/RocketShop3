@@ -21,10 +21,10 @@ namespace RocketShop.Identity.Service
         Task<Either<Exception, Role>> GerRole(int roleId);
         Task<Either<Exception, List<string>>> GetAuthoriozedPermissionList(string userId);
     }
-    public class RoleAndPermissionService(Serilog.ILogger logger, 
+    public class RoleAndPermissionService(ILogger<RoleAndPermissionService> logger, 
         IConfiguration configuration,
         IdentityContext context) 
-        : BaseServices("Role And Permission Service", logger, new NpgsqlConnection(configuration.GetIdentityConnectionString())), IRoleAndPermissionService
+        : BaseServices<RoleAndPermissionService>("Role And Permission Service", logger, new NpgsqlConnection(configuration.GetIdentityConnectionString())), IRoleAndPermissionService
     {
 
 

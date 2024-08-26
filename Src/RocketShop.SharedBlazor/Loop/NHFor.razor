@@ -1,0 +1,45 @@
+﻿@using RocketShop.Framework.Extension
+
+
+@code {
+    /// <summary>
+    /// Start Number
+    /// </summary>
+    [Parameter]
+    public long From { get; set; } = 0;
+    /// <summary>
+    /// Stop Number
+    /// </summary>
+    [Parameter]
+    public long To { get; set; } = 0;
+
+    /// <summary>
+    /// Number Decrement Mode (i--) Is False[Defaut] Is IncrementMode(i++) 
+    /// </summary>
+    [Parameter]
+    public bool DecrementMode { get; set; } = false;
+
+    [Parameter]
+    public RenderFragment<long>? ChildContent { get; set; }
+
+}
+@if (DecrementMode)
+{
+    @for(long i =From; i> To;i--)
+    {
+        @if (ChildContent.IsNotNull())
+        {
+            @ChildContent!(i)
+        }
+    }
+}
+else
+{
+    @for (long i = From; i < To; i++)
+    {
+        @if (ChildContent.IsNotNull())
+        {
+            @ChildContent!(i)
+        }
+    }
+}

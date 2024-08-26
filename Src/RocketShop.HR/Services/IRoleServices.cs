@@ -19,11 +19,11 @@ namespace RocketShop.HR.Services
         Task<Either<Exception, Option<Role>>> GetRole(int roleId);
         Task<Either<Exception, int>> RevokeAllRolesByUser(string userId);
     }
-    public class RoleServices(Serilog.ILogger logger,
+    public class RoleServices(ILogger<RoleServices> logger,
         IConfiguration configuration,
         RoleRepository roleRepository,
         UserRoleRepository userRoleRepository) :
-        BaseServices("Role Service", logger, new NpgsqlConnection(configuration.GetIdentityConnectionString())), IRoleServices
+        BaseServices<RoleServices>("Role Service", logger, new NpgsqlConnection(configuration.GetIdentityConnectionString())), IRoleServices
     {
         public async Task<Either<Exception, bool>> Create(Role role) =>
             await InvokeServiceAsync(async () => await roleRepository.Create(role));

@@ -1,5 +1,6 @@
 ﻿using ClosedXML.Excel;
 using LanguageExt;
+using Microsoft.Extensions.Logging;
 using RocketShop.Framework.Services;
 using System;
 using System.Collections.Generic;
@@ -15,7 +16,8 @@ namespace RocketShop.Shared.SharedService.Scoped
         Either<Exception, byte[]> ExportExcel(DataTable table);
         Either<Exception, byte[]> ExportExcel(DataSet set);
     }
-    public class ExportExcelServices(Serilog.ILogger logger) : BaseServices("Export Excel Service", logger), IExportExcelServices
+    public class ExportExcelServices(ILogger<ExportExcelServices> logger) : 
+        BaseServices<ExportExcelServices>("Export Excel Service", logger), IExportExcelServices
     {
         public Either<Exception, byte[]> ExportExcel(DataTable table) =>
             InvokeService(() =>

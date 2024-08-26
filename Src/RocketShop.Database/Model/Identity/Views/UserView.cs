@@ -22,6 +22,8 @@ namespace RocketShop.Database.Model.Identity.Views
         public string? Position { get; init; }
         public string? ManagerId { get; init; }
         public bool Active { get; init; }
+        public bool Lock { get; init; }
+        public TimeSpan? LockRemaining { get; init; }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     }
 }
