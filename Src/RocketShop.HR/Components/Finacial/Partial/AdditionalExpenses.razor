@@ -1,5 +1,151 @@
-﻿<h3>AdditionalExpenses</h3>
-
+﻿@using LanguageExt
+@using RocketShop.Database.Model.Identity
+@using RocketShop.Database.Model.NonDatabaseModel
+@using RocketShop.Framework.Extension
+@using RocketShop.HR.Services
+@using RocketShop.SharedBlazor.Loop
+@using RocketShop.SharedBlazor.Table
+@using RocketShop.SharedBlazor.Tools
+@inject IFinacialServices finacialServices
+@inject ILogger<AdditionalExpenses> logger
 @code {
+    [Parameter]
+    public string UserId { get; set; }
+    Option<UserFinacialData> data;
+    List<UserAddiontialExpense> additionalExpenses = new List<UserAddiontialExpense>();
+    LoadingModal? loading;
+    const string AdditionalHeaders = "Name;One Time;Month;Year;Type;Balance;";
+    protected override async Task OnInitializedAsync()
+    {
+        var dataResult = await finacialServices.GetFinacialData(UserId);
+        if (dataResult.IsLeft)
+        {
+            var exc = dataResult.GetLeft();
+            logger.LogError(exc, exc?.Message);
+            return;
+        }
 
+        data = dataResult.GetRight();
+        if (data.IsSome)
+        {
+            var d = data.Extract()!;
+            additionalExpenses = d.AddiontialExpenses ?? new List<UserAddiontialExpense>();
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+    void DeleteAdditionExpense(string id)
+    {
+        additionalExpenses = additionalExpenses.Where(x => x.Id != id).ToList();
+        StateHasChanged();
+    }
+    void AddExpenseClicked()
+    {
+        additionalExpenses.Add(new UserAddiontialExpense
+            {
+                Balance = 0,
+                Paid = false
+            });
+        StateHasChanged();
+    }
+    async Task Submit()
+    {
+        loading?.Open("Updating...");
+        if(additionalExpenses.Where(x=> x.ExpenseName.IsNullOrEmpty()).HasData())
+        {
+            loading?.Then(false,"Expense Name Required","Required");
+            return;
+        }
+        try
+        {
+            var result = await finacialServices.SetAdditionalExpense(UserId, additionalExpenses);
+            if (result.IsLeft)
+                throw result.GetLeft()!;
+            if (!result.GetRight())
+                throw new Exception("Update Failed");
+            loading?.Then(true, "Update Expense Successful", "Success");
+        }
+        catch(Exception x)
+        {
+            logger.LogError(x,x.Message);
+            loading?.Then(false, "Error While Update Additional Expense", "Failed");
+        }
+        finally
+        {
+            await OnInitializedAsync();
+        }
+    }
 }
+<br />
+<button class="btn btn-info rounded-full text-white font-bold" @onclick="AddExpenseClicked"><i class="plus icon"></i>Add Expenses</button>
+<br />
+<br />
+<NHTypeTable Items="additionalExpenses"
+             TItem="UserAddiontialExpense"
+             TableClass="table table-hover"
+             NoDataDisplayText="No Additional Expense"
+             TableBodyClass="table-success"
+             TableHeaderClass="table-dark"
+             Context="expense"
+             Columns="@AdditionalHeaders">
+    <tr>
+        <td>
+            <div class="form-group">
+                <input id="text" @bind-value="expense.ExpenseName" name="text" type="text" class="form-control">
+            </div>
+        </td>
+        <td>
+            <div>
+                <label class="inline-flex items-center cursor-pointer">
+                    <input type="checkbox" @bind-value="expense.OneTimePay" checked="@expense.OneTimePay" class="sr-only peer">
+                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-1 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-400 rounded-full peer dark:bg-gray-400 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                    <span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300"></span>
+                </label>
+            </div>
+        </td>
+        <td>
+            <select class="form-select" aria-label="Default select example" @bind="expense.Month">
+                <option selected="@(expense.Month.IsNull())">No Month Selected</option>
+                <NHFor From="1"
+                       To="13"
+                       Context="i">
+                    <option value="@i" selected="@(expense.Month==i)">@i</option>
+                </NHFor>
+            </select>
+        </td>
+        <td>
+            <select class="form-select" aria-label="Default select example" @bind="expense.Year">
+                <option selected="@(expense.Year.IsNull())">No Year Selected</option>
+                <NHFor From="2000"
+                       To="3000"
+                       Context="i">
+                    <option value="@i" selected="@(expense.Year==i)">@i</option>
+                </NHFor>
+            </select>
+        </td>
+        <td>
+            <select class="form-select" aria-label="Default select example" @bind="expense.PreiodType" disabled="@expense.OneTimePay">
+                <NHForeach TItem="string" Items="@(new[] {"Monthly","Yearly"})"
+                           Context="mode">
+                    <option value="@mode" selected="@(mode == expense.PreiodType)">@mode</option>
+                </NHForeach>
+                @if (expense.OneTimePay)
+                {
+                    <option  selected="@(expense.OneTimePay)">One Time Pay</option>
+                }
+            </select>
+        </td>
+        <td>
+            <div class="form-group">
+                <input id="text" @bind-value="expense.Balance" step="0.01" name="text" type="number" class="form-control">
+            </div>
+        </td>
+        <td>
+            <button class="btn btn-danger text-white font-bold" @onclick="()=>DeleteAdditionExpense(expense.Id)"><i class="trash icon" /></button>
+        </td>
+    </tr>
+</NHTypeTable>
+<br />
+<div class="form-group">
+    <button name="submit" @onclick="Submit" class="btn btn-primary rounded-full text-white font-bold"><i class="save icon" /> Save</button>
+</div>
+<LoadingModal @ref="loading" />

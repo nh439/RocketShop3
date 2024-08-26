@@ -123,11 +123,11 @@ namespace RocketShop.HR.Repository
 
         public async Task<bool> LockedUser(string userId, DateTime lockUntil) =>
             await context.Users.Where(x => x.Id == userId)
-            .ExecuteUpdateAsync(s => s.SetProperty(t => t.LockoutEnd, lockUntil)) > 0;
+            .ExecuteUpdateAsync(s => s.SetProperty(t => t.LockoutEnd, lockUntil)).GeAsync(0);
 
         public async Task<bool> UnlockUser(string userId) =>
             await context.Users.Where(x => x.Id == userId)
-            .ExecuteUpdateAsync(s => s.SetProperty(t => t.LockoutEnd,l=> null)) > 0;
+            .ExecuteUpdateAsync(s => s.SetProperty(t => t.LockoutEnd,l=> null)).GeAsync(0);
 
         IQueryable<UserView> SearchUser(IQueryable<UserView> query, string? searchTerm) =>
            searchTerm.HasMessage() ? query.Where(x => x.EmployeeCode.Contains(searchTerm!) ||

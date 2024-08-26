@@ -5,6 +5,7 @@
 @using RocketShop.Database.Model.Identity.Views
 @using RocketShop.Database.Model.NonDatabaseModel
 @using RocketShop.Framework.Extension
+@using RocketShop.HR.Enum
 @using RocketShop.HR.ServicePermissions
 @using RocketShop.HR.Services
 @using RocketShop.SharedBlazor.Loop
@@ -89,7 +90,11 @@
         try
         {
             newData.UserId = selectedUser.UserId;
-            addiontialExpenses.HasDataAndForEach(f => f.UserId = newData.UserId);
+            addiontialExpenses.HasDataAndForEach(f => {
+                f.UserId = newData.UserId;
+                if (f.OneTimePay)
+                    f.PreiodType = AddiontialExpenseEnum.OneTime;
+            });
             var result = await finacialServices.CreateFinacialData(
                 new UserFinacialData(newData, addiontialExpenses),
                 new UserProvidentFund

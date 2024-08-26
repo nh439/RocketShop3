@@ -1,0 +1,89 @@
+﻿
+@using RocketShop.Framework.Extension
+@using RocketShop.HR.Services
+@using RocketShop.SharedBlazor.Loop
+@using RocketShop.SharedBlazor.Modal
+@using RocketShop.SharedBlazor.Modal.ModalCompenment
+@using RocketShop.SharedBlazor.Tools
+@inject IUserServices userService
+
+@code {
+    Modal? e;
+    string userId = string.Empty,
+    employeeCode = string.Empty;
+    LoadingModal? loading;
+    LockDropDown[] lockDropDowns = new[]
+    {
+        new LockDropDown(1,"1 Hour"),
+        new LockDropDown(2,"2 Hour"),
+        new LockDropDown(3,"3 Hour"),
+        new LockDropDown(6,"6 Hour"),
+        new LockDropDown(9,"9 Hour"),
+        new LockDropDown(12,"12 Hour"),
+        new LockDropDown(18,"18 Hour"),
+        new LockDropDown(24,"1 Day"),
+        new LockDropDown(24*2,"2 Day"),
+        new LockDropDown(24*3,"3 Day"),
+        new LockDropDown(24*5,"5 Day"),
+        new LockDropDown(24*7,"7 Day"),
+        new LockDropDown(24*10,"10 Day"),
+        new LockDropDown(24*15,"15 Day"),
+        new LockDropDown(24*20,"20 Day"),
+        new LockDropDown(24*25,"25 Day"),
+        new LockDropDown(24*30,"30 Day")
+    };
+    int lockedHours = 1;
+    public void Open(string _userId, string _empCode)
+    {
+        userId = _userId;
+        employeeCode = _empCode;
+        e!.Show();
+    }
+    public async void LockAccepted()
+    {
+        e!.Close();
+        loading!.Open("Locking Users...", "User Locking...");
+        bool isSuccess = false;
+        string message = string.Empty;
+        try
+        {     
+            var result = await userService.LockUser(userId,lockedHours);
+            if (result.IsLeft)
+                throw result.GetLeft()!;
+            if (!result.GetRight()!)
+                throw new Exception("Error While Lock User");
+            message = "User Locked";
+            isSuccess = true;
+        }
+        catch (Exception x)
+        {
+            isSuccess = false;
+            message = x.Message;
+        }
+        finally
+        {
+            await loading.Then(isSuccess, message, (isSuccess ? "Success" : "Failed"));
+        }
+    }
+    sealed record LockDropDown(int hours,string display);
+}
+
+<Modal @ref="e" Title="Lock Users Confirmation">
+    <ModalBody>
+        <h2 class="text-2xl">Are You Sure TO Lock Employee : '@employeeCode'</h2>
+        <br />
+        <select class="form-select" aria-label="Default select example" @bind="lockedHours">
+            <NHForeach TItem="LockDropDown" Items="lockDropDowns" Context="dropDown">
+            <option value="@dropDown.hours">@dropDown.display</option>
+            </NHForeach>
+        </select>
+        <h2 class="text-xl text-red">
+            Temporary Lock Can be locked for a maximum of 30 days. If you want longer, we recommend you to <b class="font-bold">Set Resign.</b>
+        </h2>
+    </ModalBody>
+    <ModalFooter>
+        <button type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-3 py-1.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mx-1" @onclick="LockAccepted"><i class="check icon" /> Yes</button>
+        <button type="button" class="text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-full text-sm px-3 py-1.5 me-2 mb-2 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700 dark:border-gray-700 mx-1" @onclick="()=>e!.Close()"><i class="x icon" /> No</button>
+    </ModalFooter>
+</Modal>
+<LoadingModal @ref="loading" LoadingTitle="Locking User" />

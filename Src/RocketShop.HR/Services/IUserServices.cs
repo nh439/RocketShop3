@@ -34,6 +34,8 @@ namespace RocketShop.HR.Services
         Task<Either<Exception, Option<UserInformation>>> GetInformation(string userId);
         Task<Either<Exception, Option<User>>> FindByEmail(string email);
         Task<Either<Exception, Option<UserView>>> GetUserViewById(string userId);
+        Task<Either<Exception, bool>> UnlockUser(string userId);
+        Task<Either<Exception, bool>> LockUser(string userId, int lockedHours);
     }
     public class UserServices(
         ILogger<UserServices> logger,
@@ -183,6 +185,13 @@ namespace RocketShop.HR.Services
 
         public async Task<Either<Exception, Option<UserView>>> GetUserViewById(string userId)=>
             await InvokeServiceAsync(async () => (await userRepository.GetUserViewById(userId)).AsOptional());
+
+        public async Task<Either<Exception, bool>> UnlockUser(string userId) =>
+            await InvokeServiceAsync(async () => await userRepository.UnlockUser(userId));
+
+        public async Task<Either<Exception, bool>> LockUser(string userId, int lockedHours) =>
+            await InvokeServiceAsync(async () => await userRepository.LockedUser(userId,DateTime.UtcNow.AddHours(lockedHours)));
+
 
     }
 }

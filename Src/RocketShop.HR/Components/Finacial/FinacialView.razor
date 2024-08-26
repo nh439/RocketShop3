@@ -25,14 +25,14 @@
     protected override async Task OnInitializedAsync()
     {
         state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        state.If(x => x.IsNotNull() && x!.User.Identity!.IsAuthenticated, x =>
+        state.If(x => x.IsNotNull() && x!.User.Identity!.IsAuthenticated, async x =>
         {
-            FetchData();
+            await FetchData();
         },
         x => navigationManager.NavigateTo("/login"));
 
     }
-    async void FetchData()
+    async Task FetchData()
     {
         var dataResult = await finacialServices.ListFinacialData(searchQuery, currentPage);
         var countResult = await finacialServices.ListFinacialViewCount(searchQuery);
@@ -66,16 +66,16 @@
         isLoading = false;
         await InvokeAsync(StateHasChanged);
     }
-    void SetPage(int newPage)
+    async Task SetPage(int newPage)
     {
         currentPage = newPage;
-        FetchData();
+        await FetchData();
     }
-    void SetSearch()
+    async Task SetSearch()
     {
         currentPage = 1;
         searchQuery = _searchQuery;
-        FetchData();
+        await FetchData();
     }
 }
 
