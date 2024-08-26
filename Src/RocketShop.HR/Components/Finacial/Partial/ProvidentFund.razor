@@ -1,0 +1,50 @@
+﻿@using RocketShop.Database.Model.Identity.Views
+@using RocketShop.Database.Model.NonDatabaseModel
+@using RocketShop.Framework.Extension
+@using RocketShop.HR.Services
+@using RocketShop.SharedBlazor.Condition
+@inject IFinacialServices finacialServices
+@inject ILogger<ProvidentFund> logger;
+@code {
+    [Parameter]
+    public string UserId { get; set; }
+    UserFinacialData userFinancialView = new ();
+    bool isSuccess = false;
+    protected override async Task OnInitializedAsync()
+    {
+        var rawData = await finacialServices.GetFinacialData(UserId);
+        if(rawData.IsLeft)
+        {
+            var x = rawData.GetLeft();
+            logger.LogError(x, x.Message);
+            isSuccess = false;
+            return;
+        }
+        userFinancialView = rawData.GetRight().Extract(new())!;
+        isSuccess = true;
+        StateHasChanged();
+    }
+}
+<NHIF Condition="isSuccess">
+    <YesOperation>
+        <div class="row text-xl font-semibold">
+            <div class="col-1"></div>
+            <div class="col-10">
+                <div class="form-group">
+                    <label for="text">Accumulated per month</label>
+                    <input id="text" @bind-value="userFinancialView.ProvidentFundPerMonth" type="text" class="form-control">
+                </div>
+                <br />
+                <div class="form-group">
+                    <label for="text1">Total Amount</label>
+                    <input id="text1" @bind-value="userFinancialView.AccumulatedProvidentFund" name="text1" type="text" class="form-control">
+                </div>
+            </div>
+            <div class="col-1"></div>
+        </div> 
+    </YesOperation>
+    <NoOperation>
+        <h1 class="text-2xl">Error While Geting Data</h1>
+    </NoOperation>
+</NHIF>
+ 

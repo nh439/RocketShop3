@@ -41,8 +41,12 @@
                         <li class="nav-item">
                             <a class="nav-link @(mode==2 ? "active":"")" @onclick="() =>ModeChange(2)">Additional Expenses</a>
                         </li>
+                         <li class="nav-item">
+                            <a class="nav-link @(mode==3 ? "active":"")" @onclick="() =>ModeChange(3)">Provident Fund</a>
+                        </li>
+
                         <li class="nav-item">
-                            <a class="nav-link @(mode==3 ? "active":"")" @onclick="() =>ModeChange(3)">Payroll Histories</a>
+                            <a class="nav-link @(mode==4 ? "active":"")" @onclick="() =>ModeChange(4)">Payroll Histories</a>
                         </li>
                     </ul>
                 </div>
@@ -57,8 +61,13 @@
                     }
                     else if (mode == 3)
                     {
-                        <h1 class="text-3xl gont-bold">3</h1>
+                        <RocketShop.HR.Components.Finacial.Partial.ProvidentFund UserId="@userId" />
                     }
+                    else if (mode == 4)
+                    {
+                        <h1 class="text-3xl gont-bold">4</h1>
+                    }
+
 
                 </div>
             </div>
