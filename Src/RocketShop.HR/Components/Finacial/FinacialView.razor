@@ -3,8 +3,12 @@
 @using RocketShop.Database.Model.NonDatabaseModel
 @using RocketShop.Framework.Extension
 @using RocketShop.HR.Services
+@using RocketShop.Shared.SharedService.Scoped
+@using RocketShop.SharedBlazor.SharedBlazorServices.Scope
 @using RocketShop.SharedBlazor.Table
 @inject IFinacialServices finacialServices
+@inject IDownloadServices downloadServices
+@inject IExportExcelServices exportServices
 @inject NavigationManager navigationManager
 @rendermode InteractiveServer
 

@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RocketShop.Framework\RocketShop.Framework.csproj" />
+    <ProjectReference Include="..\RocketShop.Database\RocketShop.Database.csproj" />
   </ItemGroup>
 
 </Project>
