@@ -17,7 +17,7 @@ namespace RocketShop.Database.Model.NonDatabaseModel
             AccountNo = AccountNo,
             BankName = BankName,
             Currency = Currency,
-            ProvidentFund = AccumulatedProvidentFund,
+            ProvidentFund = ProvidentFundPerMonth,
             Salary = Salary,
             SocialSecurites = SocialSecurites,
             TotalAddiontialExpense = TotalAddiontialExpense,
@@ -30,12 +30,12 @@ namespace RocketShop.Database.Model.NonDatabaseModel
 
         }
 
-        public UserFinacialData(UserFinancal userFinancal,IEnumerable<UserAddiontialExpense>? userAddiontialExpenses= null)
+        public UserFinacialData(UserFinancal userFinancal,IEnumerable<UserAddiontialExpense>? userAddiontialExpenses= null,UserProvidentFund? userProvidentFund = null)
         {
             AccountNo = userFinancal.AccountNo;
             BankName  = userFinancal.BankName;
             Currency  = userFinancal.Currency;
-            AccumulatedProvidentFund = userFinancal.ProvidentFund;
+            ProvidentFundPerMonth= userFinancal.ProvidentFund;
             Salary        = userFinancal.Salary;
             SocialSecurites = userFinancal.SocialSecurites;
             TotalAddiontialExpense = userFinancal.TotalAddiontialExpense;
@@ -47,6 +47,8 @@ namespace RocketShop.Database.Model.NonDatabaseModel
                 TotalAddiontialExpense = userAddiontialExpenses!.Select(s => s.Balance).Sum();
                 AddiontialExpenses = userAddiontialExpenses!.ToList();
             }
+            if (userProvidentFund.IsNotNull())
+                AccumulatedProvidentFund = userProvidentFund.Balance;
         }
 
 

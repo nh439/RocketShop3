@@ -18,7 +18,7 @@ namespace RocketShop.HR.Repository
 
         public async Task<bool> Update(UserProvidentFund userProvidentFund, IDbConnection identityConnection, IDbTransaction? transaction = null) =>
             await identityConnection.CreateQueryStore(table)
-            .Where(nameof(UserProvidentFund),userProvidentFund.UserId)
+            .Where(nameof(UserProvidentFund.UserId),userProvidentFund.UserId)
             .UpdateAsync(userProvidentFund,transaction).GeAsync(0);
 
         public async Task<bool> Delete(string userId, IDbConnection identityConnection, IDbTransaction? transaction = null)=>

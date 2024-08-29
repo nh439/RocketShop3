@@ -23,6 +23,7 @@ namespace RocketShop.HR.Services
         Task<Either<Exception, int>> ListFinacialViewCount(string? searchName = null);
         Task<Either<Exception, int>> ListFinacialViewLastpage(string? searchName = null, int per = 20);
         Task<Either<Exception, List<UserView>>> ListNoFinacialDataUsers(string? searchKeyword = null, int? take = null);
+        Task<Either<Exception, bool>> UpdateProvidentFundRate(string userId, decimal newProvidentFundRate);
     }
     public class FinacialServices(
         ILogger<FinacialServices> logger,
@@ -40,12 +41,13 @@ namespace RocketShop.HR.Services
             await InvokeServiceAsync(async () =>
             {
                 var finacial = await userFinacialRepository.GetUserFinancal(userId);
+                var providentFund = await providentRepository.GetUserProvidentFund(userId);
                 if (includedAdditionalExpense)
                 {
                     var expenses = await userAdditionalExpenseRepository.ListAdditionalExpenseByUserId(userId);
-                    return new UserFinacialData(finacial!, expenses).AsOptional();
+                    return new UserFinacialData(finacial!, expenses,providentFund).AsOptional();
                 }
-                return new UserFinacialData(finacial!).AsOptional();
+                return new UserFinacialData(finacial!,null, providentFund).AsOptional();
             });
 
         public async Task<Either<Exception, bool>> CreateFinacialData(UserFinacialData data, UserProvidentFund? userProvidentFund = null) =>
@@ -117,6 +119,16 @@ namespace RocketShop.HR.Services
             {
                 var userId = await userFinacialRepository.ListUsersWhenHasFinacialData();
                 return await userRepository.ListUserNOTIn(userId, searchKeyword, true, take);
+            });
+        public async Task<Either<Exception, bool>> UpdateProvidentFundRate(string userId, decimal newProvidentFundRate) =>
+            await InvokeDapperServiceAsync(async con =>
+            {
+                var item = await userFinacialRepository.GetUserFinancal(userId);
+                if (item.IsNull())
+                    return false;
+                var fixPayment = item!.SocialSecurites + newProvidentFundRate;
+                item.TotalPayment = item.Salary - fixPayment + (item.TravelExpenses + item.TotalAddiontialExpense);
+                return await userFinacialRepository.UpdateProvidentFundRate(userId, newProvidentFundRate, item.TotalPayment,con);
             });
 
     }

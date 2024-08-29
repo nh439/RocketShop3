@@ -3,12 +3,14 @@
 @using RocketShop.Framework.Extension
 @using RocketShop.HR.Services
 @using RocketShop.SharedBlazor.Condition
+@using RocketShop.SharedBlazor.Tools
 @inject IFinacialServices finacialServices
 @inject ILogger<ProvidentFund> logger;
 @code {
     [Parameter]
     public string UserId { get; set; }
     UserFinacialData userFinancialView = new ();
+    LoadingModal loading;
     bool isSuccess = false;
     protected override async Task OnInitializedAsync()
     {
@@ -23,6 +25,30 @@
         userFinancialView = rawData.GetRight().Extract(new())!;
         isSuccess = true;
         StateHasChanged();
+    }
+    async Task Submit()
+    {
+        loading.Open("Submitting...");
+        try
+        {
+            var result = await finacialServices.UpdateProvidentFundRate(UserId, userFinancialView.ProvidentFundPerMonth);
+            if (result.IsLeft)
+                throw result.GetLeft()!;
+            result = await finacialServices.UpdateProvidentFund(new Database.Model.Identity.UserProvidentFund
+                {
+                    Currency = "THB",
+                    Balance = userFinancialView.AccumulatedProvidentFund,
+                    UserId = UserId
+                });
+            if (result.IsLeft)
+                throw result.GetLeft()!;
+            await loading.Then(true, "Update Success", "Success");
+        }
+        catch(Exception x)
+        {
+            logger.LogError(x, x.Message);
+            loading?.Then(false, "Update Failed", "Failed");
+        }
     }
 }
 <NHIF Condition="isSuccess">
@@ -39,6 +65,10 @@
                     <label for="text1">Total Amount</label>
                     <input id="text1" @bind-value="userFinancialView.AccumulatedProvidentFund" name="text1" type="text" class="form-control">
                 </div>
+                <br />
+                <div class="form-group">
+                    <button name="submit" @onclick="Submit" class="btn btn-primary rounded-full text-white font-bold"><i class="save icon" /> Save</button>
+                </div>
             </div>
             <div class="col-1"></div>
         </div> 
@@ -47,4 +77,4 @@
         <h1 class="text-2xl">Error While Geting Data</h1>
     </NoOperation>
 </NHIF>
- 
+ <LoadingModal @ref="loading" />
