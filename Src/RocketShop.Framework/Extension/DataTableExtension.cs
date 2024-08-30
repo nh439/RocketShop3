@@ -9,20 +9,20 @@ namespace RocketShop.Framework.Extension
 {
     public static class DataTableExtension
     {
-        public static DataTable ToDataTable<T>(this IEnumerable<T> items)
+        public static DataTable ToDataTable<T>(this IEnumerable<T>? items)
         {
             DataTable table = new DataTable();
             var properties = typeof(T).GetProperties();
             foreach (var property in properties)
                 table.Columns.Add(property.Name);
-            foreach (var item in items)
+            items.HasDataAndForEach(item =>
             {
                 var data = new object?[properties.Length];
                 for (int i = 0; i < properties.Length; i++)
                     data[i] = properties[i].GetValue(item);
 
                 table.Rows.Add(data);
-            }
+            });
             return table;
         }
 

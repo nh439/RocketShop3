@@ -121,122 +121,282 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         public static async Task<SqlResult> CompiledAsync(this QueryStore store) =>
            await Task.Run(() => store.Compiled());
 
-        public static IEnumerable<T> Fetch<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30)
+        /// <summary>
+        /// Fetching Data From Database
+        /// </summary>
+        /// <typeparam name="T">Entity To Fetch</typeparam>
+        /// <param name="store">Query Store</param>
+        /// <param name="transaction">Db Transaction</param>
+        /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
+        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
+        /// <returns>Enumerable Of Entity</returns>
+        public static IEnumerable<T> Fetch<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30, bool debugMode = false)
         {
             var compiledResult = store.Compiled();
+            if (debugMode)
+                Console.WriteLine($"Executing : {compiledResult.Sql}");
             return store.connection.Query<T>(compiledResult.Sql, compiledResult.Parameters, transaction, commandTimeout: commandTimeout);
         }
-
-        public static async Task<IEnumerable<T>> FetchAsync<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30)
+        /// <summary>
+        /// Fetching Data From Database With Asynchronous Pattern
+        /// </summary>
+        /// <typeparam name="T">Entity To Fetch</typeparam>
+        /// <param name="store">Query Store</param>
+        /// <param name="transaction">Db Transaction</param>
+        /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
+        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
+        /// <returns>Enumerable Of Entity</returns>
+        public static async Task<IEnumerable<T>> FetchAsync<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30,bool debugMode = false)
         {
             var compiledResult = await store.CompiledAsync();
+            if (debugMode)
+                Console.WriteLine($"Executing : {compiledResult.Sql}");
             return await store.connection.QueryAsync<T>(compiledResult.Sql, compiledResult.Parameters, transaction, commandTimeout: commandTimeout);
         }
-
-        public static List<T> ToList<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30) =>
-            store.Fetch<T>().ToList();
-
-        public static async Task<List<T>> ToListAsync<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30) =>
-          (await store.FetchAsync<T>()).ToList();
-
-        public static T[] ToArray<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30) =>
-           store.Fetch<T>().ToArray();
-
-        public static async Task<T[]> ToArrayAsync<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30) =>
-          (await store.FetchAsync<T>()).ToArray();
-
-        public static Option<T> FetchOne<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30)
+        /// <summary>
+        /// Fetching Data From Database
+        /// </summary>
+        /// <typeparam name="T">Entity To Fetch</typeparam>
+        /// <param name="store">Query Store</param>
+        /// <param name="transaction">Db Transaction</param>
+        /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
+        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
+        /// <returns>List Of Entity</returns>
+        public static List<T> ToList<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30, bool debugMode = false) =>
+            store.Fetch<T>(transaction,commandTimeout,debugMode).ToList();
+        /// <summary>
+        /// Fetching Data From Database With Asynchronous Pattern
+        /// </summary>
+        /// <typeparam name="T">Entity To Fetch</typeparam>
+        /// <param name="store">Query Store</param>
+        /// <param name="transaction">Db Transaction</param>
+        /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
+        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
+        /// <returns>List Of Entity</returns>
+        public static async Task<List<T>> ToListAsync<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30, bool debugMode = false) =>
+          (await store.FetchAsync<T>(transaction,commandTimeout,debugMode)).ToList();
+        /// <summary>
+        /// Fetching Data From Database
+        /// </summary>
+        /// <typeparam name="T">Entity To Fetch</typeparam>
+        /// <param name="store">Query Store</param>
+        /// <param name="transaction">Db Transaction</param>
+        /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
+        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
+        /// <returns>Array Of Entity</returns>
+        public static T[] ToArray<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30, bool debugMode = false) =>
+           store.Fetch<T>(transaction,commandTimeout,debugMode).ToArray();
+        /// <summary>
+        /// Fetching Data From Database With Asynchronous Pattern
+        /// </summary>
+        /// <typeparam name="T">Entity To Fetch</typeparam>
+        /// <param name="store">Query Store</param>
+        /// <param name="transaction">Db Transaction</param>
+        /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
+        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
+        /// <returns>Array Of Entity</returns>
+        public static async Task<T[]> ToArrayAsync<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30, bool debugMode = false) =>
+          (await store.FetchAsync<T>(transaction,commandTimeout,debugMode)).ToArray();
+        /// <summary>
+        /// Fetch Item From Database (1 Row Only)
+        /// </summary>
+        /// <typeparam name="T">Entity To Fetch</typeparam>
+        /// <param name="store">Query Store</param>
+        /// <param name="transaction">Db Transaction</param>
+        /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
+        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
+        /// <returns>Entity</returns>
+        public static Option<T> FetchOne<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30, bool debugMode = false)
         {
             var compiledResult = store.Compiled();
+            if (debugMode)
+                Console.WriteLine($"Executing : {compiledResult.Sql}");
             return store.connection.QueryFirst<T>(compiledResult.Sql, compiledResult.Parameters, transaction, commandTimeout: commandTimeout);
         }
-
-        public static async Task<Option<T>> FetchOneAsync<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30)
+        /// <summary>
+        /// Fetch Item From Database (1 Row Only) With Asynchronous Pattern
+        /// </summary>
+        /// <typeparam name="T">Entity To Fetch</typeparam>
+        /// <param name="store">Query Store</param>
+        /// <param name="transaction">Db Transaction</param>
+        /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
+        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
+        /// <returns>Entity</returns>
+        public static async Task<Option<T>> FetchOneAsync<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30,bool debugMode = false)
         {
             var compiledResult = await store.CompiledAsync();
+            if (debugMode)
+                Console.WriteLine($"Executing : {compiledResult.Sql}");
             return await store.connection.QueryFirstAsync<T>(compiledResult.Sql, compiledResult.Parameters, transaction, commandTimeout: commandTimeout);
         }
-
+        /// <summary>
+        /// Insert Row Into Database 
+        /// </summary>
+        /// <typeparam name="T">Entity To Insert</typeparam>
+        /// <param name="store">Query Store</param>
+        /// <param name="insertItem">Data To Insert</param>
+        /// <param name="transaction">Db Transaction</param>
+        /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
+        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
+        /// <returns>Insert Complete Status</returns>
         public static bool Insert<T>(this QueryStore store,
             T insertItem,
             IDbTransaction? transaction = null,
-            int commandTimeout = 100)
+            int commandTimeout = 100, 
+            bool debugMode = false)
         {
             var type = typeof(T);
             var properties = type.GetProperties();
             var columns = properties.Select(s => s.Name);
             string sql = $"insert into \"{store.TableName}\" ({string.Join(",", columns.Select(s => $"\"{s}\""))}) values ({string.Join(",", columns.Select(s => $"@{s}"))})";
+            if (debugMode)
+                Console.WriteLine($"Executing : {sql}");
             return store.connection.Execute(sql, insertItem, transaction, commandTimeout).Ge(0);
         }
-
+        /// <summary>
+        /// Insert Row Into Database With Asynchronous Pattern
+        /// </summary>
+        /// <typeparam name="T">Entity To Insert</typeparam>
+        /// <param name="store">Query Store</param>
+        /// <param name="insertItem">Data To Insert</param>
+        /// <param name="transaction">Db Transaction</param>
+        /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
+        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
+        /// <returns>Insert Complete Status</returns>
         public static async Task<bool> InsertAsync<T>(this QueryStore store,
             T insertItem,
             IDbTransaction? transaction = null,
-            int commandTimeout = 100)
+            int commandTimeout = 100, bool debugMode = false)
         {
             var type = typeof(T);
             var properties = type.GetProperties();
             var columns = properties.Select(s => s.Name);
             string sql = $"insert into \"{store.TableName}\" ({string.Join(",", columns.Select(s => $"\"{s}\""))}) values ({string.Join(",", columns.Select(s => $"@{s}"))})";
+            if (debugMode)
+                Console.WriteLine($"Executing : {sql}");
             return (await store.connection.ExecuteAsync(sql, insertItem, transaction, commandTimeout)).Ge(0);
         }
-
+        /// <summary>
+        /// Insert Mulitple Item
+        /// </summary>
+        /// <typeparam name="T">Entity To Insert</typeparam>
+        /// <param name="store">Query Store</param>
+        /// <param name="insertItem">Data To Insert</param>
+        /// <param name="transaction">Db Transaction</param>
+        /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
+        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
+        /// <returns>Inserted Rows</returns>
         public static int BulkInsert<T>(this QueryStore store,
             IEnumerable<T> insertItem,
             IDbTransaction? transaction = null,
-            int commandTimeout = 100)
+            int commandTimeout = 100, bool debugMode = false)
         {
             var type = typeof(T);
             var properties = type.GetProperties();
             var columns = properties.Select(s => s.Name);
             string sql = $"insert into \"{store.TableName}\" ({string.Join(",", columns.Select(s => $"\"{s}\""))}) values ({string.Join(",", columns.Select(s => $"@{s}"))})";
+            if (debugMode)
+                Console.WriteLine($"Executing : {sql}");
             return store.connection.Execute(sql, insertItem, transaction, commandTimeout);
         }
-
+        /// <summary>
+        /// Insert Mulitple Item With Asynchronous Pattern
+        /// </summary>
+        /// <typeparam name="T">Entity To Insert</typeparam>
+        /// <param name="store">Query Store</param>
+        /// <param name="insertItem">Data To Insert</param>
+        /// <param name="transaction">Db Transaction</param>
+        /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
+        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
+        /// <returns>Inserted Rows</returns>
         public static async Task<int> BulkInsertAsync<T>(this QueryStore store,
             IEnumerable<T> insertItem,
             IDbTransaction? transaction = null,
-            int commandTimeout = 100)
+            int commandTimeout = 100, bool debugMode = false)
         {
             var type = typeof(T);
             var properties = type.GetProperties();
             var columns = properties.Select(s => s.Name);
             string sql = $"insert into \"{store.TableName}\" ({string.Join(",", columns.Select(s => $"\"{s}\""))}) values ({string.Join(",", columns.Select(s => $"@{s}"))})";
+            if (debugMode)
+                Console.WriteLine($"Executing : {sql}");
             return await store.connection.ExecuteAsync(sql, insertItem, transaction, commandTimeout);
         }
-
+        /// <summary>
+        /// Update Item on Database 
+        /// </summary>
+        /// <param name="store">Query Store</param>
+        /// <param name="data">New Data To Update</param>
+        /// <param name="transaction">Db Transaction</param>
+        /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
+        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
+        /// <returns>Rows Affected</returns>
         public static int Update(this QueryStore store,
             object data,
             IDbTransaction? transaction = null,
-            int commandTimeout = 100)
+            int commandTimeout = 100, 
+            bool debugMode = false)
         {
             var sqlRes = store.Compiled(StatementType.Update,data);
+            if (debugMode)
+                Console.WriteLine($"Executing : {sqlRes.Sql}");
             return store.connection.Execute(sqlRes.Sql, sqlRes.Parameters, transaction, commandTimeout);
         }
-
+        /// <summary>
+        /// Update Item on Database With Asynchronous Pattern
+        /// </summary>
+        /// <param name="store">Query Store</param>
+        /// <param name="data">New Data To Update</param>
+        /// <param name="transaction">Db Transaction</param>
+        /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
+        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
+        /// <returns>Rows Affected</returns>
         public static async Task<int> UpdateAsync(this QueryStore store,
             object data,
             IDbTransaction? transaction = null,
-            int commandTimeout = 100)
+            int commandTimeout = 100,
+            bool debugMode = false)
         {
             var sqlRes = store.Compiled(StatementType.Update,data);
+            if (debugMode)
+                Console.WriteLine($"Executing : {sqlRes.Sql}");
             return await store.connection.ExecuteAsync(sqlRes.Sql, sqlRes.Parameters, transaction, commandTimeout);
         }
-
+        /// <summary>
+        /// Delete Item on Database
+        /// </summary>
+        /// <param name="store">Query Store</param>
+        /// <param name="transaction">Db Transaction</param>
+        /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
+        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
+        /// <returns>Rows Affected</returns>
 
         public static int Delete(this QueryStore store,
             IDbTransaction? transaction = null,
-            int commandTimeout = 100)
+            int commandTimeout = 100,
+            bool debugMode = false)
         {
             var sqlRes = store.Compiled(StatementType.Delete);
+            if (debugMode)
+                Console.WriteLine($"Executing : {sqlRes.Sql}");
             return store.connection.Execute(sqlRes.Sql,sqlRes.Parameters, transaction: transaction, commandTimeout: commandTimeout);
         }
-
+        /// <summary>
+        /// Delete Item on Database With Asynchronous Pattern
+        /// </summary>
+        /// <param name="store">Query Store</param>
+        /// <param name="transaction">Db Transaction</param>
+        /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
+        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
+        /// <returns>Rows Affected</returns>
         public static async Task<int> DeleteAsync(this QueryStore store,
             IDbTransaction? transaction = null,
-            int commandTimeout = 100)
+            int commandTimeout = 100, 
+            bool debugMode = false)
         {
             var sqlRes = store.Compiled(StatementType.Delete);
+            if (debugMode)
+                Console.WriteLine($"Executing : {sqlRes.Sql}");
             return await store.connection.ExecuteAsync(sqlRes.Sql,sqlRes.Parameters, transaction: transaction, commandTimeout: commandTimeout);
         }
 

@@ -60,6 +60,20 @@ namespace RocketShop.HR.Repository
             .Distinct()
             .ToArrayAsync();
 
-
+        public async Task<bool> UpdateProvidentFundRate(string userId,
+            decimal newProvidentFundRate,
+            decimal newTotalPayment,
+            IDbConnection connection,
+            IDbTransaction? transaction = null
+            ) =>
+            await connection.CreateQueryStore(finacialTable)
+            .Where(nameof(UserFinancal.UserId), userId)
+            .UpdateAsync(new
+            {
+                ProvidentFund = newProvidentFundRate,
+                TotalPayment = newTotalPayment
+            }).GeAsync(0);
+       
     }
 }
+
