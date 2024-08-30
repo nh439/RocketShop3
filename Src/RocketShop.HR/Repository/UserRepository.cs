@@ -129,6 +129,10 @@ namespace RocketShop.HR.Repository
             await context.Users.Where(x => x.Id == userId)
             .ExecuteUpdateAsync(s => s.SetProperty(t => t.LockoutEnd,l=> null)).GeAsync(0);
 
+        public async Task<List<UserView>> ListUserViewByEmployeeCode(params string[] empCodes) =>
+            await context.UserViews.Where(x => empCodes.Contains(x.EmployeeCode))
+            .ToListAsync();
+
         IQueryable<UserView> SearchUser(IQueryable<UserView> query, string? searchTerm) =>
            searchTerm.HasMessage() ? query.Where(x => x.EmployeeCode.Contains(searchTerm!) ||
                 x.Email.Contains(searchTerm!) ||

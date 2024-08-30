@@ -7,8 +7,10 @@ using RocketShop.Database.Model.NonDatabaseModel;
 using RocketShop.Framework.Extension;
 using RocketShop.Framework.Services;
 using RocketShop.HR.Enum;
+using RocketShop.HR.LocalModel;
 using RocketShop.HR.Repository;
 using RocketShop.Shared.Model.ExcelModel;
+using System.Linq;
 
 namespace RocketShop.HR.Services
 {
@@ -145,5 +147,35 @@ namespace RocketShop.HR.Services
                 s.TravelExpenses,
                 s.ProvidentFundPerMonth)  
             ).ToList());
+
+        public async Task<Either<Exception, List<InputFinacialDataVerify>>> VerfyInputFinacialData(List<InputOutputUserFinacialData> inputData) =>
+            await InvokeServiceAsync(async () =>
+            {
+                var users = await userRepository.ListUserViewByEmployeeCode(inputData.Select(s => s.EmployeeCode).ToArray());
+                if (!users.HasData())
+                    return inputData.Select(s => new InputFinacialDataVerify(
+                        s.EmployeeCode,
+                        s.BankName,
+                        s.AccountNo,
+                        s.Salary,
+                        s.SocialSecurites,
+                        s.TravelExpense,
+                        s.ProvidentFundPerMonth,
+                        IsCorrupt: true
+                        )).ToList();
+                return inputData.Select(s => new InputFinacialDataVerify(
+                       s.EmployeeCode,
+                       s.BankName,
+                       s.AccountNo,
+                       s.Salary,
+                       s.SocialSecurites,
+                       s.TravelExpense,
+                       s.ProvidentFundPerMonth,
+                       users.FirstOrDefault(x=>x.EmployeeCode==s.EmployeeCode)?.UserId,
+                       users.FirstOrDefault(x => x.EmployeeCode == s.EmployeeCode).IsNull() ?
+                       true : users.Where(x => x.EmployeeCode == s.EmployeeCode).Count().Ge(1) 
+                       )).ToList();
+
+            });
     }
 }
