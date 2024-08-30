@@ -1,5 +1,4 @@
-﻿using RocketShop.Database.Model.Identity;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace RocketShop.Shared.Model.ExcelModel
 {
-    public sealed record InputOutputUserFinacialData(
+    public record InputOutputUserFinacialData(
         string EmployeeCode,
         string BankName,
         string AccountNo,

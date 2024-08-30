@@ -8,6 +8,7 @@ using RocketShop.Framework.Extension;
 using RocketShop.Framework.Services;
 using RocketShop.HR.Enum;
 using RocketShop.HR.Repository;
+using RocketShop.Shared.Model.ExcelModel;
 
 namespace RocketShop.HR.Services
 {
@@ -24,6 +25,7 @@ namespace RocketShop.HR.Services
         Task<Either<Exception, int>> ListFinacialViewLastpage(string? searchName = null, int per = 20);
         Task<Either<Exception, List<UserView>>> ListNoFinacialDataUsers(string? searchKeyword = null, int? take = null);
         Task<Either<Exception, bool>> UpdateProvidentFundRate(string userId, decimal newProvidentFundRate);
+        Task<Either<Exception, List<InputOutputUserFinacialData>>> GetOutputUserFinancialData(string? searchKeyword);
     }
     public class FinacialServices(
         ILogger<FinacialServices> logger,
@@ -131,5 +133,17 @@ namespace RocketShop.HR.Services
                 return await userFinacialRepository.UpdateProvidentFundRate(userId, newProvidentFundRate, item.TotalPayment,con);
             });
 
+        public async Task<Either<Exception, List<InputOutputUserFinacialData>>> GetOutputUserFinancialData(string? searchKeyword) =>
+            await userFinacialRepository.ListFinancialData(searchKeyword)
+            .Map(financialData => financialData.Select(s =>
+            new InputOutputUserFinacialData(
+                s.EmployeeCode,
+                s.BankName,
+                s.AccountNo,
+                s.Salary,
+                s.SocialSecurites,
+                s.TravelExpenses,
+                s.ProvidentFundPerMonth)  
+            ).ToList());
     }
 }
