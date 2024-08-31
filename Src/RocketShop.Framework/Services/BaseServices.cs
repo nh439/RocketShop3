@@ -39,7 +39,7 @@ namespace RocketShop.Framework.Services
 #pragma warning restore CS8602 // Dereference of a possibly null reference.                
                     if (retriesCount.GeOrEq(retries))
                         return x;
-                    AppliedDelayPolicy(retriesCount,intervalSecond, isExponential);
+                    PolicyManager.AppliedDelayPolicy(retriesCount,intervalSecond, isExponential);
                     retriesCount++;
                 }
             }
@@ -67,7 +67,7 @@ namespace RocketShop.Framework.Services
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
                     if (retriesCount.GeOrEq(retries))
                         return x;
-                    await AppliedDelayPolicyAsync(retriesCount, intervalSecond, isExponential);
+                    await PolicyManager.AppliedDelayPolicyAsync(retriesCount, intervalSecond, isExponential);
                     retriesCount++;
                 }
             }
@@ -95,7 +95,7 @@ namespace RocketShop.Framework.Services
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
                     if (retriesCount.GeOrEq(retries))
                         throw;
-                    AppliedDelayPolicy(retriesCount, intervalSecond, isExponential);
+                    PolicyManager.AppliedDelayPolicy(retriesCount, intervalSecond, isExponential);
                     retriesCount++;
                 }
             }
@@ -123,7 +123,7 @@ namespace RocketShop.Framework.Services
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
                     if (retriesCount.GeOrEq(retries))
                         throw;
-                    await AppliedDelayPolicyAsync(retriesCount, intervalSecond, isExponential);
+                    await PolicyManager.AppliedDelayPolicyAsync(retriesCount, intervalSecond, isExponential);
                     retriesCount++;
                 }
             }
@@ -154,7 +154,7 @@ namespace RocketShop.Framework.Services
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
                     if (retriesCount.Le(retries))
                     {
-                        AppliedDelayPolicy(retriesCount, intervalSecond, isExponential);
+                        PolicyManager.AppliedDelayPolicy(retriesCount, intervalSecond, isExponential);
                         retriesCount++;
                         continue;
                     }             
@@ -194,7 +194,7 @@ namespace RocketShop.Framework.Services
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
                     if (retriesCount.Le(retries))
                     {
-                        AppliedDelayPolicy(retriesCount, intervalSecond, isExponential);
+                        PolicyManager.AppliedDelayPolicy(retriesCount, intervalSecond, isExponential);
                         retriesCount++;
                         continue;
                     }
@@ -209,33 +209,6 @@ namespace RocketShop.Framework.Services
             }
         }
 
-        void AppliedDelayPolicy(int retries, int interval,bool isExp)
-        {
-            if (isExp)
-                DelayExponential(retries);
-            else
-                DelaySecond(interval);
-        }
-        async Task AppliedDelayPolicyAsync(int retries, int interval,bool isExp)
-        {
-            if (isExp)
-               await DelayExponentialAsync(retries);
-            else
-               await DelaySecondAsync(interval);
-        }
-
-
-        void DelaySecond(int interval)=>
-            Thread.Sleep(interval * 1000);
-
-        async Task DelaySecondAsync(int interval) =>
-            await Task.Delay(interval * 1000);
-
-        void DelayExponential(int retries) =>
-            Thread.Sleep((int)Math.Pow(2,retries)*1000);
-
-        async Task DelayExponentialAsync(int retries) =>
-            await Task.Delay((int)Math.Pow(2, retries)*1000);
 
         void IDisposable.Dispose()
         {
