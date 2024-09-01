@@ -45,7 +45,7 @@ namespace RocketShop.SharedBlazor.SharedBlazorService.Scope
             string message,
             string header,
             string link = "/",
-            string buttonColor = null,
+            string? buttonColor = null,
             string buttonText = "OK") =>
             await _jSRuntime.InvokeAsync<object>("RawWithNavigate", success ? "success" : "error", header, message, link, buttonColor, buttonText);
     }

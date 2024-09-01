@@ -1,0 +1,42 @@
+﻿@page "/Financial/Import"
+@using RocketShop.SharedBlazor.Domain
+@using RocketShop.SharedBlazor.Table
+
+@code{
+    List<ModelDescription> descriptions = new List<ModelDescription>()
+    {
+        new ModelDescription("EmployeeCode","Text","Employee Id",true),
+        new ModelDescription("BankName","Text","Employee Bank Name",true),
+        new ModelDescription("AccountNo","Text","Employee Account Id",true),
+        new ModelDescription("Salary","Number","Employee Salary",true),
+        new ModelDescription("SocialSecurites","Number","Employee Social Securites",true),
+        new ModelDescription("TravelExpense","Number","Employee Travel Expense",true),
+        new ModelDescription("ProvidentFundPerMonth","Number","Employee Provident Fund (Per Month)",true),
+    };
+
+    async Task FileChanged(InputFileChangeEventArgs e)
+    {
+        
+    }
+}
+<PageTitle>Import Fianacial Data</PageTitle>
+<div class="row">
+    <div class="col-1"></div>
+    <div class="col-10">
+        <center>
+            <h1 class="text-3xl font-bold">Import Employee Financial Data</h1>
+        </center>
+        <br />
+        <br />
+        <h2 class="text-xl font-semibold">Excel Data</h2>
+        <br />
+        <br />
+        <NHModelDescriptionTable Descriptions="descriptions" />
+        <br />
+        <div class="input-group mb-3">
+            <InputFile OnChange="FileChanged" class="form-control" id="inputGroupFile02" />
+            <label class="input-group-text" for="inputGroupFile02">Upload Excel Data</label>
+        </div>
+    </div>
+    <div class="col-1"></div>
+</div>

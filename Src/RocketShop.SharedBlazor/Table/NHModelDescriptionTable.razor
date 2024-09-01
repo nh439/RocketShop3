@@ -1,0 +1,29 @@
+﻿@using RocketShop.SharedBlazor.Condition
+@using RocketShop.SharedBlazor.Domain
+
+
+@code {
+    [Parameter]
+    public IEnumerable<ModelDescription> Descriptions { get; set; } = new List<ModelDescription>();
+}
+<NHTypeTable Columns="@("Field Name;Field Type;Description;Required")"
+             Context="des"
+             Items="Descriptions"
+             TItem="ModelDescription"
+             TableClass="table table-hover table-bordered"
+             TableHeaderClass="table-dark"
+             TableBodyClass="table-info"
+             NoDataDisplayText="No Description">
+             <tr>
+                 <td>@des.FieldName</td>
+                 <td>@des.FieldType</td>
+                 <td>@des.Description</td>
+                 <td>
+                     <NHIF Condition="des.Required">
+                         <YesOperation>
+                             <i class="check icon" />
+                         </YesOperation>
+                     </NHIF>
+                 </td>
+                 </tr>
+</NHTypeTable>
