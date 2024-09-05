@@ -1,8 +1,29 @@
 ﻿@page "/Financial/Import"
+@using RocketShop.Database.Model.Identity.Views
+@using RocketShop.Framework.Extension
+@using RocketShop.HR.LocalModel
+@using RocketShop.HR.ServicePermissions
+@using RocketShop.HR.Services
+@using RocketShop.Shared.Model.ExcelModel
+@using RocketShop.Shared.SharedService.Scoped
+@using RocketShop.SharedBlazor.Condition
 @using RocketShop.SharedBlazor.Domain
 @using RocketShop.SharedBlazor.Table
-
-@code{
+@using RocketShop.SharedBlazor.Tools
+@using RocketShop.HR.LocalExtension
+@inject ILogger<ImportFianacialData> logger
+@inject IImportExcelServices importService
+@inject IFinacialServices finacialServices
+@inject IUserServices userServices;
+@rendermode InteractiveServer
+@code {
+    LoadingModal loading = new();
+    bool isUploaded = false,
+    hasCorrupt = false;
+    int corruped = 0;
+    const string columns = "EmployeeCode;EmployeeName;BankName;AccountNo;Salary;SocialSecurites;TravelExpense;ProvidentFundPerMonth;Verify;";
+    List<InputFinacialDataVerify>? preUpload = new();
+    List<UserView> relatedUsers = new();
     List<ModelDescription> descriptions = new List<ModelDescription>()
     {
         new ModelDescription("EmployeeCode","Text","Employee Id",true),
@@ -14,29 +35,147 @@
         new ModelDescription("ProvidentFundPerMonth","Number","Employee Provident Fund (Per Month)",true),
     };
 
-    async Task FileChanged(InputFileChangeEventArgs e)
+    async void FileChanged(InputFileChangeEventArgs e)
+    {
+        loading.Open("Processing 0%");
+        try
+        {
+            var file = e.File;
+            if (file.ContentType != "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            {
+                await loading!.Then(false, "Spread Sheet Only", "Failed");
+                return;
+            }
+            loading.SetText("Processing 10%");
+            using var stream = file.OpenReadStream(int.MaxValue);
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            var content = ms.ToArray();
+            loading.SetText("Processing 20%");
+            var tableResult = await importService.ReadExcelAsync(content);
+            if (tableResult.IsLeft)
+                throw tableResult.GetLeft()!;
+            loading.SetText("Processing 25%");
+            var table = tableResult.GetRight()!;
+            loading.SetText("Processing 30%");
+            var data = table.ToEnumerable<InputOutputUserFinacialData>();
+            loading.SetText("Processing 40%");
+            var verifyModel = await finacialServices.VerfyInputFinacialData(data.ToList());
+            loading.SetText("Processing 12%");
+            if (verifyModel.IsLeft)
+                throw verifyModel.GetLeft()!;
+            loading.SetText("Processing 50%");
+            preUpload = verifyModel.GetRight();
+            if (preUpload.HasData())
+            {
+                var userIdRange = preUpload!.Select(s => s.UserId).Distinct().ToArray();
+                loading.SetText("Processing 60%");
+                var relatedUserResult = await userServices.ListUserByUserIdIn(userIdRange);
+                if (relatedUserResult.IsLeft)
+                    throw relatedUserResult.GetLeft()!;
+                loading.SetText("Processing 70%");
+                relatedUsers = relatedUserResult.GetRight()!;
+                hasCorrupt = !preUpload!.VerifyFinancialData();
+                corruped = preUpload!.GetCorrupedData().Count();
+                loading.SetText("Processing 80%");
+            }
+            loading.SetText("Processing 90%");
+            isUploaded = true;
+            loading.SetText("Processing 99%");
+            loading.Close();
+            StateHasChanged();
+        }
+        catch (Exception x)
+        {
+            logger.LogError(x, x.Message);
+            await loading!.Then(false, "Error While Processing Data", "Failed");
+        }
+    }
+    string? GetEmployeeName(string? userId) =>
+    userId.HasMessage() ?
+        relatedUsers?.Where(x => x.UserId == userId!).Select(s => $"{s.Firstname} {s.Surname}").FirstOrDefault() :
+        "Unknown Employee";
+
+    void RemoveCorruptData()
+    {
+        preUpload = preUpload!.Where(x => !x.IsCorrupt).ToList();
+        hasCorrupt = !preUpload!.VerifyFinancialData();
+        corruped = preUpload!.GetCorrupedData().Count();
+        StateHasChanged();
+    }
+    void Submit()
     {
         
     }
 }
 <PageTitle>Import Fianacial Data</PageTitle>
-<div class="row">
-    <div class="col-1"></div>
-    <div class="col-10">
-        <center>
-            <h1 class="text-3xl font-bold">Import Employee Financial Data</h1>
-        </center>
-        <br />
-        <br />
-        <h2 class="text-xl font-semibold">Excel Data</h2>
-        <br />
-        <br />
-        <NHModelDescriptionTable Descriptions="descriptions" />
-        <br />
-        <div class="input-group mb-3">
-            <InputFile OnChange="FileChanged" class="form-control" id="inputGroupFile02" />
-            <label class="input-group-text" for="inputGroupFile02">Upload Excel Data</label>
+<CascadingAuthenticationState>
+    <AuthorizeView Policy="@ServicePermission.AllHRServiceName" Context="authContext">
+        <div class="row">
+            <div class="col-1"></div>
+            <div class="col-10">
+                <center>
+                    <h1 class="text-3xl font-bold">Import Employee Financial Data</h1>
+                </center>
+                <br />
+                <br />
+                <h2 class="text-xl font-semibold">Excel Data</h2>
+                <br />
+                <br />
+                <NHIF Condition="isUploaded">
+                    <NoOperation>
+                        <NHModelDescriptionTable Descriptions="descriptions" />
+                    </NoOperation>
+                </NHIF>
+                <br />
+                <div class="input-group mb-3">
+                    <InputFile OnChange="FileChanged" class="form-control" id="inputGroupFile02" />
+                    <label class="input-group-text" for="inputGroupFile02">Upload Excel Data</label>
+                </div>
+                <NHIF Condition="isUploaded">
+                    <YesOperation>
+                        <NHIF Condition="@hasCorrupt">
+                            <YesOperation>
+                                <div class="alert alert-danger text-xl text-center" role="alert">
+                                    @corruped Data Corrupted <button class="btn btn-link" @onclick="RemoveCorruptData" >Remove Corrupted Data</button>
+                                </div>
+                            </YesOperation>
+                        </NHIF>
+                        <NHTypeTable Items="preUpload"
+                                     Columns="@columns"
+                                     TableClass="table table-hover"
+                                     TableHeaderClass="table-dark">
+                            <tr class="@(context.IsCorrupt ? "table-danger":"table-success")">
+                                <td>@context.EmployeeCode</td>
+                                <td>@GetEmployeeName(context.UserId).IfNull("Unknown Employee")</td>
+                                <td>@context.BankName</td>
+                                <td>@context.AccountNo</td>
+                                <td>@context.Salary.ToMoneyFormat()</td>
+                                <td>@context.SocialSecurites.ToMoneyFormat()</td>
+                                <td>@context.TravelExpense.ToMoneyFormat()</td>
+                                <td>@context.ProvidentFundPerMonth.ToMoneyFormat()</td>
+                                <td>
+                                    <NHIF Condition="context.IsCorrupt">
+                                        <YesOperation>
+                                            <i class="x icon" />
+                                        </YesOperation>
+                                        <NoOperation>
+                                            <i class="check icon" />
+                                        </NoOperation>
+                                    </NHIF>
+
+                                </td>
+                                <td></td>
+                            </tr>
+                        </NHTypeTable>
+                        <br />
+                        <br />
+                        <button type="button" class="text-white font-bold text-2xl bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 rounded-full px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" disabled="@hasCorrupt">Import</button>
+                    </YesOperation>
+                </NHIF>
+            </div>
+            <div class="col-1"></div>
         </div>
-    </div>
-    <div class="col-1"></div>
-</div>
+    </AuthorizeView>
+</CascadingAuthenticationState>
+<LoadingModal @ref="loading" />

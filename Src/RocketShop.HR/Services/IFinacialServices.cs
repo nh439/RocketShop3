@@ -7,10 +7,13 @@ using RocketShop.Database.Model.NonDatabaseModel;
 using RocketShop.Framework.Extension;
 using RocketShop.Framework.Services;
 using RocketShop.HR.Enum;
+using RocketShop.HR.LocalExtension;
 using RocketShop.HR.LocalModel;
 using RocketShop.HR.Repository;
 using RocketShop.Shared.Model.ExcelModel;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Security;
 
 namespace RocketShop.HR.Services
 {
@@ -28,6 +31,8 @@ namespace RocketShop.HR.Services
         Task<Either<Exception, List<UserView>>> ListNoFinacialDataUsers(string? searchKeyword = null, int? take = null);
         Task<Either<Exception, bool>> UpdateProvidentFundRate(string userId, decimal newProvidentFundRate);
         Task<Either<Exception, List<InputOutputUserFinacialData>>> GetOutputUserFinancialData(string? searchKeyword);
+        Task<Either<Exception, List<InputFinacialDataVerify>>> VerfyInputFinacialData(List<InputOutputUserFinacialData> inputData);
+        Task<Either<Exception, int>> UpSertFinancialData(IEnumerable<InputFinacialDataVerify> inputs);
     }
     public class FinacialServices(
         ILogger<FinacialServices> logger,
@@ -49,9 +54,9 @@ namespace RocketShop.HR.Services
                 if (includedAdditionalExpense)
                 {
                     var expenses = await userAdditionalExpenseRepository.ListAdditionalExpenseByUserId(userId);
-                    return new UserFinacialData(finacial!, expenses,providentFund).AsOptional();
+                    return new UserFinacialData(finacial!, expenses, providentFund).AsOptional();
                 }
-                return new UserFinacialData(finacial!,null, providentFund).AsOptional();
+                return new UserFinacialData(finacial!, null, providentFund).AsOptional();
             });
 
         public async Task<Either<Exception, bool>> CreateFinacialData(UserFinacialData data, UserProvidentFund? userProvidentFund = null) =>
@@ -132,20 +137,22 @@ namespace RocketShop.HR.Services
                     return false;
                 var fixPayment = item!.SocialSecurites + newProvidentFundRate;
                 item.TotalPayment = item.Salary - fixPayment + (item.TravelExpenses + item.TotalAddiontialExpense);
-                return await userFinacialRepository.UpdateProvidentFundRate(userId, newProvidentFundRate, item.TotalPayment,con);
+                return await userFinacialRepository.UpdateProvidentFundRate(userId, newProvidentFundRate, item.TotalPayment, con);
             });
 
         public async Task<Either<Exception, List<InputOutputUserFinacialData>>> GetOutputUserFinancialData(string? searchKeyword) =>
             await userFinacialRepository.ListFinancialData(searchKeyword)
             .Map(financialData => financialData.Select(s =>
-            new InputOutputUserFinacialData(
-                s.EmployeeCode,
-                s.BankName,
-                s.AccountNo,
-                s.Salary,
-                s.SocialSecurites,
-                s.TravelExpenses,
-                s.ProvidentFundPerMonth)  
+            new InputOutputUserFinacialData
+            {
+                EmployeeCode = s.EmployeeCode,
+                BankName = s.BankName,
+                AccountNo = s.AccountNo,
+                Salary = s.Salary,
+                SocialSecurites = s.SocialSecurites,
+                TravelExpense = s.TravelExpenses,
+                ProvidentFundPerMonth = s.ProvidentFundPerMonth
+            }
             ).ToList());
 
         public async Task<Either<Exception, List<InputFinacialDataVerify>>> VerfyInputFinacialData(List<InputOutputUserFinacialData> inputData) =>
@@ -171,11 +178,70 @@ namespace RocketShop.HR.Services
                        s.SocialSecurites,
                        s.TravelExpense,
                        s.ProvidentFundPerMonth,
-                       users.FirstOrDefault(x=>x.EmployeeCode==s.EmployeeCode)?.UserId,
+                       users.FirstOrDefault(x => x.EmployeeCode == s.EmployeeCode)?.UserId,
                        users.FirstOrDefault(x => x.EmployeeCode == s.EmployeeCode).IsNull() ?
-                       true : users.Where(x => x.EmployeeCode == s.EmployeeCode).Count().Ge(1) 
+                       true : users.Where(x => x.EmployeeCode == s.EmployeeCode).Count().Ge(1)
                        )).ToList();
 
+            });
+
+        public async Task<Either<Exception, int>> UpSertFinancialData(IEnumerable<InputFinacialDataVerify> inputs) =>
+            await InvokeDapperServiceAsync(async con =>
+            {
+                int returnValue = 0;
+                if (!inputs.VerifyFinancialData())
+                    throw new VerificationException("Cannot UpSert,Because Has Corruped Data");
+                var userIds = inputs.Select(s => s.UserId).Distinct();
+                var existsData = userIds.HasData() ?  await userFinacialRepository.ListFinancialDataByUserIn(userIds!) : new List<UserFinancal>();
+                con.Open();
+                using var transaction = con.BeginTransaction();
+                var insertData = inputs
+                .Where(w => !existsData.Select(s => s.UserId).Contains(w.UserId))
+                .Select(s => new UserFinancal
+                {
+                    UserId = s.UserId!,
+                    AccountNo = s.AccountNo,
+                    BankName = s.BankName,
+                    Currency = "THB",
+                    ProvidentFund = s.ProvidentFundPerMonth,
+                    Salary = s.Salary,
+                    SocialSecurites = s.SocialSecurites,
+                    TotalAddiontialExpense = 0,
+                    TotalPayment = s.Salary + s.TravelExpense - (s.ProvidentFundPerMonth + s.SocialSecurites),
+                    TravelExpenses = s.TravelExpense,
+
+                });
+               if(insertData.HasData())
+                returnValue = await userFinacialRepository.BulkCreateFinancialData(insertData,con, transaction);
+               var updateData = inputs.Where(w => existsData.Select(s => s.UserId).Contains(w.UserId))
+                 .Select(s => new UserFinancal
+                 {
+                     UserId = s.UserId!,
+                     AccountNo = s.AccountNo,
+                     BankName = s.BankName,
+                     Currency = "THB",
+                     ProvidentFund = s.ProvidentFundPerMonth,
+                     Salary = s.Salary,
+                     SocialSecurites = s.SocialSecurites,
+                     TotalAddiontialExpense = 0,
+                     TotalPayment = s.Salary + s.TravelExpense - (s.ProvidentFundPerMonth + s.SocialSecurites),
+                     TravelExpenses = s.TravelExpense,
+
+                 })
+                 .ToList();
+                if(updateData.HasData())
+                {
+                    foreach(var data in updateData)
+                    {
+                        var oldData = existsData.FirstOrDefault(x => x.UserId == data.UserId);
+                        data.TotalAddiontialExpense = oldData!.TotalAddiontialExpense;
+                        data.TotalPayment = data.Salary + data.TravelExpenses - (data.ProvidentFund + data.SocialSecurites + data.TotalAddiontialExpense);
+                        returnValue += await userFinacialRepository.UpdateFinacialData(data, con, transaction) ? 1:0;
+                    }
+                }
+                transaction.Commit();
+                con.Close();
+                return returnValue;
             });
     }
 }

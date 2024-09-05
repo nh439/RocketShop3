@@ -29,6 +29,10 @@ namespace RocketShop.HR.Repository
            await identityConnection.CreateQueryStore(finacialTable)
             .InsertAsync(financal, transaction);
 
+        public async Task<int> BulkCreateFinancialData(IEnumerable<UserFinancal> data, IDbConnection identityConnection, IDbTransaction? transaction = null)=>
+            await identityConnection.CreateQueryStore(finacialTable)
+            .BulkInsertAsync(data, transaction);
+
         public async Task<bool> UpdateFinacialData(UserFinancal financal, IDbConnection identityConnection, IDbTransaction? transaction = null) =>
             await identityConnection.CreateQueryStore(finacialTable)
             .Where(nameof(UserFinancal.UserId),financal.UserId)
@@ -41,6 +45,9 @@ namespace RocketShop.HR.Repository
 
         public async Task<UserFinancal?> GetUserFinancal(string userId) =>
             await context.UserFinancal.FirstOrDefaultAsync(x => x.UserId == userId);
+
+        public async Task<List<UserFinancal>> ListFinancialDataByUserIn(IEnumerable<string> userIdRange) =>
+            await context.UserFinancal.Where(x => userIdRange.Contains(x.UserId)).ToListAsync();
 
         public async Task<int> ListFinacialCount(string? searchName = null) =>
             await context

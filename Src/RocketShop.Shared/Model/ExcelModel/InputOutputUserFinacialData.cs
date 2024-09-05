@@ -7,14 +7,16 @@ using System.Threading.Tasks;
 
 namespace RocketShop.Shared.Model.ExcelModel
 {
-    public record InputOutputUserFinacialData(
-        string EmployeeCode,
-        string BankName,
-        string AccountNo,
-        decimal Salary,
-        decimal SocialSecurites,
-        decimal TravelExpense,
-        decimal ProvidentFundPerMonth);
+    public class InputOutputUserFinacialData
+    {
+        public string EmployeeCode { get; set; }
+        public string BankName { get; set; }
+        public string AccountNo { get; set; }
+        public decimal Salary { get; set; }
+        public decimal SocialSecurites { get; set; }
+        public decimal TravelExpense { get; set; }
+        public decimal ProvidentFundPerMonth { get; set; }
+    }
 
 
 }
