@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Dapper;
+using Microsoft.EntityFrameworkCore;
 using RocketShop.Database;
 using RocketShop.Database.EntityFramework;
 using RocketShop.Database.Model.Identity;
@@ -15,6 +16,16 @@ namespace RocketShop.HR.Repository
         public async Task<bool> Create(UserProvidentFund userProvidentFund,IDbConnection identityConnection,IDbTransaction? transaction = null)=>
             await identityConnection.CreateQueryStore(table)
             .InsertAsync(userProvidentFund,transaction);
+
+        public async Task<int> BulkCreateOrUpdate(IEnumerable<UserProvidentFund> userProvidentFunds, IDbConnection identityConnection, IDbTransaction? transaction = null) => 
+            await identityConnection.ExecuteAsync(
+                $@"insert into ""{table}"" 
+                    values(@{nameof(UserProvidentFund.UserId)},@{nameof(UserProvidentFund.Balance)},@{nameof(UserProvidentFund.Currency)})
+                on conflict(""{nameof(UserProvidentFund.UserId)}"") do nothing;",
+                userProvidentFunds,
+                transaction
+                );
+
 
         public async Task<bool> Update(UserProvidentFund userProvidentFund, IDbConnection identityConnection, IDbTransaction? transaction = null) =>
             await identityConnection.CreateQueryStore(table)

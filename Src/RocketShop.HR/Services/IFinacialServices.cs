@@ -211,8 +211,16 @@ namespace RocketShop.HR.Services
                     TravelExpenses = s.TravelExpense,
 
                 });
-               if(insertData.HasData())
-                returnValue = await userFinacialRepository.BulkCreateFinancialData(insertData,con, transaction);
+                if (insertData.HasData())
+                {
+                    returnValue = await userFinacialRepository.BulkCreateFinancialData(insertData, con, transaction);
+                    await providentRepository.BulkCreateOrUpdate(insertData.Select(s => new UserProvidentFund
+                    {
+                        Balance = 0,
+                        Currency = "THB",
+                        UserId = s.UserId
+                    }), con, transaction);
+                }
                var updateData = inputs.Where(w => existsData.Select(s => s.UserId).Contains(w.UserId))
                  .Select(s => new UserFinancal
                  {
