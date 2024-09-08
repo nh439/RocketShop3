@@ -18,11 +18,11 @@
 @rendermode InteractiveServer
 @code {
     [CascadingParameter]
-    public AuthenticationState state { get; set; }
+    public AuthenticationState? state { get; set; }
     UserView selectedUser = new UserView();
     UserFinancal newData = new UserFinancal();
     UserProvidentFund? newProvidentFund;
-    LoadingModal loading;
+    LoadingModal? loading;
     List<UserAddiontialExpense> addiontialExpenses = new List<UserAddiontialExpense>();
     const string AdditionalHeaders = "Name;One Time;Month;Year;Type;Balance;";
     bool userInvalid = false,

@@ -12,7 +12,7 @@ namespace RocketShop.Database.Model.Identity
     public class UserPayroll
     {
         [Key]
-        public string PayRollId { get; set; }
+        public string PayRollId { get; set; } = Guid.NewGuid().ToString();
         public string UserId { get; set; }
         public DateTime PayrollDate { get; set; }
         public decimal Salary { get; set; } = 0;
@@ -21,5 +21,6 @@ namespace RocketShop.Database.Model.Identity
         public decimal TotalPayment { get; set; } = 0;
         public decimal TravelExpenses { get; set; } = 0;
         public decimal TotalAdditionalPay { get; set; } = 0;
+        public bool Cancelled { get; set; } = false;
     }
 }

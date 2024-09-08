@@ -24,6 +24,9 @@ namespace RocketShop.Framework.Extension
         public static async Task<bool> HasMessageAsync(this Task<string?> s) => (await s).HasMessage();
         public static async Task<bool> IsNullOrEmptyAsync(this Task<string?> s) => (await s).IsNullOrEmpty();
 
+        public static string IfNull(this string? s, string messageIfNull) =>
+            s.HasMessage() ? s! : messageIfNull;
+
         public static string SealMiddleCharacters(this string input)
         {
             if (input.Length <= 2)

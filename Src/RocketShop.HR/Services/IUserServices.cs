@@ -36,6 +36,7 @@ namespace RocketShop.HR.Services
         Task<Either<Exception, Option<UserView>>> GetUserViewById(string userId);
         Task<Either<Exception, bool>> UnlockUser(string userId);
         Task<Either<Exception, bool>> LockUser(string userId, int lockedHours);
+        Task<Either<Exception, List<UserView>>> ListUserByUserIdIn(params string[] userIds);
     }
     public class UserServices(
         ILogger<UserServices> logger,
@@ -192,6 +193,7 @@ namespace RocketShop.HR.Services
         public async Task<Either<Exception, bool>> LockUser(string userId, int lockedHours) =>
             await InvokeServiceAsync(async () => await userRepository.LockedUser(userId,DateTime.UtcNow.AddHours(lockedHours)));
 
-
+        public async Task<Either<Exception, List<UserView>>> ListUserByUserIdIn(params string[] userIds)=>
+            await InvokeServiceAsync(async () =>await userRepository.ListUserIn(userIds));
     }
 }

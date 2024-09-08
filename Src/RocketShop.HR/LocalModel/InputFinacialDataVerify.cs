@@ -10,5 +10,5 @@ namespace RocketShop.HR.LocalModel
         decimal TravelExpense,
         decimal ProvidentFundPerMonth,
         string? UserId = null,
-        bool IsCorrupt = false) : InputOutputUserFinacialData(EmployeeCode, BankName, AccountNo, Salary, SocialSecurites, TravelExpense, ProvidentFundPerMonth);
+        bool IsCorrupt = false);
 }

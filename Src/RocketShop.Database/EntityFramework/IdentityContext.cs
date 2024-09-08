@@ -62,7 +62,7 @@ namespace RocketShop.Database.EntityFramework
             builder.Entity<UserFinancal>().HasIndex(x => x.UserId);
             builder.Entity<UserAddiontialExpense>().HasIndex(x => x.UserId);
             builder.Entity<UserPayroll>().HasIndex(x => x.UserId);
-            builder.Entity<UserPayroll>().HasIndex(x => x.UserId);
+            builder.Entity<UserPayroll>().HasIndex(x => x.Cancelled);
             builder.Entity<AdditionalPayroll>().HasIndex(x => x.PayrollId);
             builder.Entity<UserFinancialView>().HasNoKey().ToView(TableConstraint.UserFinacialView);
             base.OnModelCreating(builder);
