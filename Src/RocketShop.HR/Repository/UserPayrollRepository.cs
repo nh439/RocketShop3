@@ -21,6 +21,7 @@ namespace RocketShop.HR.Repository
 
         public async Task<List<UserPayroll>> GetByUserIdRange(IEnumerable<string> userIdRange, int? page = null, int per = 20) =>
             await entity.Where(x => userIdRange.Contains(x.UserId))
+            .OrderByDescending(x=>x.PayrollDate)
             .UsePaging(page, per)
             .ToListAsync();
 
@@ -47,7 +48,17 @@ namespace RocketShop.HR.Repository
 
         public async Task<bool> Delete(string payrollId, IDbConnection identityConnection, IDbTransaction? transaction = null)=>
             await identityConnection.CreateQueryStore(tableName)
+            .Where(nameof(UserPayroll), payrollId)
             .DeleteAsync(transaction)
+            .GeAsync(0);
+
+        public async Task<bool> CancelPayroll(string payrollId, IDbConnection identityConnection, IDbTransaction? transaction = null) =>
+            await identityConnection.CreateQueryStore(tableName)
+            .Where(nameof(UserPayroll), payrollId)
+            .UpdateAsync(new
+            {
+                Cancelled = true
+            },transaction)
             .GeAsync(0);
     }
 }

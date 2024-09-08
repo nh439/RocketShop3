@@ -21,5 +21,6 @@ namespace RocketShop.Database.Model.Identity
         public decimal TotalPayment { get; set; } = 0;
         public decimal TravelExpenses { get; set; } = 0;
         public decimal TotalAdditionalPay { get; set; } = 0;
+        public bool Cancelled { get; set; } = false;
     }
 }

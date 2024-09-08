@@ -15,6 +15,9 @@ namespace RocketShop.Database.Model.Identity
         public string Id { get; set; }
         public string PayrollId { get; set; }
         public string Name { get; set; }
+        /// <summary>
+        /// จำนวนเงิน (ถ้าติดลบ จะหักจาก Total Payment)
+        /// </summary>
         public decimal Value { get; set; }
         public string Currency { get; set; } = "THB";
     }
