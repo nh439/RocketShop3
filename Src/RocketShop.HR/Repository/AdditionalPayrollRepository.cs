@@ -13,15 +13,15 @@ namespace RocketShop.HR.Repository
         const string tableName = TableConstraint.AdditionalPayroll;
         readonly DbSet<AdditionalPayroll> entity = context.AdditionalPayroll;
 
-        public async Task<List<AdditionalPayroll>> GetAdditionalPayrolls(string payrollId)=>
-            await entity.Where(x=>x.PayrollId == payrollId).ToListAsync();
+        public async Task<List<AdditionalPayroll>> GetAdditionalPayrolls(string payrollId) =>
+            await entity.Where(x => x.PayrollId == payrollId).ToListAsync();
 
-        public async Task<bool> SetAdditionalPayroll(string payrollId,IEnumerable<AdditionalPayroll> additionalPayrolls,IDbConnection identityConnection,IDbTransaction? transaction = null)
+        public async Task<bool> SetAdditionalPayroll(string payrollId, IEnumerable<AdditionalPayroll> additionalPayrolls, IDbConnection identityConnection, IDbTransaction? transaction = null)
         {
             bool transactionInjected = transaction.IsNotNull();
             if (!transactionInjected)
             {
-                if(identityConnection.State != ConnectionState.Open)
+                if (identityConnection.State != ConnectionState.Open)
                     identityConnection.Open();
                 transaction = identityConnection.BeginTransaction();
             }
@@ -34,13 +34,14 @@ namespace RocketShop.HR.Repository
                 {
                     additionalPayrolls.HasDataAndForEach(f => f.PayrollId = payrollId);
                     await identityConnection.CreateQueryStore(tableName)
-                        .BulkInsertAsync(additionalPayrolls,transaction);
+                        .BulkInsertAsync(additionalPayrolls, transaction);
                 }
                 if (!transactionInjected)
                     transaction!.Commit();
                 return true;
             }
-            catch {
+            catch
+            {
                 if (!transactionInjected)
                     transaction!.Rollback();
                 throw;
@@ -54,5 +55,6 @@ namespace RocketShop.HR.Repository
                         identityConnection.Close();
                 }
             }
+        }
     }
 }

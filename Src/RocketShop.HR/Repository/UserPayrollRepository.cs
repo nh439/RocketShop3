@@ -21,19 +21,19 @@ namespace RocketShop.HR.Repository
 
         public async Task<List<UserPayroll>> GetByUserIdRange(IEnumerable<string> userIdRange, int? page = null, int per = 20) =>
             await entity.Where(x => userIdRange.Contains(x.UserId))
-            .OrderByDescending(x=>x.PayrollDate)
+            .OrderByDescending(x => x.PayrollDate)
             .UsePaging(page, per)
             .ToListAsync();
 
-        public async Task<List<UserPayroll>> GetByUserId(string userId, int? page = null, int per = 20)=>
-            await entity.Where(x=>x.UserId==userId)
-            .UsePaging(page,per)
+        public async Task<List<UserPayroll>> GetByUserId(string userId, int? page = null, int per = 20) =>
+            await entity.Where(x => x.UserId == userId)
+            .UsePaging(page, per)
             .ToListAsync();
 
         public async Task<UserPayroll?> GetUserPayroll(string payrollId) =>
             await entity.FirstOrDefaultAsync(x => x.PayRollId == payrollId);
 
-        public async Task<bool> Create(UserPayroll userPayroll,IDbConnection identityConnection,IDbTransaction? transaction = null)=>
+        public async Task<bool> Create(UserPayroll userPayroll, IDbConnection identityConnection, IDbTransaction? transaction = null) =>
             await identityConnection.CreateQueryStore(tableName)
             .InsertAsync(userPayroll);
 
@@ -41,12 +41,12 @@ namespace RocketShop.HR.Repository
             await identityConnection.CreateQueryStore(tableName)
             .BulkInsertAsync(userPayrolls, transaction);
 
-        public async Task<bool> Update(UserPayroll userPayroll, IDbConnection identityConnection, IDbTransaction? transaction = null)=>
+        public async Task<bool> Update(UserPayroll userPayroll, IDbConnection identityConnection, IDbTransaction? transaction = null) =>
             await identityConnection.CreateQueryStore(tableName)
-            .UpdateAsync(userPayroll,transaction)
+            .UpdateAsync(userPayroll, transaction)
             .GeAsync(0);
 
-        public async Task<bool> Delete(string payrollId, IDbConnection identityConnection, IDbTransaction? transaction = null)=>
+        public async Task<bool> Delete(string payrollId, IDbConnection identityConnection, IDbTransaction? transaction = null) =>
             await identityConnection.CreateQueryStore(tableName)
             .Where(nameof(UserPayroll), payrollId)
             .DeleteAsync(transaction)
@@ -58,7 +58,19 @@ namespace RocketShop.HR.Repository
             .UpdateAsync(new
             {
                 Cancelled = true
-            },transaction)
+            }, transaction)
             .GeAsync(0);
+
+        public async Task<int> GetCount(params string[]? userIdRange) =>
+            userIdRange.HasData() ?
+            await entity.Where(x => userIdRange!.Contains(x.UserId))
+            .CountAsync() :
+            await entity.CountAsync();
+
+        public async Task<int> GetLastPage(int per,params string[]? userIdRange) =>
+            userIdRange.HasData() ?
+            await entity.Where(x => userIdRange!.Contains(x.UserId))
+            .GetLastpageAsync(per) :
+            await entity.GetLastpageAsync(per);
     }
 }

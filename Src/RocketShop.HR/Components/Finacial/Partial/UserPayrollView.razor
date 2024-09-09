@@ -1,0 +1,120 @@
+﻿@using Radzen
+@using Radzen.Blazor
+@using RocketShop.Database.Model.Identity
+@using RocketShop.Framework.Extension
+@using RocketShop.HR.Services
+@using RocketShop.SharedBlazor.Condition
+@using RocketShop.SharedBlazor.Table
+@using System.Text.Json
+@inject IPayrollServices payrollService
+@inject ILogger<UserPayrollView> logger
+
+@code {
+    [Parameter]
+    public string UserId { get; set; }
+    const string Headers = "Id;Date;Salary;Social Securities;Provident Fund;Travel Expense;Other Payment;Total Payment;";
+    List<UserPayroll> payrolls = new List<UserPayroll>();
+    bool somethingWentWrong = false,
+    isLoading = true;
+    int count = 0,
+    currentpage = 1,
+    lastpage = 1;
+    string pagingSummaryFormat = "Displaying page {0} of {1} (total {2} records)";
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var payrollResult = await payrollService.ListPayrollByUserId(UserId, currentpage, 10);
+            if (payrollResult.IsLeft)
+            {
+                throw payrollResult.GetLeft()!;
+            }
+            payrolls = payrollResult.GetRight()!;
+            var countResult = await payrollService.GetCount(UserId);
+            var lastpageResult = await payrollService.GetLastPage(lastpage);
+            if (countResult.IsLeft)
+            {
+                var x = countResult.GetLeft()!;
+                logger.LogCritical($"{x.Source} >> {x.Message}");
+                count = 1;
+            }
+            if (lastpageResult.IsLeft)
+            {
+                var x = lastpageResult.GetLeft();
+                logger.LogCritical($"{x.Source} >> {x.Message}");
+                lastpage = 99;
+            }
+            if (lastpageResult.IsRight && countResult.IsRight)
+            {
+                count = countResult.GetRight()!;
+                lastpage = lastpageResult.GetRight()!;
+            }
+            somethingWentWrong = false;
+        }
+        catch (Exception x)
+        {
+            somethingWentWrong = true;
+            logger.LogError(x, x.Message);
+        }
+        finally
+        {
+            isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+    async void PageChanged(PagerEventArgs args)
+    {
+
+        currentpage = args.PageIndex + 1;
+        await OnInitializedAsync();
+    }
+}
+<NHIF Condition="somethingWentWrong">
+    <YesOperation>
+        <h1 class="text-2xl">Error While Get Data.</h1>
+        <h2 class="text-xl">Plase Try Again Later.</h2>
+    </YesOperation>
+    <NoOperation>
+        <h1 class="text-2xl font-bold">Slip View</h1>
+        <br />
+        <br />
+        <br />
+        <NHTypeTable Columns="@Headers"
+                     Context="payroll"
+                     Items="payrolls"
+                     LoadingFlagment="isLoading"
+                     TableBodyClass="table-warning"
+                     TableClass="table table-hover"
+                     TableHeaderClass="table-dark">
+            <tr class="@(payroll.Cancelled ? "table-secondary":"table-success")">
+                <td>
+                    <NHIF Condition="payroll.Cancelled">
+                        <YesOperation><span class="badge badge-secondary">Cancelled</span></YesOperation>
+                    </NHIF>
+                    @payroll.PayRollId
+                    </td>
+                    <td>@payroll.PayrollDate.ToDateAndTimeFormat()</td>
+                    <td>@payroll.Salary.ToMoneyFormat()</td>
+                    <td>-@payroll.SocialSecurites.ToMoneyFormat()</td>
+                    <td>-@payroll.ProvidentFund.ToMoneyFormat()</td>
+                    <td>@payroll.TravelExpenses.ToMoneyFormat()</td>
+                    <td>@payroll.TotalAdditionalPay.ToMoneyFormat()</td>
+                    <td>@payroll.TotalPayment.ToMoneyFormat()</td>
+                    <td>
+                    <button class="text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"><i class="eye icon" /></button>
+                    </td>
+            </tr>
+        </NHTypeTable>
+        <br />
+        <br />
+        <RadzenPager 
+            ShowPagingSummary="true" 
+            PagingSummaryFormat="@pagingSummaryFormat" 
+            HorizontalAlign="HorizontalAlign.Right" 
+            Count="count" 
+            PageSize="lastpage" 
+            PageNumbersCount="5" 
+            PageChanged="@PageChanged" />
+
+    </NoOperation>
+</NHIF>

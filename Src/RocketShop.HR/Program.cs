@@ -15,6 +15,7 @@ using RocketShop.HR.Middleware;
 using RocketShop.SharedBlazor.SharedBlazorService.Scope;
 using RocketShop.Shared.SharedService.Scoped;
 using RocketShop.SharedBlazor.SharedBlazorServices.Scope;
+using Radzen;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.InstallConfiguration();
@@ -50,7 +51,8 @@ builder.InstallSerilog()
             {
                 p.RequireClaim("Permission", ServicePermission.AllHRService);
             });
-        });
+        })
+        .AddRadzenComponents();
     })
     .InstallServices(service =>
     {
@@ -75,7 +77,8 @@ builder.InstallSerilog()
         .AddScoped<IImportExcelServices,ImportExcelServices>()
         .AddScoped<IExportExcelServices,ExportExcelServices>()
         .AddScoped<IDownloadServices,DownloadServices>()
-        .AddScoped<IFinacialServices,FinacialServices>();
+        .AddScoped<IFinacialServices,FinacialServices>()
+        .AddScoped<IPayrollServices,PayrollServices>();
     });
 // Add services to the container.
 

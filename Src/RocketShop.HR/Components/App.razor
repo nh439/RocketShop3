@@ -1,4 +1,5 @@
 ﻿@inject IConfiguration configuration
+@using Radzen.Blazor
 @using RocketShop.Shared.Helper;
 @code {
 
@@ -21,6 +22,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/png" href="favicon.png" />
     <link rel="stylesheet" href="./CSS/ToolTip.css" />
+    <RadzenTheme Theme="material" @rendermode="InteractiveServer" />
     <script src="JS/Download.js"></script>
     <script>
         function Failed(message, header = 'Sorry...') {
@@ -95,6 +97,7 @@
 </head>
 
 <body>
+    <script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)"></script>
     <script src="_content/Blazored.Typeahead/blazored-typeahead.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.4/dist/sweetalert2.all.min.js"></script>
     <Routes />
