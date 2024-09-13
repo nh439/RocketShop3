@@ -54,5 +54,17 @@ namespace RocketShop.Framework.Extension
         #endregion
         public static string ToMoneyFormat(this decimal d) =>
             d.ToString("#,##0.00");
+
+        public static bool IsNullOrZero(this CurrentType? x) =>
+           x == null || x.Eq(0);
+
+        public static bool IsNotNullAndUpperZero(this CurrentType? x) =>
+            x.Ge(0);
+
+        public static bool IsNotNullAndBelowZero(this CurrentType? x) =>
+            x.Le(0);
+
+        public static CurrentType Inverted(this CurrentType x) =>
+            x * -1;
     }
 }

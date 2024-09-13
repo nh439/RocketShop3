@@ -90,5 +90,15 @@ namespace RocketShop.Framework.Extension
         public static async Task<CurrentType> FindDistanceAsync(this Task<CurrentType?> x, CurrentType? y) =>
             (CurrentType)Math.Abs((await x??0) - (y??0));
         #endregion
+
+        public static async Task< bool> IsNullOrZeroAsync(this Task<CurrentType?> x) =>
+          await x == null || await x.EqAsync(0);
+
+        public static async Task<bool> IsNotNullAndUpperZeroAsync(this Task<CurrentType?> x) =>
+           await x.GeAsync(0);
+
+        public static async Task<bool> IsNotNullAndBelowZero(this Task<CurrentType?> x) =>
+           await x.LeAsync(0);
+
     }
 }

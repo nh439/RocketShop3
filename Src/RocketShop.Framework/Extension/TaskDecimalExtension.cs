@@ -92,5 +92,13 @@ namespace RocketShop.Framework.Extension
         #endregion
         public static async Task<string> ToMoneyFormatAsync(this Task< decimal> d) =>
          (await  d).ToString("#,##0.00");
+        public static async Task<bool> IsNullOrZeroAsync(this Task<CurrentType?> x) =>
+      await x == null || await x.EqAsync(0);
+
+        public static async Task<bool> IsNotNullAndUpperZeroAsync(this Task<CurrentType?> x) =>
+           await x.GeAsync(0);
+
+        public static async Task<bool> IsNotNullAndBelowZero(this Task<CurrentType?> x) =>
+           await x.LeAsync(0);
     }
 }

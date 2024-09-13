@@ -1,6 +1,152 @@
 ﻿@page "/Payroll"
-<h3>PayrollIndex</h3>
-
+@using LanguageExt
+@using RocketShop.Database.Model.Identity
+@using RocketShop.Database.Model.Identity.Views
+@using RocketShop.Framework.Extension
+@using RocketShop.HR.ServicePermissions
+@using RocketShop.HR.Services
+@using RocketShop.SharedBlazor.Condition
+@using RocketShop.SharedBlazor.Table
+@inject IPayrollServices payrollServices
+@inject IUserServices userServices
+@inject NavigationManager navigationManager
+@inject ILogger<PayrollIndex> logger
+@rendermode InteractiveServer
 @code {
+    List<UserPayroll>? payrolls = new List<UserPayroll>();
+    List<UserView> users = new List<UserView>();
+    [CascadingParameter]
+    public AuthenticationState? state { get; set; }
+    const string Headers = "Id;Date;Employee Id;Employee Name;Salary;Social Securities;Provident Fund;Travel Expense;Other Pay;Salary Received;";
+    int currentPage = 1,
+    count = 0,
+    lastpage = 1;
+    bool isLoading = true,
+    hasMajorException = false,
+    hasMinorException = false;
+    string? searchUser, _searchUser;
+
+    protected override async Task OnInitializedAsync()
+    {
+        state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var authenicated = state.If(x => x.IsNotNull() && x!.User!.Identity!.IsAuthenticated);
+        if (authenicated) 
+            await FetchingData();
+
+        else navigationManager.NavigateTo("/login", true);
+
+    }
+    async Task FetchingData()
+    {
+        try
+        {
+            var payrollResult = searchUser.HasMessage() ?
+            await payrollServices.ListByUserContain(searchUser!, currentPage) :
+            await payrollServices.ListPayroll(currentPage);
+
+            if (payrollResult.IsLeft)
+                throw payrollResult.GetLeft()!;
+
+            payrolls = payrollResult.GetRight();
+            string[] userIdRange = new string[0];
+
+            if (searchUser.HasMessage())
+            {
+                var userIdRangeResult = await userServices.ListUsers(searchUser);
+                if (userIdRangeResult.IsLeft) throw userIdRangeResult.GetLeft()!;
+
+                userIdRange = userIdRangeResult.GetRight()!.Select(s => s.UserId).ToArray();
+            }
+            var countResult = await payrollServices.GetCount(userIdRange);
+            var lastPageResult = await payrollServices.GetLastPage(20, userIdRange);
+            Either<Exception, List<UserView>> userResult = new();
+
+            if (payrolls.HasData())
+                userResult = await userServices.ListUserByUserIdIn(
+                    payrolls!.Select(s => s.UserId)
+                    .Distinct().ToArray());
+
+            await Task.WhenAll(
+                Task.Run( () =>
+                {
+                    if (countResult.IsLeft)
+                        LogMinorException(countResult.GetLeft()!);
+                    else
+                        count = countResult.GetRight()!;
+                }),
+                Task.Run(() =>
+                {
+                    if (lastPageResult.IsLeft)
+                        LogMinorException(lastPageResult.GetLeft()!);
+                    else
+                        count = lastPageResult.GetRight()!;
+                }),
+                 Task.Run(() =>
+                {
+                    if (userResult.IsBottom)
+                        return;
+                    if (userResult.IsLeft)
+                        LogMinorException(userResult.GetLeft()!);
+                    else
+                        users = userResult.GetRight()!;
+                })
+        );
+
+        }
+        catch (Exception x)
+        {
+            logger.LogError(x, x.Message);
+            hasMajorException = true;
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }        
+    }
+
+    void LogMinorException(Exception x)
+    {
+        logger.LogError(x, x.Message);
+        hasMinorException = true;
+    }
 
 }
+<CascadingAuthenticationState>
+    <AuthorizeView Policy="@ServicePermission.AllHRServiceName">
+        <Authorized>
+            <center>
+                <h1 class="text-4xl font-bold">Payrolls</h1>
+            </center>
+            <br />
+            <br />
+            <NHIF Condition="hasMajorException">
+                <NoOperation>
+                    <button class="btn btn-primary rounded-full text-white"><i class="plus icon" /> Add Payroll</button>
+                    <div style="float:right">
+                        <h2 class="text-3xl font-bold">Count : @count</h2>
+                    </div>
+                    <br />
+                    <br />
+                    <NHTypeTable Items="payrolls"
+                                 Columns="@Headers"
+                                 LoadingFlagment="@isLoading"
+                                 TableClass="table table-hover"
+                                 TableBodyClass="table-success"
+                                 NoDataDisplayText="No Payroll"
+                                 TableHeaderClass="table-dark">
+
+                    </NHTypeTable>
+                </NoOperation>
+                <YesOperation>
+                    <center>
+                        <h1 class="text-4xl font-bold">Error While Gethering Payrolls Please <button class="btn btn-link" @onclick="FetchingData"> Try Again</button></h1>
+                    </center>
+                </YesOperation>
+            </NHIF>
+        </Authorized>
+        <NotAuthorized>
+            <div class="text-2xl font-extrabold">Access Denied</div>
+        </NotAuthorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>
