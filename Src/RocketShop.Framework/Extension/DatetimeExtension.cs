@@ -21,5 +21,8 @@ namespace RocketShop.Framework.Extension
             DateTimeOffset dto = new DateTimeOffset(dateTime.ToUniversalTime());
             return dto.ToUnixTimeMilliseconds();
         }
+
+        public static string ToDateAndTimeFormat(this DateTime dateTime) =>
+            dateTime.ToString("yyyy-MM-dd HH:mm:ss");
     }
 }
