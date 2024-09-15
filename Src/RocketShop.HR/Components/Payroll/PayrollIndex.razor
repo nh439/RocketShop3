@@ -30,7 +30,7 @@
     {
         state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var authenicated = state.If(x => x.IsNotNull() && x!.User!.Identity!.IsAuthenticated);
-        if (authenicated) 
+        if (authenicated)
             await FetchingData();
 
         else navigationManager.NavigateTo("/login", true);
@@ -67,7 +67,7 @@
                     .Distinct().ToArray());
 
             await Task.WhenAll(
-                Task.Run( () =>
+                Task.Run(() =>
                 {
                     if (countResult.IsLeft)
                         LogMinorException(countResult.GetLeft()!);
@@ -102,7 +102,7 @@
         {
             isLoading = false;
             StateHasChanged();
-        }        
+        }
     }
 
     void LogMinorException(Exception x)
@@ -111,6 +111,17 @@
         hasMinorException = true;
     }
 
+    string GetEmployeeCode(UserPayroll payroll) =>
+    users.Where(x => x.UserId == payroll.UserId)
+    .Select(s => s.EmployeeCode)
+    .FirstOrDefault()
+    .IfNull("???");
+
+    string GetEmployeeName(UserPayroll payroll) =>
+     users.Where(x => x.UserId == payroll.UserId)
+    .Select(s =>$" {s.Firstname} {s.Surname}")
+    .FirstOrDefault()
+    .IfNull("???");
 }
 <CascadingAuthenticationState>
     <AuthorizeView Policy="@ServicePermission.AllHRServiceName">
@@ -134,8 +145,28 @@
                                  TableClass="table table-hover"
                                  TableBodyClass="table-success"
                                  NoDataDisplayText="No Payroll"
-                                 TableHeaderClass="table-dark">
-
+                                 TableHeaderClass="table-dark"
+                                 Context="payroll">
+                        <tr class="@(payroll.Cancelled ? "table-secondary":"table-info")">
+                            <td>
+                                <NHIF Condition="payroll.Cancelled">
+                                    <YesOperation><span class="badge badge-secondary">Cancelled</span></YesOperation>
+                                </NHIF>
+                                @payroll.PayRollId
+                                </td>
+                            <td>@payroll.PayrollDate</td>
+                            <td>@GetEmployeeCode(payroll)</td>
+                            <td>@GetEmployeeName(payroll)</td>
+                            <td>@payroll.Salary.ToMoneyFormat()</td>
+                            <td>@payroll.SocialSecurites.Inverted().ToMoneyFormat()</td>
+                            <td>@payroll.ProvidentFund.Inverted().ToMoneyFormat()</td>
+                            <td>@payroll.TravelExpenses.ToMoneyFormat()</td>
+                            <td>@payroll.TotalAdditionalPay.ToMoneyFormat()</td>
+                            <td>@payroll.TotalPayment.ToMoneyFormat()</td>
+                            <td>
+                                <button class="btn btn-info"><i class="eye icon" /></button>
+                            </td>
+                        </tr>
                     </NHTypeTable>
                 </NoOperation>
                 <YesOperation>
