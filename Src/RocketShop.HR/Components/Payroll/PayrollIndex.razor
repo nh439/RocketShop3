@@ -40,6 +40,7 @@
     {
         try
         {
+            hasMinorException = false;
             var payrollResult = searchUser.HasMessage() ?
             await payrollServices.ListByUserContain(searchUser!, currentPage) :
             await payrollServices.ListPayroll(currentPage);
@@ -133,6 +134,17 @@
             <br />
             <NHIF Condition="hasMajorException">
                 <NoOperation>
+                    <br />
+                    <br />
+                    <NHIF Condition="hasMinorException">
+                        <YesOperation>
+                            <div class="alert alert-warning text-3xl font-bold" role="alert">
+                                This Current Operation ran With Problems.
+                                &nbsp;&nbsp;
+                                For a Better experience <button class="btn btn-link text-3xl font-bold" @onclick="FetchingData">Please Try Again.</button>
+                            </div>
+                        </YesOperation>
+                    </NHIF>
                     <button class="btn btn-primary rounded-full text-white"><i class="plus icon" /> Add Payroll</button>
                     <div style="float:right">
                         <h2 class="text-3xl font-bold">Count : @count</h2>
@@ -171,7 +183,7 @@
                 </NoOperation>
                 <YesOperation>
                     <center>
-                        <h1 class="text-4xl font-bold">Error While Gethering Payrolls Please <button class="btn btn-link" @onclick="FetchingData"> Try Again</button></h1>
+                        <div class="alert alert-danger text-4xl font-bold" role="alert">Error While Gethering Payrolls Please <button class="btn btn-link text-4xl font-bold" @onclick="FetchingData"> Try Again</button></div>
                     </center>
                 </YesOperation>
             </NHIF>
