@@ -1,0 +1,110 @@
+﻿@page "/Payroll/Create"
+@using RocketShop.Database.Model.Identity
+@using RocketShop.HR.ServicePermissions
+@using RocketShop.SharedBlazor.Table
+@rendermode InteractiveServer
+
+@code {
+    UserPayroll userPayroll = new UserPayroll();
+    List<AdditionalPayroll> additionalPayrolls = new();
+    const string Headers = "Name;Balance;Currency;";
+
+    void CreateAdditional()
+    {
+        additionalPayrolls.Add(new AdditionalPayroll
+            {
+                Currency = "THB"
+            });
+        StateHasChanged();
+    }
+}
+<CascadingAuthenticationState>
+    <AuthorizeView Policy="@ServicePermission.AllHRServiceName">
+        <Authorized>
+            <h1 class="text-2xl font-bold">Create Payroll</h1>
+            <br />
+            <br />
+            <div class="row">
+                <div class="col-1"></div>
+                <div class="col-10">
+                    <div class='row'>
+                        <div class='col'>
+                            <div class="form-group">
+                                <label for="UserId">UserId</label>
+                                <input id="UserId" name="UserId" type="text" class="form-control">
+                            </div>
+                        </div>
+                        <div class='col'>
+                            <div class="form-group">
+                                <label for="PayrollDate">Payroll Date</label>
+                                <input id="PayrollDate" name="PayrollDate" type="datetime" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <div class='row'>
+                        <div class='col'>
+                            <div class="form-group">
+                                <label for="Salary">Salary</label>
+                                <input id="Salary" name="Salary" type="number" class="form-control">
+                            </div>
+                        </div>
+                        <div class='col'>
+                            <div class="form-group">
+                                <label for="SocialSecurites">Social Securites</label>
+                                <input id="SocialSecurites" name="SocialSecurites" type="number" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <div class='row'>
+                        <div class='col'>
+                            <div class="form-group">
+                                <label for="ProvidentFund">Provident Fund</label>
+                                <input id="ProvidentFund" name="ProvidentFund" type="number" class="form-control">
+                            </div>
+                        </div>
+                        <div class='col'>
+                            <div class="form-group">
+                                <label for="TravelExpenses">Travel Expenses</label>
+                                <input id="TravelExpenses" name="TravelExpenses" type="number" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <br />
+                    <h2 class="text-2xl font-bold">Additional Expense</h2>
+                    <br />
+                    <hr />
+                    <br />
+                    <button class="btn btn-primary text-while rounded-full" @onclick="CreateAdditional"><i class="plus icon" /> Add Additional Payrolls</button>
+                    <br />
+                    <br />
+                    <NHTypeTable Items="additionalPayrolls"
+                                 Columns="@Headers"
+                                 Context="additional"
+                                 TableClass="table table-hover"
+                                 TableHeaderClass="table-dark"
+                                 TableBodyClass="table-primary">
+                        <tr>
+                            <td>
+                                <div class="form-group">
+                                    <input id="text" name="text" type="text" class="form-control" @bind-value="additional.Name">
+                                </div>
+                            </td>
+                            <td>
+                                <div class="form-group">
+                                    <input id="text" name="text" type="number" class="form-control" @bind-value="additional.Value">
+                                </div>
+                            </td>
+                            <td>
+                                <div class="form-group">
+                                    <input id="text" name="text" type="text" class="form-control" @bind-value="additional.Currency">
+                                </div>
+                            </td>
+
+                        </tr>
+                    </NHTypeTable>
+                </div>
+                <div class="col-1"></div>
+            </div>
+        </Authorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>
