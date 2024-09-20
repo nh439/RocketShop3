@@ -12,8 +12,8 @@ namespace RocketShop.Database.Model.Identity
     public class AdditionalPayroll
     {
         [Key]
-        public string Id { get; set; }
-        public string PayrollId { get; set; }
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public required string PayrollId { get; set; }
         public string Name { get; set; }
         /// <summary>
         /// จำนวนเงิน (ถ้าติดลบ จะหักจาก Total Payment)

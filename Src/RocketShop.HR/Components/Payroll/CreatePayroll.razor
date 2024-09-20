@@ -1,7 +1,11 @@
 ﻿@page "/Payroll/Create"
 @using RocketShop.Database.Model.Identity
+@using RocketShop.Database.Model.NonDatabaseModel
 @using RocketShop.HR.ServicePermissions
+@using RocketShop.HR.Services
 @using RocketShop.SharedBlazor.Table
+@using Newtonsoft.Json
+@inject IUserServices userService
 @rendermode InteractiveServer
 
 @code {
@@ -13,9 +17,22 @@
     {
         additionalPayrolls.Add(new AdditionalPayroll
             {
-                Currency = "THB"
+                Currency = "THB",
+                PayrollId = userPayroll.PayRollId
             });
         StateHasChanged();
+    }
+    void DeleteAdditional(string id)
+    {
+        additionalPayrolls = additionalPayrolls.Where(x => x.Id != id).ToList();
+        StateHasChanged();
+    }
+
+    async Task Submit()
+    {
+        var slip = new SlipData(userPayroll,additionalPayrolls);
+        var json = JsonConvert.SerializeObject(slip, Formatting.Indented);
+        Console.WriteLine(json);
     }
 }
 <CascadingAuthenticationState>
@@ -37,7 +54,7 @@
                         <div class='col'>
                             <div class="form-group">
                                 <label for="PayrollDate">Payroll Date</label>
-                                <input id="PayrollDate" name="PayrollDate" type="datetime" class="form-control">
+                                <input id="PayrollDate" name="PayrollDate" type="date" @bind-value="userPayroll.PayrollDate" class="form-control">
                             </div>
                         </div>
                     </div>
@@ -45,13 +62,13 @@
                         <div class='col'>
                             <div class="form-group">
                                 <label for="Salary">Salary</label>
-                                <input id="Salary" name="Salary" type="number" class="form-control">
+                                <input id="Salary" name="Salary" type="number" @bind-value="userPayroll.Salary" class="form-control">
                             </div>
                         </div>
                         <div class='col'>
                             <div class="form-group">
                                 <label for="SocialSecurites">Social Securites</label>
-                                <input id="SocialSecurites" name="SocialSecurites" type="number" class="form-control">
+                                <input id="SocialSecurites" name="SocialSecurites" @bind-value="userPayroll.SocialSecurites" type="number" class="form-control">
                             </div>
                         </div>
                     </div>
@@ -59,13 +76,13 @@
                         <div class='col'>
                             <div class="form-group">
                                 <label for="ProvidentFund">Provident Fund</label>
-                                <input id="ProvidentFund" name="ProvidentFund" type="number" class="form-control">
+                                <input id="ProvidentFund" name="ProvidentFund" @bind-value="userPayroll.ProvidentFund" type="number" class="form-control">
                             </div>
                         </div>
                         <div class='col'>
                             <div class="form-group">
                                 <label for="TravelExpenses">Travel Expenses</label>
-                                <input id="TravelExpenses" name="TravelExpenses" type="number" class="form-control">
+                                <input id="TravelExpenses" name="TravelExpenses" @bind-value="userPayroll.TravelExpenses" type="number" class="form-control">
                             </div>
                         </div>
                     </div>
@@ -99,9 +116,15 @@
                                     <input id="text" name="text" type="text" class="form-control" @bind-value="additional.Currency">
                                 </div>
                             </td>
-
+                            <td>
+                                <button class="btn btn-danger" @onclick="()=>DeleteAdditional(additional.Id)"><i class="trash icon" /></button>
+                            </td>
                         </tr>
                     </NHTypeTable>
+                    <br />
+                    <br />
+                    <button type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-bold rounded-full text-xl px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" @onclick="Submit"><i class="plus icon" /> Create Payroll</button>
+                    <br />
                 </div>
                 <div class="col-1"></div>
             </div>

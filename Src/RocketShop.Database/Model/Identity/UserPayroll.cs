@@ -14,13 +14,13 @@ namespace RocketShop.Database.Model.Identity
         [Key]
         public string PayRollId { get; set; } = Guid.NewGuid().ToString();
         public string UserId { get; set; }
-        public DateTime PayrollDate { get; set; }
+        public DateTime PayrollDate { get; set; } = DateTime.Now;
         public decimal Salary { get; set; } = 0;
         public decimal SocialSecurites { get; set; } = 0;
         public decimal ProvidentFund { get; set; } = 0;
         public decimal TotalPayment { get; set; } = 0;
         public decimal TravelExpenses { get; set; } = 0;
         public decimal TotalAdditionalPay { get; set; } = 0;
-        public bool Cancelled { get; set; } = false;
+        public bool Cancelled { get; set; }
     }
 }
