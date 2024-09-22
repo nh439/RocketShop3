@@ -50,6 +50,20 @@ namespace RocketShop.HR.Repository
                 query = query.UsePaging(page.Value, pageSize);
             return await query.ToListAsync();
         }
+        public async Task<List<UserView>> GetActiveUsers(string? searchTerm = null, int? page = null, int pageSize = 20)
+        {
+            var query = userView
+                .Where(x=>x.Active)
+                .AsQueryable();
+            if (searchTerm.HasMessage())
+                query = SearchUser(query, searchTerm!);
+            query = query.OrderBy(x => x.EmployeeCode)
+                .OrderByDescending(x=>x.Active);
+            if (page.HasValue)
+                query = query.UsePaging(page.Value, pageSize);
+            return await query.ToListAsync();
+        }
+
         public async Task<List<UserView>> GetByDepartment(string department, int? page = null, int pageSize = 20)
         {
             var query = userView

@@ -1,17 +1,49 @@
 ﻿@page "/Payroll/Create"
+@using Blazored.Typeahead
 @using RocketShop.Database.Model.Identity
+@using RocketShop.Database.Model.Identity.Views
 @using RocketShop.Database.Model.NonDatabaseModel
+@using RocketShop.Framework.Extension
 @using RocketShop.HR.ServicePermissions
 @using RocketShop.HR.Services
+@using RocketShop.SharedBlazor.Condition
+@using RocketShop.SharedBlazor.SharedFunction
 @using RocketShop.SharedBlazor.Table
 @using Newtonsoft.Json
+@using RocketShop.SharedBlazor.Tools
+@using System.Timers
 @inject IUserServices userService
 @rendermode InteractiveServer
+@implements IDisposable
+
 
 @code {
     UserPayroll userPayroll = new UserPayroll();
     List<AdditionalPayroll> additionalPayrolls = new();
-    const string Headers = "Name;Balance;Currency;";
+    const string Headers = "Name;Balance;";
+    LoadingModal? loading;
+    UserView? selectedUser;
+    bool alertDisplay,
+    userValidate,
+    payrollDateValidate,
+    additionalNameValidate,
+    currencyValidate;
+    string? message;
+
+    decimal totalAdditionalPay,
+    salaryReceived;
+    System.Timers.Timer timer = new System.Timers.Timer(500);
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (state!.User.Identity!.IsAuthenticated)
+        {
+            timer.Elapsed += Calculating;
+            timer.Enabled = true;
+            StateHasChanged();
+        }
+    }
+
 
     void CreateAdditional()
     {
@@ -27,12 +59,57 @@
         additionalPayrolls = additionalPayrolls.Where(x => x.Id != id).ToList();
         StateHasChanged();
     }
+    async Task<IEnumerable<UserView>> SearchEmployee(string searchTerm)
+    {
+        var result = await userService.ListActiveUsers(searchTerm, 1, 10);
+        if (result.IsLeft)
+        {
+            alertDisplay = true;
+            return new List<UserView>();
+        }
+        return result.GetRight()!;
+    }
+
+    async void Calculating(object? src,ElapsedEventArgs e)
+    {
+        await Task.WhenAll(
+            Task.Run(TotalAdditionalCalculate),
+            Task.Run(SalaryReceiveCalculate)
+        );
+    //    await InvokeAsync(StateHasChanged);
+    }
+
+    void TotalAdditionalCalculate() =>
+     totalAdditionalPay = additionalPayrolls.HasDataAndTranformData(
+         t => t.Select(s => s.Value).Sum(),
+     () => 0);
+
+    void SalaryReceiveCalculate() =>
+    salaryReceived =
+    (userPayroll.Salary +
+        userPayroll.TravelExpenses +
+        additionalPayrolls.HasDataAndTranformData(
+         t => t.Select(s => s.Value).Sum(),
+     () => 0)
+    ) - (userPayroll.ProvidentFund + userPayroll.SocialSecurites);
 
     async Task Submit()
     {
-        var slip = new SlipData(userPayroll,additionalPayrolls);
+        userValidate = !selectedUser.IsNotNull();
+        payrollDateValidate = !userPayroll.PayrollDate.IsNotNull();
+        additionalNameValidate = additionalPayrolls.HasData() && additionalPayrolls.Where(x=>x.Name.IsNullOrEmpty()).HasData();
+        currencyValidate = userPayroll.Currency.IsNullOrEmpty();
+        if (userValidate.Or(payrollDateValidate, additionalNameValidate, currencyValidate))
+            return;
+        var slip = new SlipData(userPayroll, additionalPayrolls);
+        if (selectedUser.IsNotNull())
+            slip.UserId = selectedUser!.UserId;
         var json = JsonConvert.SerializeObject(slip, Formatting.Indented);
         Console.WriteLine(json);
+    }
+    void IDisposable.Dispose()
+    {
+        timer?.Dispose();
     }
 }
 <CascadingAuthenticationState>
@@ -41,20 +118,48 @@
             <h1 class="text-2xl font-bold">Create Payroll</h1>
             <br />
             <br />
+            <NHIF Condition="alertDisplay">
+                <YesOperation>
+                    <div class="alert alert-danger" role="alert">
+                        An Error While Query Data. <button @onclick="()=>alertDisplay=false" class="alert-link">Dismiss</button>. Give it a click if you like.
+                    </div>
+                </YesOperation>
+            </NHIF>
             <div class="row">
                 <div class="col-1"></div>
                 <div class="col-10">
                     <div class='row'>
                         <div class='col'>
                             <div class="form-group">
-                                <label for="UserId">UserId</label>
-                                <input id="UserId" name="UserId" type="text" class="form-control">
+                                <label for="UserId">Employee</label>
+                                <BlazoredTypeahead class="form-control"
+                                                   id="UserId"
+                                                   Context="emp"
+                                                   EnableDropDown="true"
+                                                   SearchMethod="SearchEmployee"
+                                                   @bind-Value="selectedUser">
+                                    <ResultTemplate>
+                                        @emp.EmployeeCode : @emp.Firstname @emp.Surname
+                                    </ResultTemplate>
+                                    <SelectedTemplate>
+                                        @emp?.EmployeeCode : @emp?.Firstname @emp?.Surname
+                                    </SelectedTemplate>
+                                </BlazoredTypeahead>
+                                <NHIF Condition="userValidate">
+                                    <YesOperation><small style="color:red">Required.</small></YesOperation>
+                                </NHIF>
                             </div>
                         </div>
                         <div class='col'>
                             <div class="form-group">
                                 <label for="PayrollDate">Payroll Date</label>
-                                <input id="PayrollDate" name="PayrollDate" type="date" @bind-value="userPayroll.PayrollDate" class="form-control">
+                                <input id="PayrollDate" name="PayrollDate" type="date" @bind-value="userPayroll.PayrollDate" class="form-control @TextValidator.InvalidDisplay(payrollDateValidate)">
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="text1">Currency</label>
+                                <input id="text1" name="text1" type="text" @bind-value="userPayroll.Currency" class="form-control @TextValidator.InvalidDisplay(currencyValidate)">
                             </div>
                         </div>
                     </div>
@@ -103,17 +208,12 @@
                         <tr>
                             <td>
                                 <div class="form-group">
-                                    <input id="text" name="text" type="text" class="form-control" @bind-value="additional.Name">
+                                    <input id="text" name="text" type="text" class="form-control @TextValidator.InvalidDisplay(additionalNameValidate && additional.Name.IsNullOrEmpty())" @bind-value="additional.Name">
                                 </div>
                             </td>
                             <td>
                                 <div class="form-group">
                                     <input id="text" name="text" type="number" class="form-control" @bind-value="additional.Value">
-                                </div>
-                            </td>
-                            <td>
-                                <div class="form-group">
-                                    <input id="text" name="text" type="text" class="form-control" @bind-value="additional.Currency">
                                 </div>
                             </td>
                             <td>
@@ -123,11 +223,37 @@
                     </NHTypeTable>
                     <br />
                     <br />
-                    <button type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-bold rounded-full text-xl px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" @onclick="Submit"><i class="plus icon" /> Create Payroll</button>
+                    <div class="row" @onmouseover="StateHasChanged">
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="text">Total Additional</label>
+                                <div class="input-group">
+                                    <input id="text" name="text" value="@totalAdditionalPay.ToMoneyFormat()" type="text" class="form-control" readonly>
+                                    <div class="input-group-append">
+                                        <div class="input-group-text">THB</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group">
+                                <label for="text">Salary Received</label>
+                                <div class="input-group">
+                                    <input id="text" name="text" value="@salaryReceived.ToMoneyFormat()" type="text" class="form-control" readonly>
+                                    <div class="input-group-append">
+                                        <div class="input-group-text">THB</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <br />
+                    <br />
+                    <button @onmouseover="StateHasChanged" type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-bold rounded-full text-xl px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" @onclick="Submit"><i class="plus icon" /> Create Payroll</button>
                     <br />
                 </div>
-                <div class="col-1"></div>
             </div>
         </Authorized>
     </AuthorizeView>
 </CascadingAuthenticationState>
+<LoadingModal @ref="loading" />
