@@ -30,7 +30,7 @@
     {
         state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var authenicated = state.If(x => x.IsNotNull() && x!.User!.Identity!.IsAuthenticated);
-        if (authenicated) 
+        if (authenicated)
             await FetchingData();
 
         else navigationManager.NavigateTo("/login", true);
@@ -40,6 +40,7 @@
     {
         try
         {
+            hasMinorException = false;
             var payrollResult = searchUser.HasMessage() ?
             await payrollServices.ListByUserContain(searchUser!, currentPage) :
             await payrollServices.ListPayroll(currentPage);
@@ -67,7 +68,7 @@
                     .Distinct().ToArray());
 
             await Task.WhenAll(
-                Task.Run( () =>
+                Task.Run(() =>
                 {
                     if (countResult.IsLeft)
                         LogMinorException(countResult.GetLeft()!);
@@ -102,7 +103,7 @@
         {
             isLoading = false;
             StateHasChanged();
-        }        
+        }
     }
 
     void LogMinorException(Exception x)
@@ -111,6 +112,17 @@
         hasMinorException = true;
     }
 
+    string GetEmployeeCode(UserPayroll payroll) =>
+    users.Where(x => x.UserId == payroll.UserId)
+    .Select(s => s.EmployeeCode)
+    .FirstOrDefault()
+    .IfNull("???");
+
+    string GetEmployeeName(UserPayroll payroll) =>
+     users.Where(x => x.UserId == payroll.UserId)
+    .Select(s =>$" {s.Firstname} {s.Surname}")
+    .FirstOrDefault()
+    .IfNull("???");
 }
 <CascadingAuthenticationState>
     <AuthorizeView Policy="@ServicePermission.AllHRServiceName">
@@ -122,7 +134,18 @@
             <br />
             <NHIF Condition="hasMajorException">
                 <NoOperation>
-                    <button class="btn btn-primary rounded-full text-white"><i class="plus icon" /> Add Payroll</button>
+                    <br />
+                    <br />
+                    <NHIF Condition="hasMinorException">
+                        <YesOperation>
+                            <div class="alert alert-warning text-3xl font-bold" role="alert">
+                                This Current Operation ran With Problems.
+                                &nbsp;&nbsp;
+                                For a Better experience <button class="btn btn-link text-3xl font-bold" @onclick="FetchingData">Please Try Again.</button>
+                            </div>
+                        </YesOperation>
+                    </NHIF>
+                    <a href="/Payroll/Create" class="btn btn-primary rounded-full text-white"><i class="plus icon" /> Add Payroll</a>
                     <div style="float:right">
                         <h2 class="text-3xl font-bold">Count : @count</h2>
                     </div>
@@ -134,13 +157,33 @@
                                  TableClass="table table-hover"
                                  TableBodyClass="table-success"
                                  NoDataDisplayText="No Payroll"
-                                 TableHeaderClass="table-dark">
-
+                                 TableHeaderClass="table-dark"
+                                 Context="payroll">
+                        <tr class="@(payroll.Cancelled ? "table-secondary":"table-info")">
+                            <td>
+                                <NHIF Condition="payroll.Cancelled">
+                                    <YesOperation><span class="badge badge-secondary">Cancelled</span></YesOperation>
+                                </NHIF>
+                                @payroll.PayRollId
+                                </td>
+                            <td>@payroll.PayrollDate</td>
+                            <td>@GetEmployeeCode(payroll)</td>
+                            <td>@GetEmployeeName(payroll)</td>
+                            <td>@payroll.Salary.ToMoneyFormat()</td>
+                            <td>@payroll.SocialSecurites.Inverted().ToMoneyFormat()</td>
+                            <td>@payroll.ProvidentFund.Inverted().ToMoneyFormat()</td>
+                            <td>@payroll.TravelExpenses.ToMoneyFormat()</td>
+                            <td>@payroll.TotalAdditionalPay.ToMoneyFormat()</td>
+                            <td>@payroll.TotalPayment.ToMoneyFormat()</td>
+                            <td>
+                                <button class="btn btn-info"><i class="eye icon" /></button>
+                            </td>
+                        </tr>
                     </NHTypeTable>
                 </NoOperation>
                 <YesOperation>
                     <center>
-                        <h1 class="text-4xl font-bold">Error While Gethering Payrolls Please <button class="btn btn-link" @onclick="FetchingData"> Try Again</button></h1>
+                        <div class="alert alert-danger text-4xl font-bold" role="alert">Error While Gethering Payrolls Please <button class="btn btn-link text-4xl font-bold" @onclick="FetchingData"> Try Again</button></div>
                     </center>
                 </YesOperation>
             </NHIF>

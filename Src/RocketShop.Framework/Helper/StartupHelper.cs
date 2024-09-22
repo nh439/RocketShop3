@@ -31,11 +31,12 @@ namespace RocketShop.Framework.Helper
             return services;
         }
         public static IHostApplicationBuilder InstallSerilog(this IHostApplicationBuilder builder,
-            string logPath = "../log/serilog_Service.log")
+            string logPath = "../log/serilog_Service.log",
+            string template = "- {Timestamp:u} {SourceContext} [{Level}]{NewLine} {Message}{NewLine}{Exception}---END---{NewLine}")
         {
             var logger = new LoggerConfiguration()
-    .WriteTo.Console()
-    .WriteTo.File(logPath, rollingInterval: RollingInterval.Day)
+    .WriteTo.Console(outputTemplate:template)
+    .WriteTo.File(logPath, rollingInterval: RollingInterval.Day,outputTemplate:template)
     .CreateLogger();
             builder.Logging.ClearProviders();
             builder.Logging.AddSerilog(logger);
