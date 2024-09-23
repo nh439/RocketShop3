@@ -52,6 +52,7 @@ namespace RocketShop.Framework.Extension
         public static CurrentType FindDistance(this CurrentType? x, CurrentType? y) =>
             (CurrentType)Math.Abs((x ?? 0) - (y ?? 0));
         #endregion
+
         public static string ToMoneyFormat(this decimal d) =>
             d.ToString("#,##0.00");
 

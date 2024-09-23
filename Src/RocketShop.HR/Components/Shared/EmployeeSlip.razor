@@ -1,0 +1,163 @@
+﻿@using RocketShop.Database.Model.NonDatabaseModel
+@using RocketShop.Framework.Extension
+@using RocketShop.HR.Services
+@using RocketShop.SharedBlazor.Condition
+@using RocketShop.SharedBlazor.Loop
+@using RocketShop.SharedBlazor.Modal
+@using RocketShop.SharedBlazor.Modal.ModalCompenment
+@using RocketShop.SharedBlazor.Table
+@inject IPayrollServices payrollService
+@inject IUserServices userService
+@inject IFinacialServices finacialServices
+@inject ILogger<EmployeeSlip> logger
+@rendermode InteractiveServer
+
+@code {
+    Modal? e;
+    SlipData? slipData;
+    UserProfile? profile;
+    UserFinacialData finacialData = new();
+    const string Headers = "Type;Amount";
+    bool isLoading, isError;
+    public async Task Open(string payrollId)
+    {
+        isLoading = true;
+        isError = false;
+        e!.Show();
+        try
+        {
+            var result = await payrollService.GetSlipData(payrollId);
+            if (result.IsLeft)
+                throw result.GetLeft()!;
+            slipData = result.GetRight()!;
+            var userResult = await userService.GetProfile(slipData.UserId);
+            if (userResult.IsLeft)
+                throw userResult.GetLeft()!;
+            profile = userResult.GetRight()!.Extract();
+            var finResult = await finacialServices.GetFinacialData(slipData.UserId, false);
+            if (finResult.IsLeft)
+                throw finResult.GetLeft()!;
+            finacialData = finResult.GetRight()!.Extract();
+        }
+        catch (Exception x)
+        {
+            logger.LogError(x, x.Message);
+            isError = true;
+        }
+        finally
+        {
+            isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+
+
+    }
+}
+
+<Modal Title="Salary Slip" @ref="e">
+    <ModalBody>
+        <NHIF Condition="isLoading">
+            <YesOperation>
+                <center>
+                    <div class="loader"></div>
+                    <br />
+                    <h2 class="text-xl">
+                        Loading...
+                    </h2>
+                </center>
+            </YesOperation>
+            <NoOperation>
+                <NHIF Condition="isError">
+                    <YesOperation>
+                        <div class="alert alert-danger text-2xl" role="alert">
+                            Something Went Wrong!
+                        </div>
+                    </YesOperation>
+                    <NoOperation>
+                        <NHIF Condition="@(slipData.IsNotNull().And(profile.IsNotNull(),finacialData.IsNotNull()))">
+                            <div class="row text-xl font-semibold">
+                                <div class="col">
+                                    Slip Id : @slipData!.PayRollId
+                                </div>
+                                <div class="col">
+                                    Date : @slipData.PayrollDate.Date.ToString("dd MMMM yyyy")
+                                </div>
+                            </div>
+                            <br />
+                            <div class="row text-xl font-semibold">
+                                <div class="col">
+                                    Employee Id : @profile!.EmployeeCode
+                                </div>
+                                <div class="col">
+                                    Employee Name : @profile.Tranform(x => $"{x!.Firstname} {x!.Surname}")
+                                </div>
+                            </div>
+                            <br />
+                            <div class="row text-xl font-semibold">
+                                <div class="col">
+                                    Position : @profile.Information!.CurrentPosition
+                                </div>
+                                <div class="col">
+                                </div>
+                            </div>
+                            <br />
+                            <div class="row text-xl font-semibold">
+                                <div class="col">
+                                    Bank : @finacialData!.BankName
+                                </div>
+                                <div class="col">
+                                    Acc No : @finacialData.AccountNo.SealMiddleCharacters()
+                                </div>
+                            </div>
+                            <br />
+                        </NHIF>
+                        <NHIF Condition="slipData.IsNotNull()">
+                            <YesOperation>
+                                <NHTable Columns="@Headers"
+                                         TableClass="table table-hover"
+                                         TableBodyClass="table-success">
+                                    <tr>
+                                        <td>Salary</td>
+                                        <td>@slipData!.Salary.ToMoneyFormat() @slipData.Currency</td>
+                                    </tr>
+                                    <NHIF Condition="slipData.TravelExpenses.Ge(0)">
+                                        <tr>
+                                            <td>Social Securites</td>
+                                            <td>@slipData!.TravelExpenses.ToMoneyFormat() @slipData.Currency</td>
+                                        </tr>
+                                    </NHIF>
+                                    <NHIF Condition="slipData.SocialSecurites.Ge(0)">
+                                        <tr>
+                                            <td>Social Securites</td>
+                                            <td>- @slipData!.SocialSecurites.ToMoneyFormat() @slipData.Currency</td>
+                                        </tr>
+                                    </NHIF>
+                                    <NHIF Condition="slipData.ProvidentFund.Ge(0)">
+                                        <tr>
+                                            <td>Social Securites</td>
+                                            <td>- @slipData!.ProvidentFund.ToMoneyFormat() @slipData.Currency</td>
+                                        </tr>
+                                    </NHIF>
+                                    <NHForeach Items="slipData.AdditionalPayrolls">
+                                        <tr>
+                                            <td>@context.Name</td>
+                                            <td>@context.Value.ToMoneyFormat() @slipData.Currency</td>
+                                        </tr>
+                                    </NHForeach>
+                                    <tr class="text-xl font-bold">
+                                        <td>Net Pay</td>
+                                        <td>@slipData.TotalPayment.ToMoneyFormat() @slipData.Currency</td>
+                                    </tr>
+                                </NHTable>
+                            </YesOperation>
+                        </NHIF>
+                    </NoOperation>
+                </NHIF>
+            </NoOperation>
+        </NHIF>
+
+    </ModalBody>
+    <ModalFooter>
+        <button class="btn btn-danger" @onclick="()=>e.Close()"><i class="x icon"></i> Close Window</button>
+    </ModalFooter>
+</Modal>

@@ -8,6 +8,8 @@
     public RenderFragment? YesOperation{ get; set; }
     [Parameter]
     public RenderFragment? NoOperation{ get; set; }
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
 }
 
 @if(Condition)
@@ -15,6 +17,10 @@
     if (YesOperation.IsNotNull())
     {
         @YesOperation
+    }
+    else
+    {
+        @ChildContent
     }
 }
 else

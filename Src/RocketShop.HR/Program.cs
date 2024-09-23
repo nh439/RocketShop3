@@ -44,7 +44,7 @@ builder.InstallSerilog()
             options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
             options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
         }).AddCookie(c => c.ExpireTimeSpan = TimeSpan.FromHours(10));
-        install.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+        install.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         install.AddAuthorization(a =>
         {
             a.AddPolicy(ServicePermission.AllHRServiceName, p =>

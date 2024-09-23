@@ -3,6 +3,7 @@
 @using RocketShop.Database.Model.Identity
 @using RocketShop.Database.Model.Identity.Views
 @using RocketShop.Framework.Extension
+@using RocketShop.HR.Components.Shared
 @using RocketShop.HR.ServicePermissions
 @using RocketShop.HR.Services
 @using RocketShop.SharedBlazor.Condition
@@ -17,6 +18,7 @@
     List<UserView> users = new List<UserView>();
     [CascadingParameter]
     public AuthenticationState? state { get; set; }
+    EmployeeSlip? slip;
     const string Headers = "Id;Date;Employee Id;Employee Name;Salary;Social Securities;Provident Fund;Travel Expense;Other Pay;Salary Received;";
     int currentPage = 1,
     count = 0,
@@ -176,7 +178,7 @@
                             <td>@payroll.TotalAdditionalPay.ToMoneyFormat()</td>
                             <td>@payroll.TotalPayment.ToMoneyFormat()</td>
                             <td>
-                                <button class="btn btn-info"><i class="eye icon" /></button>
+                                <button class="btn btn-info" @onclick="async () => slip!.Open(payroll.PayRollId)"><i class="eye icon" /></button>
                             </td>
                         </tr>
                     </NHTypeTable>
@@ -193,3 +195,4 @@
         </NotAuthorized>
     </AuthorizeView>
 </CascadingAuthenticationState>
+<EmployeeSlip @ref="slip" />

@@ -37,6 +37,21 @@ namespace RocketShop.HR.Repository
             .Where(nameof(UserProvidentFund.UserId), userId)
             .DeleteAsync(transaction).GeAsync(0);
 
+        public async Task<bool> AddProvidentFundValue(string userId,
+            decimal secondOperand,
+            string currency,
+            IDbConnection identityConnection,
+            IDbTransaction? transaction = null) =>
+            await identityConnection.ExecuteAsync(@$"insert into ""{table}""
+values(@userId,@balance,@currency)
+on conflict (""{nameof(UserProvidentFund.UserId)}"")
+do update set ""{nameof(UserProvidentFund.Balance)}"" = ""{nameof(UserProvidentFund.Balance)}""+@balance;
+", new {
+                userId=userId,
+                balance=secondOperand,
+                currency=currency
+            },transaction).EqAsync(1);
+
         public async Task<UserProvidentFund?> GetUserProvidentFund(string userId) =>
             await context.UserProvidentFund.FirstOrDefaultAsync(x => x.UserId == userId);
     }

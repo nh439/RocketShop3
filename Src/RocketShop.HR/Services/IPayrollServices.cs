@@ -26,6 +26,7 @@ namespace RocketShop.HR.Services
         UserPayrollRepository userPayrollRepository,
         AdditionalPayrollRepository additionalPayrollRepository,
         UserRepository userRepository,
+        ProvidentRepository providentRepository,
         IConfiguration configuration) 
         : BaseServices<PayrollServices>("Payroll Service",logger,new NpgsqlConnection(configuration.GetIdentityConnectionString())), IPayrollServices
     {
@@ -65,6 +66,13 @@ namespace RocketShop.HR.Services
                         slipData.ToAdditionalPayroll()!,
                         Connection,
                         transaction);
+                if (slipData.ProvidentFund.NotEq(0))
+                    await providentRepository.AddProvidentFundValue(
+                        slipData.UserId, 
+                        slipData.ProvidentFund, 
+                        slipData.Currency, 
+                        Connection, 
+                        transaction);
                 transaction.Commit();
                 Connection.Close();
                 return true;
@@ -82,6 +90,13 @@ namespace RocketShop.HR.Services
                         await additionalPayrollRepository.SetAdditionalPayroll(
                             s.PayRollId,
                             s.ToAdditionalPayroll()!,
+                            con,
+                            transaction);
+                    if (s.ProvidentFund.NotEq(0))
+                        await providentRepository.AddProvidentFundValue(
+                            s.UserId,
+                            s.ProvidentFund,
+                            s.Currency,
                             con,
                             transaction);
                 }
