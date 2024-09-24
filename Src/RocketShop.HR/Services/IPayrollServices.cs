@@ -67,12 +67,15 @@ namespace RocketShop.HR.Services
                         Connection,
                         transaction);
                 if (slipData.ProvidentFund.NotEq(0))
-                    await providentRepository.AddProvidentFundValue(
-                        slipData.UserId, 
-                        slipData.ProvidentFund, 
-                        slipData.Currency, 
-                        Connection, 
+                {
+                   var x = await providentRepository.AddProvidentFundValue(
+                        slipData.UserId,
+                        slipData.ProvidentFund,
+                        slipData.Currency,
+                        Connection,
                         transaction);
+                    Console.WriteLine(x);
+                }
                 transaction.Commit();
                 Connection.Close();
                 return true;

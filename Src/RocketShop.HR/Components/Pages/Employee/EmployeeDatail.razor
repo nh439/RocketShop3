@@ -57,7 +57,7 @@
             }
             )
             );
-            if (information.ManagerId.HasMessage())
+            if (information.IsNotNull() && information.ManagerId.HasMessage())
             {
                 var managerResult = await userServices.GetUserViewById(information.ManagerId!);
                 if (managerResult.IsLeft || managerResult.GetRight().IsNone)

@@ -80,6 +80,7 @@
             if (newInformation.BrithDay.HasValue)
                 newInformation.BrithDay = newInformation.BrithDay.Value.ToUniversalTime();
             newUser.CreateBy = currentUser;
+            newInformation.CreateBy = currentUser;
             var result = await userService.CreateUser(newUser, newInformation);
             if(result.IsLeft || !result.GetRight())
             {

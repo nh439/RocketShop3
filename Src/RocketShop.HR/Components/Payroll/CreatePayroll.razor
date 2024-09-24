@@ -111,41 +111,47 @@
             slip.TotalAdditionalPay = totalAdditionalPay;
             slip.TotalPayment = salaryReceived;
             var result = await payrollService.Create(slip);
-            await loading!.Then(true, "Payroll Updated", "Success", "/payroll");
+            await loading!.Then(true, "Payroll Created", "Success", "/payroll");
         }
         catch
         {
             await loading!.Then(false, "Error While Creating Payroll", "Failed");
         }
     }
-    async Task SelectedResultChanged(UserView result)
+    async Task SelectedResultChanged(UserView? result)
     {
-        var finacialData = await finacialServices.GetFinacialData(result.UserId);
-        var data = finacialData.GetRight().Extract();
-        if (!userPayroll.IsNotNull()) userPayroll = new();
-        userPayroll.Salary = data!.Salary;
-        userPayroll.Currency = data.Currency;
-        userPayroll.SocialSecurites = data.SocialSecurites;
-        userPayroll.ProvidentFund = data.ProvidentFundPerMonth;
-        userPayroll.TravelExpenses = data.TravelExpenses;
-        if (!additionalPayrolls.HasData())
-            additionalPayrolls = new();
-        if(data.AddiontialExpenses.HasData())
-            foreach(var addition in data.AddiontialExpenses!)
-            {
-                var exists = additionalPayrolls.Where(x => x.Name == addition.ExpenseName).HasData();
-                if (exists)
-                    additionalPayrolls.Where(x => x.Name == addition.ExpenseName).HasDataAndForEach(f => f.Value = addition.Balance);
-                else
-                    additionalPayrolls.Add(new AdditionalPayroll
+        if(result.IsNotNull()){
+            var finacialData = await finacialServices.GetFinacialData(result.UserId);
+            var data = finacialData.GetRight().Extract();
+            if (!userPayroll.IsNotNull()) userPayroll = new();
+            userPayroll.Salary = data!.Salary;
+            userPayroll.Currency = data.Currency;
+            userPayroll.SocialSecurites = data.SocialSecurites;
+            userPayroll.ProvidentFund = data.ProvidentFundPerMonth;
+            userPayroll.TravelExpenses = data.TravelExpenses;
+            if (!additionalPayrolls.HasData())
+                additionalPayrolls = new();
+            if(data.AddiontialExpenses.HasData())
+                foreach(var addition in data.AddiontialExpenses!)
+                {
+                    var exists = additionalPayrolls.Where(x => x.Name == addition.ExpenseName).HasData();
+                    if (exists)
+                        additionalPayrolls.Where(x => x.Name == addition.ExpenseName).HasDataAndForEach(f => f.Value = addition.Balance);
+                    else
+                        additionalPayrolls.Add(new AdditionalPayroll
                         {
                             PayrollId = userPayroll.PayRollId,
                             Currency = data.Currency,
                             Name = addition.ExpenseName,
                             Value = addition.Balance
                         });
-            }
+                }
             selectedUser = result;
+        }
+        else
+        {
+            selectedUser = null;
+        }
         StateHasChanged();
 
     }

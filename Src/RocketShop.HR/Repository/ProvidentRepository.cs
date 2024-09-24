@@ -42,7 +42,7 @@ namespace RocketShop.HR.Repository
             string currency,
             IDbConnection identityConnection,
             IDbTransaction? transaction = null) =>
-            await identityConnection.ExecuteAsync(@$"insert into ""{table}""
+            await identityConnection.ExecuteAsync(@$"insert into ""{table}"" (""{nameof(UserProvidentFund.UserId)}"",""{nameof(UserProvidentFund.Balance)}"",""{nameof(UserProvidentFund.Currency)}"")
 values(@userId,@balance,@currency)
 on conflict (""{nameof(UserProvidentFund.UserId)}"")
 do update set ""{nameof(UserProvidentFund.Balance)}"" = ""{nameof(UserProvidentFund.Balance)}""+@balance;
