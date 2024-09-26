@@ -116,6 +116,7 @@
             var updateRoleResult = await roleServices.SetRoleByUser(id, selectedRole.Select(s => s.Id).ToArray());
             if (updateRoleResult.IsLeft)
                 throw updateRoleResult.GetLeft()!;
+            await activityLogService.Create("HR", "Employee", $"Update Employee '{user.EmployeeCode} : {user.Firstname} {user.Surname}' Data");
             message = "Update Successful";
             isSuccess = true;
         }

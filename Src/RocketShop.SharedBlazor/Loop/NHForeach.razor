@@ -1,13 +1,16 @@
-﻿@typeparam TItem
+﻿@using RocketShop.Framework.Extension
+@typeparam TItem
 
 @code {
     [Parameter]
-    public IEnumerable<TItem> Items { get; set; }
+    public IEnumerable<TItem>? Items { get; set; }
     [Parameter]
     public RenderFragment<TItem> ChildContent { get; set; }
 }
-
-@foreach(var item in Items)
+@if (Items.HasData())
 {
-    @ChildContent(item)
+    @foreach (var item in Items!)
+    {
+        @ChildContent(item)
+    }
 }

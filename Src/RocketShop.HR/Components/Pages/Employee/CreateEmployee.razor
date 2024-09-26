@@ -97,6 +97,7 @@
                 if (assignResult.IsLeft)
                     throw assignResult.GetLeft()!;
             }
+            await activityLogService.Create("HR", "Employee", $"Create Employee Data");
             await loading.Then(true, $"Create Employee '{newUser.EmployeeCode}' Success", "Success", "/employee");
         }
         catch(Exception x)

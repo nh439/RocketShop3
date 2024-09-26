@@ -19,4 +19,8 @@
     <ProjectReference Include="..\RocketShop.Shared\RocketShop.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Model\AuditLog\Views\" />
+  </ItemGroup>
+
 </Project>

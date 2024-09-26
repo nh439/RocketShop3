@@ -129,6 +129,7 @@
             await loading!.Then(false, encodedResult.GetLeft()!.Message, "Export Failed");
             return;
         }
+        await activityLogService.Create("HR", "Employee", $"Export Employee Data");
         await downloadService.DownloadAsync($"employees_{DateTime.Now.ToString("yyyyMMdd")}.xlsx", encodedResult.GetRight()!);
         loading?.Close();
     }

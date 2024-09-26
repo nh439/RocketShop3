@@ -62,6 +62,7 @@
                 throw result.GetLeft()!;
             if (!result.GetRight())
                 throw new Exception("Update Failed");
+            await activityLogService.Create("HR", "Fianacial", $"Update Additional Expense Data Of '<{UserId}>'");
             loading?.Then(true, "Update Expense Successful", "Success");
         }
         catch(Exception x)

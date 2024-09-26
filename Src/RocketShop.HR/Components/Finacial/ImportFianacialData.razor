@@ -111,6 +111,7 @@
             var result = await finacialServices.UpSertFinancialData(preUpload!);
             if (result.IsLeft)
                 throw result.GetLeft()!;
+            await activityLogService.Create("HR", "Fianacial", $"Import Fianancial Data");
             await loading.Then(true, $"Import {result.GetRight()!} Records", "Import Success", "/EmployeeFinace");
         }
         catch (Exception x)

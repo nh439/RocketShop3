@@ -16,6 +16,8 @@ using RocketShop.SharedBlazor.SharedBlazorService.Scope;
 using RocketShop.Shared.SharedService.Scoped;
 using RocketShop.SharedBlazor.SharedBlazorServices.Scope;
 using Radzen;
+using RocketShop.AuditService.Repository;
+using RocketShop.AuditService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.InstallConfiguration();
@@ -36,8 +38,8 @@ builder.InstallSerilog()
 .AddEntityFrameworkStores<IdentityContext>()
 .AddDefaultTokenProviders();
         install.AddControllersWithViews();
-        install.InstallIdentityContext()
-        .AddRazorComponents()
+        install.InstallDatabase<IdentityContext,AuditLogContext>()      
+        .AddRazorComponents()   
     .AddInteractiveServerComponents();
         install.AddAuthentication(options =>
         {
@@ -65,7 +67,8 @@ builder.InstallSerilog()
         .AddScoped<ProvidentRepository>()
         .AddScoped<UserAdditionalExpenseRepository>()
         .AddScoped<UserPayrollRepository>()
-        .AddScoped<AdditionalPayrollRepository>();
+        .AddScoped<AdditionalPayrollRepository>()
+        .AddScoped<ActivityLogRepository>();
     })
     .InstallServices(service =>
     {
@@ -78,7 +81,8 @@ builder.InstallSerilog()
         .AddScoped<IExportExcelServices,ExportExcelServices>()
         .AddScoped<IDownloadServices,DownloadServices>()
         .AddScoped<IFinacialServices,FinacialServices>()
-        .AddScoped<IPayrollServices,PayrollServices>();
+        .AddScoped<IPayrollServices,PayrollServices>()
+        .AddScoped<IActivityLogService,ActivityLogService>();
     });
 // Add services to the container.
 

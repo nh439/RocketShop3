@@ -105,6 +105,7 @@
             isExoprting = false;
             return;
         }
+        await activityLogService.Create("HR", "Fianacial", $"Export Fianacial Data");
         await downloadServices.DownloadAsync($"Employee Financial Data {DateTime.Now.ToString("ddMMyyyy_HHmmss")}.xlsx", content.GetRight()!);
         logger.LogInformation("Financial Data Downloaded");
         isExoprting = false;

@@ -34,7 +34,7 @@ namespace RocketShop.Migration
     .AddClaimsPrincipalFactory<UserClaimsPrincipalFactory<User, IdentityRole>>()
     .AddEntityFrameworkStores<IdentityContext>()
     .AddDefaultTokenProviders();
-                service.InstallDatabase<IdentityContext>()
+                service.InstallDatabase<IdentityContext,AuditLogContext>()
                 .AddAuthorization()
                 .AddEndpointsApiExplorer()
                 .AddSwaggerGen();
@@ -58,7 +58,11 @@ namespace RocketShop.Migration
                 {
                     Console.WriteLine("Start Migrate");
                     var context = scope.ServiceProvider.GetRequiredService<IdentityContext>();
+                    var auditContext = scope.ServiceProvider.GetRequiredService<AuditLogContext>();
                     context!.Database.Migrate();
+                    Console.WriteLine("Identity Migrate Success");
+                    auditContext!.Database.Migrate();
+                    Console.WriteLine("Audit Log Migrate Success");
                     Console.WriteLine("End Migrate");
                     Console.WriteLine("Create First User");
                     using var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();

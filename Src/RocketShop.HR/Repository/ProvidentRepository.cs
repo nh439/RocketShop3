@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.EntityFrameworkCore;
 using RocketShop.Database;
 using RocketShop.Database.EntityFramework;
@@ -41,16 +42,28 @@ namespace RocketShop.HR.Repository
             decimal secondOperand,
             string currency,
             IDbConnection identityConnection,
-            IDbTransaction? transaction = null) =>
-            await identityConnection.ExecuteAsync(@$"insert into ""{table}"" (""{nameof(UserProvidentFund.UserId)}"",""{nameof(UserProvidentFund.Balance)}"",""{nameof(UserProvidentFund.Currency)}"")
-values(@userId,@balance,@currency)
-on conflict (""{nameof(UserProvidentFund.UserId)}"")
-do update set ""{nameof(UserProvidentFund.Balance)}"" = ""{nameof(UserProvidentFund.Balance)}""+@balance;
-", new {
-                userId=userId,
-                balance=secondOperand,
-                currency=currency
-            },transaction).EqAsync(1);
+            IDbTransaction? transaction = null)
+        {
+            var query = identityConnection.CreateQueryStore(table);
+            var condQuery = query.Where(nameof(UserProvidentFund.UserId), userId);
+            var existsData = await condQuery.FetchOneAsync<UserProvidentFund>(transaction);
+            if (existsData.IsSome)
+            {
+                var data = existsData.Extract();
+                return await condQuery.UpdateAsync(new
+                    {
+                        Balance = (data!.Balance)+secondOperand
+                    }, transaction).GeAsync(0);
+            }
+            return await query.InsertAsync(new UserProvidentFund
+            {
+                Balance = secondOperand,
+                Currency = currency,
+                UserId = userId
+            }, transaction);
+                
+        }
+           
 
         public async Task<UserProvidentFund?> GetUserProvidentFund(string userId) =>
             await context.UserProvidentFund.FirstOrDefaultAsync(x => x.UserId == userId);

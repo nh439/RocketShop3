@@ -122,7 +122,7 @@
                                     </tr>
                                     <NHIF Condition="slipData.TravelExpenses.Ge(0)">
                                         <tr>
-                                            <td>Social Securites</td>
+                                            <td>Travel Expenses</td>
                                             <td>@slipData!.TravelExpenses.ToMoneyFormat() @slipData.Currency</td>
                                         </tr>
                                     </NHIF>
@@ -134,7 +134,7 @@
                                     </NHIF>
                                     <NHIF Condition="slipData.ProvidentFund.Ge(0)">
                                         <tr>
-                                            <td>Social Securites</td>
+                                            <td>Provident Fund</td>
                                             <td>- @slipData!.ProvidentFund.ToMoneyFormat() @slipData.Currency</td>
                                         </tr>
                                     </NHIF>

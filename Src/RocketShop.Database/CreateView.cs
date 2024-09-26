@@ -115,6 +115,9 @@ inner join ""AspNetUsers"" s on s.""Id""=u.""UserId"";");
 ");
         #endregion
 
+        #region Audit Log
+        #endregion
+
     }
 
 
