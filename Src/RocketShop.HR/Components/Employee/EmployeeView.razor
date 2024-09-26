@@ -3,7 +3,7 @@
 @using RocketShop.Framework.Extension
 @using RocketShop.HR.ServicePermissions
 @using RocketShop.HR.Services
-@using RocketShop.HR.Components.Pages.Employee.Modal
+@using RocketShop.HR.Components.Employee.Modal
 @using RocketShop.Shared.SharedService.Scoped
 @using RocketShop.SharedBlazor.Condition
 @using RocketShop.SharedBlazor.Loop
@@ -145,7 +145,7 @@
 
 }
 <CascadingAuthenticationState>
-    <AuthorizeView Policy="@ServicePermission.AllHRServiceName">
+    <AuthorizeView Policy="@ServicePermission.HREmployeeName">
         <Authorized>
             <center>
                 <h2 class="text-4xl font-extrabold ">Employee List</h2>

@@ -38,8 +38,8 @@ builder.InstallSerilog()
 .AddEntityFrameworkStores<IdentityContext>()
 .AddDefaultTokenProviders();
         install.AddControllersWithViews();
-        install.InstallDatabase<IdentityContext,AuditLogContext>()      
-        .AddRazorComponents()   
+        install.InstallDatabase<IdentityContext, AuditLogContext>()
+        .AddRazorComponents()
     .AddInteractiveServerComponents();
         install.AddAuthentication(options =>
         {
@@ -53,6 +53,19 @@ builder.InstallSerilog()
             {
                 p.RequireClaim("Permission", ServicePermission.AllHRService);
             });
+            a.AddPolicy(ServicePermission.HRFinancialName, p =>
+            {
+                p.RequireClaim("Permission", ServicePermission.HRFinancial);
+            });
+            a.AddPolicy(ServicePermission.HRAuditName, p =>
+            {
+                p.RequireClaim("Permission", ServicePermission.HRAuditLog);
+            });
+            a.AddPolicy(ServicePermission.HREmployeeName, p =>
+                   {
+                       p.RequireClaim("Permission", ServicePermission.HREmployee);
+                   });
+
         })
         .AddRadzenComponents();
     })
@@ -72,17 +85,17 @@ builder.InstallSerilog()
     })
     .InstallServices(service =>
     {
-        service.AddSingleton<IUrlIndeiceServices,UrlIndeiceServices>()
-        .AddScoped<IUserServices,UserServices>()
+        service.AddSingleton<IUrlIndeiceServices, UrlIndeiceServices>()
+        .AddScoped<IUserServices, UserServices>()
         .AddSingleton<IGetRoleAndPermissionService, GetRoleAndPermissionService>()
         .AddScoped<IRoleServices, RoleServices>()
-        .AddScoped<IDialogServices,DialogServices>()
-        .AddScoped<IImportExcelServices,ImportExcelServices>()
-        .AddScoped<IExportExcelServices,ExportExcelServices>()
-        .AddScoped<IDownloadServices,DownloadServices>()
-        .AddScoped<IFinacialServices,FinacialServices>()
-        .AddScoped<IPayrollServices,PayrollServices>()
-        .AddScoped<IActivityLogService,ActivityLogService>();
+        .AddScoped<IDialogServices, DialogServices>()
+        .AddScoped<IImportExcelServices, ImportExcelServices>()
+        .AddScoped<IExportExcelServices, ExportExcelServices>()
+        .AddScoped<IDownloadServices, DownloadServices>()
+        .AddScoped<IFinacialServices, FinacialServices>()
+        .AddScoped<IPayrollServices, PayrollServices>()
+        .AddScoped<IActivityLogService, ActivityLogService>();
     });
 // Add services to the container.
 
