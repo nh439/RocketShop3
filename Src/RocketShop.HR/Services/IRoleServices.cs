@@ -18,6 +18,8 @@ namespace RocketShop.HR.Services
         Task<Either<Exception, List<Role>>> ListRoleByUsers(string userId, int? page = null, int per = 20);
         Task<Either<Exception, Option<Role>>> GetRole(int roleId);
         Task<Either<Exception, int>> RevokeAllRolesByUser(string userId);
+        Task<Either<Exception, int>> GetCount(string? searchQuery = null);
+        Task<Either<Exception, int>> GetLastpage(string? searchQuery = null, int per = 20);
     }
     public class RoleServices(ILogger<RoleServices> logger,
         IConfiguration configuration,
@@ -48,19 +50,20 @@ namespace RocketShop.HR.Services
             {
                 con.Open();
                 using var transaction = con.BeginTransaction();
-                await userRoleRepository.RemoveUsersByRole(roleId,userIds, con, transaction);
-                var result = await userRoleRepository.AddUserByRole(roleId, userIds, con,transaction);
+                await userRoleRepository.RemoveUsersByRole(roleId, userIds, con, transaction);
+                var result = await userRoleRepository.AddUserByRole(roleId, userIds, con, transaction);
                 transaction.Commit();
                 con.Close();
                 return result;
             });
 
         public async Task<Either<Exception, int>> SetRoleByUser(string userId, int[] roleIds) =>
-            await InvokeDapperServiceAsync(async con => { 
+            await InvokeDapperServiceAsync(async con =>
+            {
                 con.Open();
                 using var transaction = con.BeginTransaction();
                 var deletedResult = await userRoleRepository.RevokeRoles(userId, con, transaction);
-                var result =  await userRoleRepository.AddRoleByUser(userId, roleIds, con,transaction);
+                var result = await userRoleRepository.AddRoleByUser(userId, roleIds, con, transaction);
                 transaction.Commit();
                 con.Close();
                 return result;
@@ -76,11 +79,18 @@ namespace RocketShop.HR.Services
                 return await roleRepository.GetIdIn(roleIds, page, per);
             });
 
-        public async Task<Either<Exception,Option<Role>>> GetRole(int roleId)=>
+        public async Task<Either<Exception, Option<Role>>> GetRole(int roleId) =>
             await InvokeServiceAsync(async () => await roleRepository.GetById(roleId));
 
         public async Task<Either<Exception, int>> RevokeAllRolesByUser(string userId) =>
             await InvokeDapperServiceAsync(async con => await userRoleRepository.RevokeRoles(userId, con));
+
+        public async Task<Either<Exception, int>> GetCount(string? searchQuery = null) =>
+            await InvokeServiceAsync(async () => await roleRepository.GetCount(searchQuery));
+
+        public async Task<Either<Exception, int>> GetLastpage(string? searchQuery = null, int per = 20) =>
+            await InvokeServiceAsync(async () => await roleRepository.GetLastpage(searchQuery, per));
+
 
 
     }

@@ -1,30 +1,151 @@
 ﻿@page "/Role"
 @using RocketShop.Database.Model.Identity
 @using RocketShop.Framework.Extension
+@using RocketShop.HR.Components.Roles.Partial
 @using RocketShop.HR.ServicePermissions
 @using RocketShop.HR.Services
+@using RocketShop.SharedBlazor.Condition
+@using RocketShop.SharedBlazor.Loop
+@using RocketShop.SharedBlazor.Responsive
 @inject NavigationManager navigationManager
 @inject IRoleServices roleService
-<h3>RoleIndex</h3>
+@inject ILogger<RoleIndex> logger
+@rendermode InteractiveServer
 
 @code {
-    List<Role> roles =new List<Role>();
+    List<Role> roles = new List<Role>();
+    string query = string.Empty, _query = string.Empty;
+    int count, currentPage = 1, lastPage = 1;
+    bool majorException, minorException;
     protected override async Task OnInitializedAsync()
     {
         var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         state.If(x => x!.User.Identity!.IsAuthenticated,
          x =>
          {
-         
+             GetData();
          },
         _ => navigationManager.NavigateTo("/login", true));
         await InvokeAsync(StateHasChanged);
     }
+    async void GetData()
+    {
+        majorException = false;
+        minorException = false;
+        try
+        {
+            var roleResult = await roleService.ListRoles(query, currentPage);
+            if (roleResult.IsLeft)
+                throw roleResult.GetLeft()!;
+            roles = roleResult.GetRight()!;
+            var countResult = await roleService.GetCount(query);
+            var lastPageResult = await roleService.GetLastpage(query);
+            await Task.WhenAll(
+            Task.Run(() =>
+            {
+                if (countResult.IsLeft)
+                {
+                    LogMinorException();
+                    count = 0;
+                    return;
+                }
+                count = countResult.IsBottom ? 0 : countResult.GetRight();
+            }),
+            Task.Run(() =>
+            {
+                if (lastPageResult.IsLeft)
+                {
+                    LogMinorException();
+                    lastPage = 1;
+                    return;
+                }
+                count = lastPageResult.IsBottom ? 1 : lastPageResult.GetRight();
+            })
+            );
+        }
+        catch
+        {
+            majorException = true;
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+    void LogMinorException() =>
+       minorException = true;
+
 }
 
 <CascadingAuthenticationState>
     <AuthorizeView Policy="@ServicePermission.AppAdminName">
         <Authorized>
+            <center>
+                <h1 class="text-4xl font-bold">Roles</h1>
+            </center>
+            <br />
+            <br />
+            <div class="row">
+                <div class="col">
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" placeholder="Search Role Name..." aria-label="Recipient's username" aria-describedby="basic-addon2">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-info" type="button"><i class="search icon"></i></button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col"></div>
+                <div class="col"></div>
+            </div>
+            <br />
+            <br />
+            <NHIF Condition="@roles.HasData()">
+                <YesOperation>
+                    <NHResponsiveDisplay>
+                        <XSmallOnly>
+                            <div class="grid grid-cols-1">
+                                <NHForeach Items="roles" Context="role">
+                                    <RoleCard Name="@role.RoleName" Id="@role.Id" />
+                                </NHForeach>
+                            </div>
+                        </XSmallOnly>
+                        <SmallOnly>
+                            <div class="grid grid-cols-2 gap-1">
+                                <NHForeach Items="roles" Context="role">
+                                    <RoleCard Name="@role.RoleName" Id="@role.Id" />
+                                </NHForeach>
+                            </div>
+                        </SmallOnly>
+                        <MediumOnly>
+                            <div class="grid grid-cols-3 gap-1">
+                                <NHForeach Items="roles" Context="role">
+                                    <RoleCard Name="@role.RoleName" Id="@role.Id" />
+                                </NHForeach>
+                            </div>
+                        </MediumOnly>
+                        <LargeOnly>
+                            <div class="grid grid-cols-4 gap-1">
+                                <NHForeach Items="roles" Context="role">
+                                    <RoleCard Name="@role.RoleName" Id="@role.Id" />
+                                </NHForeach>
+                            </div>
+                        </LargeOnly>
+                        <XLargeOnly>
+                            <div class="grid grid-cols-6 gap-1">
+                                <NHForeach Items="roles" Context="role">
+                                    <RoleCard Name="@role.RoleName" Id="@role.Id" />
+                                </NHForeach>
+                            </div>
+                        </XLargeOnly>
+                    </NHResponsiveDisplay>
+
+                </YesOperation>
+                <NoOperation>
+                    <center>
+                        <h1 class="text-3xl font-bold">No Roles</h1>
+                    </center>
+                </NoOperation>
+            </NHIF>
 
         </Authorized>
         <NotAuthorized>
