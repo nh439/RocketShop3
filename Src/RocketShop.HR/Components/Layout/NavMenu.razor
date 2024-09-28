@@ -49,13 +49,17 @@
                     </div>
                 </Authorized>
             </AuthorizeView>
-            <AuthorizeView Policy="@ServicePermission.HREmployeeName">
+            <AuthorizeView Policy="@ServicePermission.AppAdminName">
                 <Authorized>
                     <div class="nav-item px-4">
                         <NavLink class="nav-link" href="Role">
                             <NavIcon IconClass="bi bi-list-check" /> Role
                         </NavLink>
                     </div>
+                </Authorized>
+            </AuthorizeView>
+            <AuthorizeView Policy="@ServicePermission.HREmployeeName">
+                <Authorized>                
                     <div class="nav-item px-4">
                         <NavLink class="nav-link" href="EmployeeMatrixReport">
                             <NavIcon IconClass="tablet alternate icon" /> Employee Matrix Report

@@ -33,7 +33,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RocketShop.SharedBlazor", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RocketShop.IntegrationTest", "Test\RocketShop.IntegrationTest\RocketShop.IntegrationTest.csproj", "{12887B53-611B-4CDB-A591-E470D840A539}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RocketShop.AuditService", "Src\RocketShop.AuditService\RocketShop.AuditService.csproj", "{68D3DE91-58A7-4914-A982-A0AC4E3B0298}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RocketShop.AuditService", "Src\RocketShop.AuditService\RocketShop.AuditService.csproj", "{68D3DE91-58A7-4914-A982-A0AC4E3B0298}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

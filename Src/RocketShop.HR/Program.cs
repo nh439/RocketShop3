@@ -65,6 +65,10 @@ builder.InstallSerilog()
                    {
                        p.RequireClaim("Permission", ServicePermission.HREmployee);
                    });
+             a.AddPolicy(ServicePermission.AppAdminName, p =>
+                   {
+                       p.RequireClaim("Permission", ServicePermission.ApplicationAdmin);
+                   });
 
         })
         .AddRadzenComponents();

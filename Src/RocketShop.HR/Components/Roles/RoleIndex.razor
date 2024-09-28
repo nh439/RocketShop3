@@ -1,0 +1,34 @@
+﻿@page "/Role"
+@using RocketShop.Database.Model.Identity
+@using RocketShop.Framework.Extension
+@using RocketShop.HR.ServicePermissions
+@using RocketShop.HR.Services
+@inject NavigationManager navigationManager
+@inject IRoleServices roleService
+<h3>RoleIndex</h3>
+
+@code {
+    List<Role> roles =new List<Role>();
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        state.If(x => x!.User.Identity!.IsAuthenticated,
+         x =>
+         {
+         
+         },
+        _ => navigationManager.NavigateTo("/login", true));
+        await InvokeAsync(StateHasChanged);
+    }
+}
+
+<CascadingAuthenticationState>
+    <AuthorizeView Policy="@ServicePermission.AppAdminName">
+        <Authorized>
+
+        </Authorized>
+        <NotAuthorized>
+            <h1 class="text-3xl font-bold">Access Denied</h1>
+        </NotAuthorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>

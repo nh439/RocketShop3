@@ -8,6 +8,7 @@ namespace RocketShop.HR.ServicePermissions
         public const string HREmployeeName = "HREmployee";
         public const string HRFinancialName = "HRFinancial";
         public const string HRAuditName = "HRAudit";
+        public const string AppAdminName = "AppAdmin";
         public static string[] AllHRService =
             [
             nameof(Role.UpdateEmployee),
@@ -31,6 +32,10 @@ namespace RocketShop.HR.ServicePermissions
         public static string[] HRFinancial =
             [
             nameof(Role.HRFinancial)
+            ];
+        public static string[] ApplicationAdmin =
+            [
+            nameof(Role.ApplicationAdmin)
             ];
 
     }

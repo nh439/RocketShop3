@@ -2,9 +2,11 @@
 using LanguageExt;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using RocketShop.Database;
 using RocketShop.Database.EntityFramework;
 using RocketShop.Database.Helper;
 using RocketShop.Database.Model.Identity;
+using RocketShop.Database.NonEntityFramework;
 using RocketShop.Framework.Extension;
 using RocketShop.Framework.Helper;
 using RocketShop.Migration.Configuration;
@@ -83,17 +85,19 @@ namespace RocketShop.Migration
                             CreateBy="SYSTEM"
                         };
                         await userManager.CreateAsync(user, startUser.Password);
-                        context.UserRole.Add(new UserRole
+                        var newUser = new UserRole
                         {
                             RoleId = 1,
                             UserId = user.Id
-                        });
+                        };
+                        context.UserRole.Add(newUser);
                         context.UserInformation.Add(new UserInformation
                         {
                             BrithDay = DateTime.UtcNow,
                             StartWorkDate = DateTime.UtcNow,
                             UserId = user.Id
                         });
+
                         await context.SaveChangesAsync();
                         Console.WriteLine("First User Create Successful");
                     }
