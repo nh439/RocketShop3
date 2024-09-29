@@ -1,5 +1,7 @@
 ﻿@page "/Payroll"
 @using LanguageExt
+@using Radzen
+@using Radzen.Blazor
 @using RocketShop.Database.Model.Identity
 @using RocketShop.Database.Model.Identity.Views
 @using RocketShop.Framework.Extension
@@ -26,7 +28,7 @@
     bool isLoading = true,
     hasMajorException = false,
     hasMinorException = false;
-    string? searchUser, _searchUser;
+    string? searchUser, _searchUser, pagingSummaryFormat = "Displaying page {0} of {1} (total {2} records)";
 
     protected override async Task OnInitializedAsync()
     {
@@ -125,6 +127,13 @@
     .Select(s =>$" {s.Firstname} {s.Surname}")
     .FirstOrDefault()
     .IfNull("???");
+
+    async void PageChanged(PagerEventArgs args)
+    {
+
+        currentPage = args.PageIndex + 1;
+        await FetchingData();
+    }
 }
 <CascadingAuthenticationState>
     <AuthorizeView Policy="@ServicePermission.AllHRServiceName">
@@ -182,6 +191,13 @@
                             </td>
                         </tr>
                     </NHTypeTable>
+                                        <RadzenPager ShowPagingSummary="true"
+                                 PagingSummaryFormat="@pagingSummaryFormat"
+                                 HorizontalAlign="HorizontalAlign.Right"
+                                 Count="@count"
+                                 PageSize="20"
+                                 PageNumbersCount="@lastpage"
+                                 PageChanged="@PageChanged" />
                 </NoOperation>
                 <YesOperation>
                     <center>
