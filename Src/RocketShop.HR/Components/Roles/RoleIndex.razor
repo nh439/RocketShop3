@@ -83,86 +83,108 @@
         currentPage = args.PageIndex + 1;
         GetData();
     }
+    void SetSearch()
+    {
+        currentPage = 1;
+        query = _query;
+        GetData();
+    }
 }
 
 <CascadingAuthenticationState>
     <AuthorizeView Policy="@ServicePermission.AppAdminName">
         <Authorized>
-            <center>
-                <h1 class="text-4xl font-bold">Roles</h1>
-            </center>
-            <br />
-            <br />
-            <div class="row">
-                <div class="col">
-                    <div class="input-group mb-3">
-                        <input type="text" class="form-control" placeholder="Search Role Name..." aria-label="Recipient's username" aria-describedby="basic-addon2">
-                        <div class="input-group-append">
-                            <button class="btn btn-outline-info" type="button"><i class="search icon"></i></button>
-                        </div>
-                    </div>
-                </div>
-                <div class="col"></div>
-                <div class="col"></div>
-            </div>
-            <br />
-            <br />
-            <NHIF Condition="@roles.HasData()">
+            <NHIF Condition="majorException">
                 <YesOperation>
-                    <NHResponsiveDisplay>
-                        <XSmallOnly>
-                            <div class="grid grid-cols-1 gap-1">
-                                <NHForeach Items="roles" Context="role">
-                                    <RoleCard Name="@role.RoleName" Id="@role.Id" />
-                                </NHForeach>
-                            </div>
-                        </XSmallOnly>
-                        <SmallOnly>
-                            <div class="grid grid-cols-2 gap-1">
-                                <NHForeach Items="roles" Context="role">
-                                    <RoleCard Name="@role.RoleName" Id="@role.Id" />
-                                </NHForeach>
-                            </div>
-                        </SmallOnly>
-                        <MediumOnly>
-                            <div class="grid grid-cols-3 gap-2">
-                                <NHForeach Items="roles" Context="role">
-                                    <RoleCard Name="@role.RoleName" Id="@role.Id" />
-                                </NHForeach>
-                            </div>
-                        </MediumOnly>
-                        <LargeOnly>
-                            <div class="grid grid-cols-4 gap-3">
-                                <NHForeach Items="roles" Context="role">
-                                    <RoleCard Name="@role.RoleName" Id="@role.Id" />
-                                </NHForeach>
-                            </div>
-                        </LargeOnly>
-                        <XLargeOnly>
-                            <div class="grid grid-cols-6 gap-5">
-                                <NHForeach Items="roles" Context="role">
-                                    <RoleCard Name="@role.RoleName" Id="@role.Id" />
-                                </NHForeach>
-                            </div>
-                        </XLargeOnly>
-                    </NHResponsiveDisplay>
-                    <br />
-                    <br />
-                    <RadzenPager ShowPagingSummary="true"
-                                 PagingSummaryFormat="@pagingSummaryFormat"
-                                 HorizontalAlign="HorizontalAlign.Right"
-                                 Count="count"
-                                 PageSize="lastPage"
-                                 PageNumbersCount="20"
-                                 PageChanged="@PageChanged" />
+                    <div class="alert alert-danger" role="alert">
+                        Something Went Wrong <button class="btn btn-link" @onclick="GetData">Refresh</button>
+                    </div>
                 </YesOperation>
                 <NoOperation>
                     <center>
-                        <h1 class="text-3xl font-bold">No Roles</h1>
+                        <h1 class="text-4xl font-bold">Roles</h1>
                     </center>
+                    <br />
+                    <br />
+                    <NHIF Condition="minorException">
+                        <div class="alert alert-danger" role="alert">
+                            This Operation Ran Has Exception <button class="btn btn-link" @onclick="GetData">Refresh</button>
+                        </div>
+                    </NHIF>
+                    <div class="row">
+                        <div class="col">
+                            <div class="input-group mb-3">
+                                <input type="text" class="form-control" placeholder="Search Role Name..." aria-label="Recipient's username" aria-describedby="basic-addon2" @bind-value="_query">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-info" type="button" @onclick="SetSearch"><i class="search icon"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col"></div>
+                        <div class="col"></div>
+                    </div>
+                    <br />
+                    <br />
+                    <button class="btn btn-primary"><i class="plus icon"></i> Create New Role</button>
+                    <br />
+                    <br />
+                    <NHIF Condition="@roles.HasData()">
+                        <YesOperation>
+                            <NHResponsiveDisplay>
+                                <XSmallOnly>
+                                    <div class="grid grid-cols-1 gap-1">
+                                        <NHForeach Items="roles" Context="role">
+                                            <RoleCard Name="@role.RoleName" Id="@role.Id" />
+                                        </NHForeach>
+                                    </div>
+                                </XSmallOnly>
+                                <SmallOnly>
+                                    <div class="grid grid-cols-2 gap-1">
+                                        <NHForeach Items="roles" Context="role">
+                                            <RoleCard Name="@role.RoleName" Id="@role.Id" />
+                                        </NHForeach>
+                                    </div>
+                                </SmallOnly>
+                                <MediumOnly>
+                                    <div class="grid grid-cols-3 gap-2">
+                                        <NHForeach Items="roles" Context="role">
+                                            <RoleCard Name="@role.RoleName" Id="@role.Id" />
+                                        </NHForeach>
+                                    </div>
+                                </MediumOnly>
+                                <LargeOnly>
+                                    <div class="grid grid-cols-4 gap-3">
+                                        <NHForeach Items="roles" Context="role">
+                                            <RoleCard Name="@role.RoleName" Id="@role.Id" />
+                                        </NHForeach>
+                                    </div>
+                                </LargeOnly>
+                                <XLargeOnly>
+                                    <div class="grid grid-cols-6 gap-5">
+                                        <NHForeach Items="roles" Context="role">
+                                            <RoleCard Name="@role.RoleName" Id="@role.Id" />
+                                        </NHForeach>
+                                    </div>
+                                </XLargeOnly>
+                            </NHResponsiveDisplay>
+                            <br />
+                            <br />
+                            <RadzenPager ShowPagingSummary="true"
+                                         PagingSummaryFormat="@pagingSummaryFormat"
+                                         HorizontalAlign="HorizontalAlign.Right"
+                                         Count="count"
+                                         PageSize="20"
+                                         PageNumbersCount="lastPage"
+                                         PageChanged="@PageChanged" />
+                        </YesOperation>
+                        <NoOperation>
+                            <center>
+                                <h1 class="text-3xl font-bold">No Roles</h1>
+                            </center>
+                        </NoOperation>
+                    </NHIF>
                 </NoOperation>
             </NHIF>
-
         </Authorized>
         <NotAuthorized>
             <h1 class="text-3xl font-bold">Access Denied</h1>
