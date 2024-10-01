@@ -1,0 +1,175 @@
+﻿@page "/role/Detail/{id:int}"
+@using Blazored.Typeahead
+@using RocketShop.Database.Helper
+@using RocketShop.Database.Model.Identity
+@using RocketShop.Database.Model.Identity.Views
+@using RocketShop.Framework.Extension
+@using RocketShop.HR.ServicePermissions
+@using RocketShop.HR.Services
+@using RocketShop.SharedBlazor.Condition
+@using RocketShop.SharedBlazor.Tools
+@inject IRoleServices roleServices
+@inject IUserServices userServices
+@inject NavigationManager navigationManager
+@rendermode InteractiveServer
+
+@code {
+    [Parameter]
+    public int id { get; set; }
+    Role role = new Role();
+    IList<UserView>? selectedUser;
+    IList<string>? AllowedPermission = new List<string>();
+    LoadingModal? loading;
+    bool isError;
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            if (state.User.Identity!.IsAuthenticated)
+            {
+                var roleResult = await roleServices.GetRole(id);
+                if (roleResult.IsLeft)
+                    throw roleResult.GetLeft()!;
+                role = roleResult.GetRight().Extract()!;
+                var userResult = await roleServices.ListUserByRole(id);
+                if (userResult.IsLeft)
+                    throw userResult.GetLeft()!;
+                selectedUser = userResult.GetRight()!;
+                AllowedPermission = role.GetAllowedPermission();
+            }
+            else
+            {
+                navigationManager.NavigateTo("/login", true);
+            }
+        }
+        catch
+        {
+            isError = true;
+        }
+        StateHasChanged();
+    }
+    async Task<IEnumerable<UserView>> SearchUser(string searchTerm)
+    {
+        var result = await userServices.ListUsers(searchTerm, 1, 10);
+        return result.GetRight()!;
+    }
+
+    async Task<IEnumerable<string>> SearchPermission(string searchTerm) =>
+        await Task.FromResult(RoleHelper.ListAllPermission().Where(x => x.ToLower().Contains(searchTerm.ToLower())).ToList());
+
+    async Task Submit()
+    {
+        loading!.Open("Submitting");
+        try
+        {
+            var properties = typeof(Role).GetProperties();
+            foreach(var prop in properties)
+            {
+                if (prop.PropertyType != typeof(bool))
+                    continue;
+                var allowed = AllowedPermission?.Where(x => x.ToLower() == prop.Name.ToLower()).HasData();
+                prop.SetValue(role, allowed);
+            }
+            List<string> selectedUserId = new();
+            if (selectedUser.HasData())
+                selectedUserId = selectedUser!.Select(s => s.UserId).ToList();
+            var updateResult = await roleServices.Update(role, selectedUserId);
+            if (updateResult.IsLeft)
+                throw updateResult.GetLeft()!;
+            await activityLogService.Create("HR", "Role", $"Update Role {id}");
+            await loading.Then(true, "Update Role Success", "Success", "/role");
+
+        }
+        catch
+        {
+            await loading.Then(false, "Update Role Failed", "Failed");
+        }
+    }
+}
+
+<CascadingAuthenticationState>
+    <AuthorizeView Policy="@ServicePermission.AppAdminName">
+        <Authorized>
+            <NHIF Condition="@isError">
+                <YesOperation>
+                    <div class="alert alert-danger" role="alert">
+                        Something Went Wrong <button class="btn btn-link" @onclick="OnInitializedAsync">Refresh</button>
+                    </div>
+                </YesOperation>
+                <NoOperation>
+                    <h1 class="text-4xl font-bold">Role Setting</h1>
+                    <br />
+                    <br />
+                    <div class="row">
+                        <div class="col-1"></div>
+                        <div class="col-10">
+                            <div class="card">
+                                <div class="card-header text-3xl font-bold text-white bg-primary">
+                                    Detail Setting
+                                </div>
+                                <div class="card-body table-info">
+                                    <div class="form-group">
+                                        <label for="text">Role Name</label>
+                                        <input id="text" @bind-value="role.RoleName" name="text" type="text" class="form-control">
+                                    </div>
+                                    <br />
+                                    <div class="form-group">
+                                        <label for="text1">Allowed Permission</label>
+                                        <BlazoredTypeahead class="form-control"
+                                                           style="background-color:white"
+                                                           Context="permission"
+                                                           SearchMethod="SearchPermission"
+                                                           EnableDropDown="true"
+                                                           @bind-Values="AllowedPermission">
+                                            <ResultTemplate>@permission</ResultTemplate>
+                                            <SelectedTemplate>@permission</SelectedTemplate>
+                                        </BlazoredTypeahead>
+                                    </div>
+                                </div>
+                            </div>
+                            <br />
+                            <br />
+                            <div class="card">
+                                <div class="card-header text-3xl font-bold text-white bg-primary">
+                                    Employee Assignment
+                                </div>
+                                <div class="card-body table-info">
+                                    <br />
+                                    <div class="form-group">
+                                        <label for="text2">Assigned Employees</label>
+                                        <BlazoredTypeahead class="form-control"
+                                                           style="background-color:white"
+                                                           Context="user"
+                                                           SearchMethod="SearchUser"
+                                                           EnableDropDown="true"
+                                                           @bind-Values="selectedUser">
+                                            <ResultTemplate>@user.EmployeeCode : @user.Firstname @user.Surname</ResultTemplate>
+                                            <SelectedTemplate>@user.EmployeeCode : @user.Firstname @user.Surname</SelectedTemplate>
+                                        </BlazoredTypeahead>
+                                    </div>
+                                </div>
+                            </div>
+                            <br />
+                            <br />
+                            <div class="card">
+                                <div class="card-header text-3xl font-bold text-white bg-primary">
+                                    Confirmation
+                                </div>
+                                <div class="card-body table-info">
+                                    <br />
+                                   <button class="btn btn-primary" @onclick="Submit"><i class="save icon" /> Save Changes</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-1"></div>
+                    </div>
+                </NoOperation>
+            </NHIF>
+        </Authorized>
+        <NotAuthorized>
+            <h1 class="text-5xl font-bold">Access Denied</h1>
+        </NotAuthorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>
+<LoadingModal @ref="loading" />

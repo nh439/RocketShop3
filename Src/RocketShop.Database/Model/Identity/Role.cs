@@ -34,6 +34,8 @@ namespace RocketShop.Database.Model.Identity
         public bool UpdateEmployee { get; set; } = true;
         public bool SetResign { get; set; } = true;
         public bool ViewEmployeeDeepData { get; set; } = true;
+        public bool HRFinancial { get; set; } = true;
+        public bool HRAuditLog { get; set; } = true;
         //ADMIN
         public bool ApplicationAdmin { get; set; } = true;
     }

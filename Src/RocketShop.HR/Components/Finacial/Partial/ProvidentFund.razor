@@ -1,4 +1,5 @@
-﻿@using RocketShop.Database.Model.Identity.Views
+﻿@using RocketShop.AuditService.Services
+@using RocketShop.Database.Model.Identity.Views
 @using RocketShop.Database.Model.NonDatabaseModel
 @using RocketShop.Framework.Extension
 @using RocketShop.HR.Services
@@ -6,6 +7,7 @@
 @using RocketShop.SharedBlazor.Tools
 @inject IFinacialServices finacialServices
 @inject ILogger<ProvidentFund> logger;
+
 @code {
     [Parameter]
     public string UserId { get; set; }
@@ -42,6 +44,7 @@
                 });
             if (result.IsLeft)
                 throw result.GetLeft()!;
+            await activityLogService.Create("HR", "Financial", $"Update Provident Fund Data. User '<{UserId}>' ");
             await loading.Then(true, "Update Success", "Success");
         }
         catch(Exception x)

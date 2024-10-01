@@ -105,6 +105,7 @@
             );
             if (result.IsLeft)
                 throw result.GetLeft()!;
+            await activityLogService.Create("HR", "Fianacial", $"Create Fianancial Data Of '<{newData.UserId}>'");
             await loading.Then(true, "Create Finacial Data Success", "Success", "/EmployeeFinace");
         }
         catch (Exception x)
@@ -114,7 +115,7 @@
     }
 }
 <CascadingAuthenticationState>
-    <AuthorizeView Policy="@ServicePermission.AllHRServiceName">
+    <AuthorizeView Policy="@ServicePermission.HRFinancialName">
         <div class="row">
             <div class="col-1"></div>
             <div class="col-10">

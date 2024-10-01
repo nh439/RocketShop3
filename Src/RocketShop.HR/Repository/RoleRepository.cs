@@ -47,6 +47,13 @@ namespace RocketShop.HR.Repository
             .UsePaging(page,per)
             .ToListAsync();
             
+        public async Task<int> GetCount(string? searchName = null)=>
+            await SearchQuery(searchName)
+            .CountAsync();
+
+        public async Task<int> GetLastpage(string? searchName,int per =20)=>
+            await SearchQuery(searchName)
+            .GetLastpageAsync();
 
         IQueryable<Role> SearchQuery(string? searchName) =>
             entity.Where(x => !searchName.HasMessage() || x.RoleName.ToLower().Contains(searchName!.ToLower()));

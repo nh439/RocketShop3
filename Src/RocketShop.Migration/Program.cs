@@ -2,9 +2,11 @@
 using LanguageExt;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using RocketShop.Database;
 using RocketShop.Database.EntityFramework;
 using RocketShop.Database.Helper;
 using RocketShop.Database.Model.Identity;
+using RocketShop.Database.NonEntityFramework;
 using RocketShop.Framework.Extension;
 using RocketShop.Framework.Helper;
 using RocketShop.Migration.Configuration;
@@ -34,7 +36,7 @@ namespace RocketShop.Migration
     .AddClaimsPrincipalFactory<UserClaimsPrincipalFactory<User, IdentityRole>>()
     .AddEntityFrameworkStores<IdentityContext>()
     .AddDefaultTokenProviders();
-                service.InstallDatabase<IdentityContext>()
+                service.InstallDatabase<IdentityContext,AuditLogContext>()
                 .AddAuthorization()
                 .AddEndpointsApiExplorer()
                 .AddSwaggerGen();
@@ -58,7 +60,11 @@ namespace RocketShop.Migration
                 {
                     Console.WriteLine("Start Migrate");
                     var context = scope.ServiceProvider.GetRequiredService<IdentityContext>();
+                    var auditContext = scope.ServiceProvider.GetRequiredService<AuditLogContext>();
                     context!.Database.Migrate();
+                    Console.WriteLine("Identity Migrate Success");
+                    auditContext!.Database.Migrate();
+                    Console.WriteLine("Audit Log Migrate Success");
                     Console.WriteLine("End Migrate");
                     Console.WriteLine("Create First User");
                     using var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
@@ -79,17 +85,19 @@ namespace RocketShop.Migration
                             CreateBy="SYSTEM"
                         };
                         await userManager.CreateAsync(user, startUser.Password);
-                        context.UserRole.Add(new UserRole
+                        var newUser = new UserRole
                         {
                             RoleId = 1,
                             UserId = user.Id
-                        });
+                        };
+                        context.UserRole.Add(newUser);
                         context.UserInformation.Add(new UserInformation
                         {
                             BrithDay = DateTime.UtcNow,
                             StartWorkDate = DateTime.UtcNow,
                             UserId = user.Id
                         });
+
                         await context.SaveChangesAsync();
                         Console.WriteLine("First User Create Successful");
                     }

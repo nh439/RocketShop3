@@ -32,6 +32,7 @@
                 throw new Exception("Error While Unlock User");
             message = "User Unlocked";
             isSuccess = true;
+            await activityLogService.Create("HR", "Employee", $"Unlock Employee '<{userId}>'");
         }
         catch (Exception x)
         {

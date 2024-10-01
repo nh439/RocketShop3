@@ -26,28 +26,57 @@
             </NavLink>
         </div>
         <CascadingAuthenticationState>
-            <AuthorizeView Policy="@ServicePermission.AllHRServiceName">
-                <div class="nav-item px-4">
-                    <NavLink class="nav-link" href="Employee">
-                        <NavIcon IconClass="bi bi-people-fill" /> Employee
-                    </NavLink>
-                </div>
-                <div class="nav-item px-4">
-                    <NavLink class="nav-link" href="EmployeeFinace">                      
-                        <NavIcon IconClass="bi bi-cash-coin" /> Financial
-                    </NavLink>
-                </div>
-                  <div class="nav-item px-4">
-                    <NavLink class="nav-link" href="Payroll">
-                        <NavIcon IconClass="money icon" /> Payroll
-                    </NavLink>
-                </div>
-                <div class="nav-item px-4">
-                    <NavLink class="nav-link" href="Role">
-                        <NavIcon IconClass="bi bi-list-check" /> Role
-                    </NavLink>
-                </div>
+            <AuthorizeView Policy="@ServicePermission.HREmployeeName">
+                <Authorized>
+                    <div class="nav-item px-4">
+                        <NavLink class="nav-link" href="Employee">
+                            <NavIcon IconClass="bi bi-people-fill" /> Employee
+                        </NavLink>
+                    </div>
+                </Authorized>
             </AuthorizeView>
+            <AuthorizeView Policy="@ServicePermission.HRFinancialName">
+                <Authorized>
+                    <div class="nav-item px-4">
+                        <NavLink class="nav-link" href="EmployeeFinace">
+                            <NavIcon IconClass="bi bi-cash-coin" /> Financial
+                        </NavLink>
+                    </div>
+                    <div class="nav-item px-4">
+                        <NavLink class="nav-link" href="Payroll">
+                            <NavIcon IconClass="money icon" /> Payroll
+                        </NavLink>
+                    </div>
+                </Authorized>
+            </AuthorizeView>
+            <AuthorizeView Policy="@ServicePermission.AppAdminName">
+                <Authorized>
+                    <div class="nav-item px-4">
+                        <NavLink class="nav-link" href="Role">
+                            <NavIcon IconClass="bi bi-list-check" /> Role
+                        </NavLink>
+                    </div>
+                </Authorized>
+            </AuthorizeView>
+            <AuthorizeView Policy="@ServicePermission.HREmployeeName">
+                <Authorized>                
+                    <div class="nav-item px-4">
+                        <NavLink class="nav-link" href="EmployeeMatrixReport">
+                            <NavIcon IconClass="tablet alternate icon" /> Employee Matrix Report
+                        </NavLink>
+                    </div>
+                </Authorized>
+            </AuthorizeView>
+            <AuthorizeView Policy="@ServicePermission.HRAuditName">
+                <Authorized>
+                    <div class="nav-item px-4">
+                        <NavLink class="nav-link" href="AuditLog">
+                            <NavIcon IconClass="tasks icon" /> Audit Log
+                        </NavLink>
+                    </div>
+                </Authorized>
+            </AuthorizeView>
+
         </CascadingAuthenticationState>
         <CascadingAuthenticationState>
             <AuthorizeView>
@@ -61,7 +90,7 @@
                 </Authorized>
                 <NotAuthorized>
                     <div class="nav-item px-3">
-                        <NavLink class="nav-link" href="login">                        
+                        <NavLink class="nav-link" href="login">
                             <NavIcon IconClass="bi bi-door-open" />
                             Login
                         </NavLink>

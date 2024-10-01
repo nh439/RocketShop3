@@ -70,6 +70,12 @@ namespace RocketShop.HR.Repository
             .Where(nameof(UserRole.UserId),userId)
             .DeleteAsync (transaction, 200);
 
+        public async Task<int> TurncateUserByRole(int roleId,
+             IDbConnection connection,
+            IDbTransaction? transaction = null) =>
+             await connection.CreateQueryStore(TableConstraint.UserRole)
+            .Where(x => x.Where(nameof(UserRole.RoleId), roleId))
+            .DeleteAsync(transaction);
 
 
     }

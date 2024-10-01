@@ -16,6 +16,8 @@ using RocketShop.SharedBlazor.SharedBlazorService.Scope;
 using RocketShop.Shared.SharedService.Scoped;
 using RocketShop.SharedBlazor.SharedBlazorServices.Scope;
 using Radzen;
+using RocketShop.AuditService.Repository;
+using RocketShop.AuditService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.InstallConfiguration();
@@ -36,7 +38,7 @@ builder.InstallSerilog()
 .AddEntityFrameworkStores<IdentityContext>()
 .AddDefaultTokenProviders();
         install.AddControllersWithViews();
-        install.InstallIdentityContext()
+        install.InstallDatabase<IdentityContext, AuditLogContext>()
         .AddRazorComponents()
     .AddInteractiveServerComponents();
         install.AddAuthentication(options =>
@@ -44,13 +46,30 @@ builder.InstallSerilog()
             options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
             options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
         }).AddCookie(c => c.ExpireTimeSpan = TimeSpan.FromHours(10));
-        install.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+        install.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         install.AddAuthorization(a =>
         {
             a.AddPolicy(ServicePermission.AllHRServiceName, p =>
             {
                 p.RequireClaim("Permission", ServicePermission.AllHRService);
             });
+            a.AddPolicy(ServicePermission.HRFinancialName, p =>
+            {
+                p.RequireClaim("Permission", ServicePermission.HRFinancial);
+            });
+            a.AddPolicy(ServicePermission.HRAuditName, p =>
+            {
+                p.RequireClaim("Permission", ServicePermission.HRAuditLog);
+            });
+            a.AddPolicy(ServicePermission.HREmployeeName, p =>
+                   {
+                       p.RequireClaim("Permission", ServicePermission.HREmployee);
+                   });
+             a.AddPolicy(ServicePermission.AppAdminName, p =>
+                   {
+                       p.RequireClaim("Permission", ServicePermission.ApplicationAdmin);
+                   });
+
         })
         .AddRadzenComponents();
     })
@@ -65,20 +84,22 @@ builder.InstallSerilog()
         .AddScoped<ProvidentRepository>()
         .AddScoped<UserAdditionalExpenseRepository>()
         .AddScoped<UserPayrollRepository>()
-        .AddScoped<AdditionalPayrollRepository>();
+        .AddScoped<AdditionalPayrollRepository>()
+        .AddScoped<ActivityLogRepository>();
     })
     .InstallServices(service =>
     {
-        service.AddSingleton<IUrlIndeiceServices,UrlIndeiceServices>()
-        .AddScoped<IUserServices,UserServices>()
+        service.AddSingleton<IUrlIndeiceServices, UrlIndeiceServices>()
+        .AddScoped<IUserServices, UserServices>()
         .AddSingleton<IGetRoleAndPermissionService, GetRoleAndPermissionService>()
         .AddScoped<IRoleServices, RoleServices>()
-        .AddScoped<IDialogServices,DialogServices>()
-        .AddScoped<IImportExcelServices,ImportExcelServices>()
-        .AddScoped<IExportExcelServices,ExportExcelServices>()
-        .AddScoped<IDownloadServices,DownloadServices>()
-        .AddScoped<IFinacialServices,FinacialServices>()
-        .AddScoped<IPayrollServices,PayrollServices>();
+        .AddScoped<IDialogServices, DialogServices>()
+        .AddScoped<IImportExcelServices, ImportExcelServices>()
+        .AddScoped<IExportExcelServices, ExportExcelServices>()
+        .AddScoped<IDownloadServices, DownloadServices>()
+        .AddScoped<IFinacialServices, FinacialServices>()
+        .AddScoped<IPayrollServices, PayrollServices>()
+        .AddScoped<IActivityLogService, ActivityLogService>();
     });
 // Add services to the container.
 

@@ -1,8 +1,11 @@
 ﻿@page "/Payroll"
 @using LanguageExt
+@using Radzen
+@using Radzen.Blazor
 @using RocketShop.Database.Model.Identity
 @using RocketShop.Database.Model.Identity.Views
 @using RocketShop.Framework.Extension
+@using RocketShop.HR.Components.Shared
 @using RocketShop.HR.ServicePermissions
 @using RocketShop.HR.Services
 @using RocketShop.SharedBlazor.Condition
@@ -17,6 +20,7 @@
     List<UserView> users = new List<UserView>();
     [CascadingParameter]
     public AuthenticationState? state { get; set; }
+    EmployeeSlip? slip;
     const string Headers = "Id;Date;Employee Id;Employee Name;Salary;Social Securities;Provident Fund;Travel Expense;Other Pay;Salary Received;";
     int currentPage = 1,
     count = 0,
@@ -24,7 +28,7 @@
     bool isLoading = true,
     hasMajorException = false,
     hasMinorException = false;
-    string? searchUser, _searchUser;
+    string? searchUser, _searchUser, pagingSummaryFormat = "Displaying page {0} of {1} (total {2} records)";
 
     protected override async Task OnInitializedAsync()
     {
@@ -123,6 +127,13 @@
     .Select(s =>$" {s.Firstname} {s.Surname}")
     .FirstOrDefault()
     .IfNull("???");
+
+    async void PageChanged(PagerEventArgs args)
+    {
+
+        currentPage = args.PageIndex + 1;
+        await FetchingData();
+    }
 }
 <CascadingAuthenticationState>
     <AuthorizeView Policy="@ServicePermission.AllHRServiceName">
@@ -176,10 +187,17 @@
                             <td>@payroll.TotalAdditionalPay.ToMoneyFormat()</td>
                             <td>@payroll.TotalPayment.ToMoneyFormat()</td>
                             <td>
-                                <button class="btn btn-info"><i class="eye icon" /></button>
+                                <button class="btn btn-info" @onclick="async () => slip!.Open(payroll.PayRollId)"><i class="eye icon" /></button>
                             </td>
                         </tr>
                     </NHTypeTable>
+                                        <RadzenPager ShowPagingSummary="true"
+                                 PagingSummaryFormat="@pagingSummaryFormat"
+                                 HorizontalAlign="HorizontalAlign.Right"
+                                 Count="@count"
+                                 PageSize="20"
+                                 PageNumbersCount="@lastpage"
+                                 PageChanged="@PageChanged" />
                 </NoOperation>
                 <YesOperation>
                     <center>
@@ -193,3 +211,4 @@
         </NotAuthorized>
     </AuthorizeView>
 </CascadingAuthenticationState>
+<EmployeeSlip @ref="slip" />

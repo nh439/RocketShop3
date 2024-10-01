@@ -54,6 +54,7 @@
                 throw new Exception("Error While Lock User");
             message = "User Locked";
             isSuccess = true;
+            await activityLogService.Create("HR", "Employee", $"Lock Employee '<{userId}>'");
         }
         catch (Exception x)
         {

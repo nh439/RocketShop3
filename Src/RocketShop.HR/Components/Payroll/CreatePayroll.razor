@@ -13,6 +13,8 @@
 @using RocketShop.SharedBlazor.Tools
 @using System.Timers
 @inject IUserServices userService
+@inject IPayrollServices payrollService
+@inject IFinacialServices finacialServices
 @rendermode InteractiveServer
 @implements IDisposable
 
@@ -70,13 +72,12 @@
         return result.GetRight()!;
     }
 
-    async void Calculating(object? src,ElapsedEventArgs e)
+    async void Calculating(object? src, ElapsedEventArgs e)
     {
         await Task.WhenAll(
             Task.Run(TotalAdditionalCalculate),
             Task.Run(SalaryReceiveCalculate)
         );
-    //    await InvokeAsync(StateHasChanged);
     }
 
     void TotalAdditionalCalculate() =>
@@ -97,15 +98,62 @@
     {
         userValidate = !selectedUser.IsNotNull();
         payrollDateValidate = !userPayroll.PayrollDate.IsNotNull();
-        additionalNameValidate = additionalPayrolls.HasData() && additionalPayrolls.Where(x=>x.Name.IsNullOrEmpty()).HasData();
+        additionalNameValidate = additionalPayrolls.HasData() && additionalPayrolls.Where(x => x.Name.IsNullOrEmpty()).HasData();
         currencyValidate = userPayroll.Currency.IsNullOrEmpty();
         if (userValidate.Or(payrollDateValidate, additionalNameValidate, currencyValidate))
             return;
         var slip = new SlipData(userPayroll, additionalPayrolls);
         if (selectedUser.IsNotNull())
             slip.UserId = selectedUser!.UserId;
-        var json = JsonConvert.SerializeObject(slip, Formatting.Indented);
-        Console.WriteLine(json);
+        loading!.Open("Creating...", "Create Payroll");
+        try
+        {
+            slip.TotalAdditionalPay = totalAdditionalPay;
+            slip.TotalPayment = salaryReceived;
+            var result = await payrollService.Create(slip);
+            await loading!.Then(true, "Payroll Created", "Success", "/payroll");
+        }
+        catch
+        {
+            await loading!.Then(false, "Error While Creating Payroll", "Failed");
+        }
+    }
+    async Task SelectedResultChanged(UserView? result)
+    {
+        if(result.IsNotNull()){
+            var finacialData = await finacialServices.GetFinacialData(result.UserId);
+            var data = finacialData.GetRight().Extract();
+            if (!userPayroll.IsNotNull()) userPayroll = new();
+            userPayroll.Salary = data!.Salary;
+            userPayroll.Currency = data.Currency;
+            userPayroll.SocialSecurites = data.SocialSecurites;
+            userPayroll.ProvidentFund = data.ProvidentFundPerMonth;
+            userPayroll.TravelExpenses = data.TravelExpenses;
+            if (!additionalPayrolls.HasData())
+                additionalPayrolls = new();
+            if(data.AddiontialExpenses.HasData())
+                foreach(var addition in data.AddiontialExpenses!)
+                {
+                    var exists = additionalPayrolls.Where(x => x.Name == addition.ExpenseName).HasData();
+                    if (exists)
+                        additionalPayrolls.Where(x => x.Name == addition.ExpenseName).HasDataAndForEach(f => f.Value = addition.Balance);
+                    else
+                        additionalPayrolls.Add(new AdditionalPayroll
+                        {
+                            PayrollId = userPayroll.PayRollId,
+                            Currency = data.Currency,
+                            Name = addition.ExpenseName,
+                            Value = addition.Balance
+                        });
+                }
+            selectedUser = result;
+        }
+        else
+        {
+            selectedUser = null;
+        }
+        StateHasChanged();
+
     }
     void IDisposable.Dispose()
     {
@@ -137,7 +185,11 @@
                                                    Context="emp"
                                                    EnableDropDown="true"
                                                    SearchMethod="SearchEmployee"
-                                                   @bind-Value="selectedUser">
+                                                   Value="selectedUser"
+                                                   TValue="UserView"
+                                                   TItem="UserView"
+                                                   ValueChanged="SelectedResultChanged"
+                                                   ValueExpression="@(() => selectedUser)">
                                     <ResultTemplate>
                                         @emp.EmployeeCode : @emp.Firstname @emp.Surname
                                     </ResultTemplate>

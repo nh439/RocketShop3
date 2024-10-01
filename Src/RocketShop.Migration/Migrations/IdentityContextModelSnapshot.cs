@@ -231,6 +231,12 @@ namespace RocketShop.Migration.Migrations
                     b.Property<bool>("EndFixtureRequest")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("HRAuditLog")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("HRFinancial")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("RoleName")
                         .IsRequired()
                         .HasColumnType("text");
@@ -282,6 +288,8 @@ namespace RocketShop.Migration.Migrations
                             CreateProduct = true,
                             DeleteProduct = true,
                             EndFixtureRequest = true,
+                            HRAuditLog = true,
+                            HRFinancial = true,
                             RoleName = "Application Starter",
                             Sell = true,
                             SellSpeicalProduct = true,

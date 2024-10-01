@@ -2,6 +2,7 @@
 @using Radzen.Blazor
 @using RocketShop.Database.Model.Identity
 @using RocketShop.Framework.Extension
+@using RocketShop.HR.Components.Shared
 @using RocketShop.HR.Services
 @using RocketShop.SharedBlazor.Condition
 @using RocketShop.SharedBlazor.Table
@@ -19,6 +20,7 @@
     int count = 0,
     currentpage = 1,
     lastpage = 1;
+    EmployeeSlip? slipView;
     string pagingSummaryFormat = "Displaying page {0} of {1} (total {2} records)";
     protected override async Task OnInitializedAsync()
     {
@@ -101,7 +103,7 @@
                     <td>@payroll.TotalAdditionalPay.ToMoneyFormat()</td>
                     <td>@payroll.TotalPayment.ToMoneyFormat()</td>
                     <td>
-                    <button class="text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"><i class="eye icon" /></button>
+                    <button @onclick="()=>slipView!.Open(payroll.PayRollId)" class="text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"><i class="eye icon" /></button>
                     </td>
             </tr>
         </NHTypeTable>
@@ -118,3 +120,4 @@
 
     </NoOperation>
 </NHIF>
+<RocketShop.HR.Components.Shared.EmployeeSlip @ref="slipView" />

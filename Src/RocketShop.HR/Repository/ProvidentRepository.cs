@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.EntityFrameworkCore;
 using RocketShop.Database;
 using RocketShop.Database.EntityFramework;
@@ -36,6 +37,33 @@ namespace RocketShop.HR.Repository
             await identityConnection.CreateQueryStore(table)
             .Where(nameof(UserProvidentFund.UserId), userId)
             .DeleteAsync(transaction).GeAsync(0);
+
+        public async Task<bool> AddProvidentFundValue(string userId,
+            decimal secondOperand,
+            string currency,
+            IDbConnection identityConnection,
+            IDbTransaction? transaction = null)
+        {
+            var query = identityConnection.CreateQueryStore(table);
+            var condQuery = query.Where(nameof(UserProvidentFund.UserId), userId);
+            var existsData = await condQuery.FetchOneAsync<UserProvidentFund>(transaction);
+            if (existsData.IsSome)
+            {
+                var data = existsData.Extract();
+                return await condQuery.UpdateAsync(new
+                    {
+                        Balance = (data!.Balance)+secondOperand
+                    }, transaction).GeAsync(0);
+            }
+            return await query.InsertAsync(new UserProvidentFund
+            {
+                Balance = secondOperand,
+                Currency = currency,
+                UserId = userId
+            }, transaction);
+                
+        }
+           
 
         public async Task<UserProvidentFund?> GetUserProvidentFund(string userId) =>
             await context.UserProvidentFund.FirstOrDefaultAsync(x => x.UserId == userId);

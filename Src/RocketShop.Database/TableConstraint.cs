@@ -20,5 +20,6 @@ namespace RocketShop.Database
         public const string UserPayroll = "Payroll";
         public const string AdditionalPayroll = "AdditionalPayroll";
         public const string UserFinacialView = "V_UFinacial";
+        public const string ActivityLog = "EventLog";
     }
 }

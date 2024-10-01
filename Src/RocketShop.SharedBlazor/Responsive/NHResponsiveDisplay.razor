@@ -1,0 +1,61 @@
+﻿@using RocketShop.Framework.Extension
+@using RocketShop.SharedBlazor.Condition
+
+
+@code {
+    [Parameter]
+    public RenderFragment? XSmallOnly { get; set; }
+    [Parameter]
+    public RenderFragment? SmallOnly { get; set; }
+    [Parameter]
+    public RenderFragment? MediumOnly { get; set; }
+    [Parameter]
+    public RenderFragment? LargeOnly { get; set; }
+    [Parameter]
+    public RenderFragment? XLargeOnly { get; set; }
+
+
+    [Parameter]
+    public RenderFragment? NotXSmall { get; set; }
+    [Parameter]
+    public RenderFragment? NotSmall { get; set; }
+    [Parameter]
+    public RenderFragment? NotMedium { get; set; }
+    [Parameter]
+    public RenderFragment? NotLarge { get; set; }
+    [Parameter]
+    public RenderFragment? NotXLarge { get; set; }
+
+}
+
+<NHIF Condition="@XSmallOnly.IsNotNull()">
+    <div class="d-block d-sm-none">@XSmallOnly</div>
+</NHIF>
+<NHIF Condition="@SmallOnly.IsNotNull()">
+    <div class="d-none d-sm-block d-md-none">@SmallOnly</div>
+</NHIF>
+<NHIF Condition="@MediumOnly.IsNotNull()">
+    <div class="d-none d-md-block d-lg-none">@MediumOnly</div>
+</NHIF>
+<NHIF Condition="@LargeOnly.IsNotNull()">
+    <div class="d-none d-lg-block d-xl-none">@LargeOnly</div>
+</NHIF>
+<NHIF Condition="@XLargeOnly.IsNotNull()">
+    <div class="d-none d-xl-block">@XLargeOnly</div>
+</NHIF>
+
+<NHIF Condition="@NotXSmall.IsNotNull()">
+    <div class="d-none d-sm-block">@NotXSmall</div>
+</NHIF>
+<NHIF Condition="@NotSmall.IsNotNull()">
+    <div class="d-sm-none d-md-block">@NotSmall</div>
+</NHIF>
+<NHIF Condition="@NotMedium.IsNotNull()">
+    <div class="d-md-none d-lg-block">@NotMedium</div>
+</NHIF>
+<NHIF Condition="@NotLarge.IsNotNull()">
+    <div class="d-lg-none d-xl-block">@NotLarge</div>
+</NHIF>
+<NHIF Condition="@NotXLarge.IsNotNull()">
+    <div class="d-xl-none">@NotXLarge</div>
+</NHIF>

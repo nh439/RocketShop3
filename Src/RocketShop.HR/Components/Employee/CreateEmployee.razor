@@ -80,6 +80,7 @@
             if (newInformation.BrithDay.HasValue)
                 newInformation.BrithDay = newInformation.BrithDay.Value.ToUniversalTime();
             newUser.CreateBy = currentUser;
+            newInformation.CreateBy = currentUser;
             var result = await userService.CreateUser(newUser, newInformation);
             if(result.IsLeft || !result.GetRight())
             {
@@ -96,6 +97,7 @@
                 if (assignResult.IsLeft)
                     throw assignResult.GetLeft()!;
             }
+            await activityLogService.Create("HR", "Employee", $"Create Employee Data");
             await loading.Then(true, $"Create Employee '{newUser.EmployeeCode}' Success", "Success", "/employee");
         }
         catch(Exception x)
@@ -110,7 +112,7 @@
     }
 }
 <CascadingAuthenticationState>
-    <AuthorizeView Policy="@ServicePermission.AllHRServiceName">
+    <AuthorizeView Policy="@ServicePermission.HREmployeeName">
         <Authorized Context="authContext">
             <center>
                 <h2 class="text-4xl font-extrabold dark:text-black">Create Employee</h2>
