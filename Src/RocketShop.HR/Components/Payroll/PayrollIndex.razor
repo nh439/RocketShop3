@@ -187,7 +187,8 @@
                             <td>@payroll.TotalAdditionalPay.ToMoneyFormat()</td>
                             <td>@payroll.TotalPayment.ToMoneyFormat()</td>
                             <td>
-                                <button class="btn btn-info" @onclick="async () => slip!.Open(payroll.PayRollId)"><i class="eye icon" /></button>
+                                <button class="btn btn-info mx-1" @onclick="async () => slip!.Open(payroll.PayRollId)"><i class="eye icon" /></button>
+                                <button class="btn btn-danger mx-1"><i class="x icon" /></button>
                             </td>
                         </tr>
                     </NHTypeTable>
