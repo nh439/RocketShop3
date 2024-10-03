@@ -1,0 +1,75 @@
+﻿@page "/Role/Create"
+@using Blazored.Typeahead
+@using RocketShop.Database.Helper
+@using RocketShop.Database.Model.Identity
+@using RocketShop.Database.Model.Identity.Views
+@using RocketShop.HR.ServicePermissions
+@using RocketShop.SharedBlazor.Condition
+@using RocketShop.SharedBlazor.Tools
+@rendermode InteractiveServer
+@code {
+    Role role = new Role();
+    IList<UserView>? selectedUser;
+    IList<string>? AllowedPermission = new List<string>();
+    LoadingModal? loading;
+    bool isError;
+
+    async Task<IEnumerable<string>> SearchPermission(string searchTerm) =>
+        await Task.FromResult(RoleHelper.ListAllPermission().Where(x => x.ToLower().Contains(searchTerm.ToLower())).ToList());
+}
+<CascadingAuthenticationState>
+    <AuthorizeView Policy="@ServicePermission.AppAdminName">
+        <Authorized>
+            <NHIF Condition="@isError">
+                <YesOperation>
+                    <div class="alert alert-danger" role="alert">
+                        Something Went Wrong <button class="btn btn-link" @onclick="OnInitializedAsync">Refresh</button>
+                    </div>
+                </YesOperation>
+                <NoOperation>
+                    <h1 class="text-4xl font-bold">Create New Role</h1>
+                    <br />
+                    <br />
+                    <div class="row">
+                        <div class="col-1"></div>
+                        <div class="col-10">
+                            <div class="card">
+                                <div class="card-header text-3xl font-bold text-white bg-primary">
+                                    Detail Setting
+                                </div>
+                                <div class="card-body table-info">
+                                    <div class="form-group">
+                                        <label for="text">Role Name</label>
+                                        <input id="text" @bind-value="role.RoleName" name="text" type="text" class="form-control">
+                                    </div>
+                                    <br />
+                                    <div class="form-group">
+                                        <label for="text1">Allowed Permission</label>
+                                        <BlazoredTypeahead class="form-control"
+                                                           style="background-color:white"
+                                                           Context="permission"
+                                                           SearchMethod="SearchPermission"
+                                                           EnableDropDown="true"
+                                                           @bind-Values="AllowedPermission">
+                                            <ResultTemplate>@permission</ResultTemplate>
+                                            <SelectedTemplate>@permission</SelectedTemplate>
+                                        </BlazoredTypeahead>
+                                    </div>
+                                    <br />
+                                    <button class="btn btn-primary"><i class="save icon" /> Save Changes</button>
+                                </div>
+                            </div>
+                            <br />
+                            <br />
+                        </div>
+                        <div class="col-1"></div>
+                    </div>
+                </NoOperation>
+            </NHIF>
+        </Authorized>
+        <NotAuthorized>
+            <h1 class="text-5xl font-bold">Access Denied</h1>
+        </NotAuthorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>
+<LoadingModal @ref="loading" />
