@@ -11,6 +11,7 @@ using RocketShop.Framework.Helper;
 using RocketShop.Identity.Configuration;
 using RocketShop.Identity.Service;
 using RocketShop.Shared.SharedService.Scoped;
+using RocketShop.Shared.SharedService.Singletion;
 using Serilog;
 
 namespace RocketShop.Identity
@@ -58,7 +59,8 @@ namespace RocketShop.Identity
                     .AddScoped<IUserService,UserService>()
                     .AddScoped<IPasswordServices,PasswordServices>()
                     .AddScoped<IRoleAndPermissionService,RoleAndPermissionService>()
-                    .AddScoped<ISendEmailServices,SendEmailServices>();
+                    .AddScoped<ISendEmailServices,SendEmailServices>()
+                    .AddSingleton<IUrlIndeiceServices,UrlIndeiceServices>();
                 });
             var app = builder.Build();
 

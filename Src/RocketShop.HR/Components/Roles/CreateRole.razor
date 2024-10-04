@@ -3,19 +3,54 @@
 @using RocketShop.Database.Helper
 @using RocketShop.Database.Model.Identity
 @using RocketShop.Database.Model.Identity.Views
+@using RocketShop.Framework.Extension
 @using RocketShop.HR.ServicePermissions
+@using RocketShop.HR.Services
 @using RocketShop.SharedBlazor.Condition
+@using RocketShop.SharedBlazor.SharedFunction
 @using RocketShop.SharedBlazor.Tools
+@inject IRoleServices roleService
+@inject ILogger<CreateRole> logger
 @rendermode InteractiveServer
 @code {
     Role role = new Role();
     IList<UserView>? selectedUser;
     IList<string>? AllowedPermission = new List<string>();
     LoadingModal? loading;
-    bool isError;
+    bool isError,nameValidate;
 
     async Task<IEnumerable<string>> SearchPermission(string searchTerm) =>
         await Task.FromResult(RoleHelper.ListAllPermission().Where(x => x.ToLower().Contains(searchTerm.ToLower())).ToList());
+
+    async Task Submit()
+    {
+        nameValidate = role.RoleName.IsNullOrEmpty();
+        if (nameValidate)
+            return;
+        loading!.Open("Creating...");
+        try
+        {
+            var props = typeof(Role).GetProperties();
+            foreach(var prop in props)
+            {
+                if(prop.PropertyType == typeof(bool))
+                {
+                    var isAllowed = AllowedPermission?.Where(x => x == prop.Name).HasData();
+                    prop.SetValue(role,isAllowed);
+                }
+            }
+            var result = await roleService.Create(role);
+            if (result.IsLeft)
+                throw result.GetLeft()!;
+            await activityLogService.Create("HR", "Role", "Create Role Success");
+            await loading.Then(true, $"Role '{role.RoleName}' Has Created", "Success", "/role");
+        }
+        catch(Exception x)
+        {
+            logger.LogError(x, x.Message);
+            await loading!.Then(false, "Error While Creating Role", "Failed");
+        }
+    }
 }
 <CascadingAuthenticationState>
     <AuthorizeView Policy="@ServicePermission.AppAdminName">
@@ -40,7 +75,7 @@
                                 <div class="card-body table-info">
                                     <div class="form-group">
                                         <label for="text">Role Name</label>
-                                        <input id="text" @bind-value="role.RoleName" name="text" type="text" class="form-control">
+                                        <input id="text" @bind-value="role.RoleName" name="text" type="text" class="form-control @TextValidator.InvalidDisplay(nameValidate)" >
                                     </div>
                                     <br />
                                     <div class="form-group">
@@ -56,7 +91,7 @@
                                         </BlazoredTypeahead>
                                     </div>
                                     <br />
-                                    <button class="btn btn-primary"><i class="save icon" /> Save Changes</button>
+                                    <button class="btn btn-primary" @onclick="Submit"><i class="save icon" /> Save Changes</button>
                                 </div>
                             </div>
                             <br />

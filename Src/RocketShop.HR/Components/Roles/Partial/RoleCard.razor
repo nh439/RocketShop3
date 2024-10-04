@@ -1,15 +1,21 @@
-﻿
+﻿@using RocketShop.Framework.Extension
+
 
 @code {
     [Parameter]
     public string Name { get; set; }
     [Parameter]
     public int Id { get; set; }
+    [Parameter]
+    public Action? OnDeleteAction { get; set; }
 }
 <div class="card" style="width: 18rem;">
     <div class="card-body">
         <h5 class="card-title text-3xl font-bold">@Name</h5>
         <a class="btn btn-primary mx-1" href="/role/Detail/@Id"><i class="edit icon" /></a>
-        <button class="btn btn-danger mx-1"><i class="trash icon" /></button>
+        <button class="btn btn-danger mx-1" @onclick="()=> {
+if(OnDeleteAction.IsNotNull())
+OnDeleteAction!();}
+"><i class="trash icon" /></button>
     </div>
 </div>
