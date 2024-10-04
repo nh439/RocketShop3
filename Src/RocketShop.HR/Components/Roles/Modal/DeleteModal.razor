@@ -24,6 +24,7 @@
             var result = await roleService.Delete(roleToDelete.Id);
             if(result.IsLeft)
                 throw result.GetLeft()!;
+            await activityLogService.Create("HR", "Role", "Delete Role Success");
             await loading!.Then(true, "Role Deleted", "Success");
             if (AfterSubmitAction.IsNotNull())
                 AfterSubmitAction!();
