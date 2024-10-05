@@ -77,7 +77,7 @@
                         <NHIF Condition="@(slipData.IsNotNull().And(profile.IsNotNull(),finacialData.IsNotNull()))">
                             <div class="row text-xl font-semibold">
                                 <div class="col">
-                                    Slip Id : @slipData!.PayRollId
+                                    Slip Id : @(slipData!.Cancelled ? "[Cancelled]":string.Empty) @slipData!.PayRollId
                                 </div>
                                 <div class="col">
                                     Date : @slipData.PayrollDate.Date.ToString("dd MMMM yyyy")

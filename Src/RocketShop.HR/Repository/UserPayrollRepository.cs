@@ -16,17 +16,23 @@ namespace RocketShop.HR.Repository
         readonly DbSet<UserPayroll> entity = context.UserPayroll;
 
         public async Task<List<UserPayroll>> GetUserPayrolls(int? page = null, int per = 20) =>
-            await entity.UsePaging(page, per)
+            await entity
+            .OrderByDescending(x => x.PayrollDate)
+            .OrderBy(x => x.Cancelled)
+            .UsePaging(page, per)
             .ToListAsync();
 
         public async Task<List<UserPayroll>> GetByUserIdRange(IEnumerable<string> userIdRange, int? page = null, int per = 20) =>
             await entity.Where(x => userIdRange.Contains(x.UserId))
-            .OrderByDescending(x => x.PayrollDate)
+             .OrderByDescending(x => x.PayrollDate)
+            .OrderBy(x => x.Cancelled)
             .UsePaging(page, per)
             .ToListAsync();
 
         public async Task<List<UserPayroll>> GetByUserId(string userId, int? page = null, int per = 20) =>
             await entity.Where(x => x.UserId == userId)
+             .OrderByDescending(x => x.PayrollDate)
+            .OrderBy(x => x.Cancelled)
             .UsePaging(page, per)
             .ToListAsync();
 
@@ -52,12 +58,13 @@ namespace RocketShop.HR.Repository
             .DeleteAsync(transaction)
             .GeAsync(0);
 
-        public async Task<bool> CancelPayroll(string payrollId, IDbConnection identityConnection, IDbTransaction? transaction = null) =>
+        public async Task<bool> CancelPayroll(string payrollId,string? cancelReason, IDbConnection identityConnection, IDbTransaction? transaction = null) =>
             await identityConnection.CreateQueryStore(tableName)
-            .Where(nameof(UserPayroll), payrollId)
+            .Where(nameof(UserPayroll.PayRollId), payrollId)
             .UpdateAsync(new
             {
-                Cancelled = true
+                Cancelled = true,
+                CancelledReason = cancelReason
             }, transaction)
             .GeAsync(0);
 

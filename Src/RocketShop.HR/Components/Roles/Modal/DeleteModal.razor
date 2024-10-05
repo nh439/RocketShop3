@@ -1,0 +1,51 @@
+﻿@using RocketShop.Database.Model.Identity
+@using RocketShop.Framework.Extension
+@using RocketShop.HR.Services
+@using RocketShop.SharedBlazor.Modal
+@using RocketShop.SharedBlazor.Modal.ModalCompenment
+@using RocketShop.SharedBlazor.Tools
+@inject IRoleServices roleService
+
+@code {
+    Role roleToDelete = new Role(); 
+    Modal? e;
+    LoadingModal? loading;
+    public Action? AfterSubmitAction;
+    public void Open(Role role)
+    {
+        roleToDelete = role;
+        e!.Show();
+    }
+    async Task DeleteAccepted()
+    {
+        loading!.Open("Deleting...");
+        try
+        {
+            var result = await roleService.Delete(roleToDelete.Id);
+            if(result.IsLeft)
+                throw result.GetLeft()!;
+            await activityLogService.Create("HR", "Role", "Delete Role Success");
+            await loading!.Then(true, "Role Deleted", "Success");
+            if (AfterSubmitAction.IsNotNull())
+                AfterSubmitAction!();
+        }
+        catch
+        {
+            await loading!.Then(false, "Error While Delete Role", "Failed");
+        }
+        finally
+        {
+            e!.Close();
+        }
+    }
+}
+<Modal Title="Delete Role Confirmation" @ref="e">
+    <ModalBody>
+        <h1 class="text-2xl font-bold">Are You Sure To Delete '@roleToDelete.RoleName'</h1>
+    </ModalBody>
+    <ModalFooter>
+        <button class="btn btn-danger mx-1" @onclick="DeleteAccepted">Delete</button>
+        <button class="btn btn-secondary mx-1" @onclick="()=>e!.Close()">Back</button>
+    </ModalFooter>
+</Modal>
+<LoadingModal @ref="loading" />

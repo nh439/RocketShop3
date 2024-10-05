@@ -20,6 +20,7 @@ namespace RocketShop.HR.Services
         Task<Either<Exception, int>> BulkCreate(IEnumerable<SlipData> slipData);
         Task<Either<Exception, int>> GetCount(params string[]? UserIdRange);
         Task<Either<Exception, int>> GetLastPage(int per, params string[]? UserIdRange);
+        Task<Either<Exception, bool>> CancelPayroll(UserPayroll payroll);
     }
     public class PayrollServices(
         ILogger<PayrollServices> logger,
@@ -108,8 +109,17 @@ namespace RocketShop.HR.Services
                 return slipInserted;
             });
 
-        public async Task<Either<Exception, bool>> CancelPayroll(string payrollId) =>
-            await InvokeDapperServiceAsync(async con => await userPayrollRepository.CancelPayroll(payrollId, con));
+        public async Task<Either<Exception, bool>> CancelPayroll(UserPayroll payroll) =>
+            await InvokeDapperServiceAsync(async con => {
+                con.Open();
+                using var transaction = con.BeginTransaction();
+                if (payroll.ProvidentFund.Ge(0))
+                    await providentRepository.AddProvidentFundValue(payroll.UserId, payroll.ProvidentFund.Inverted(), payroll.Currency, con, transaction);
+                await userPayrollRepository.CancelPayroll(payroll.PayRollId,payroll.CancelledReason, con,transaction);
+                transaction.Commit();
+                con.Close();
+                return true;
+            });
 
         public async Task<Either<Exception,int>> GetCount(params string[]? UserIdRange) =>
             await InvokeServiceAsync(async () => await  userPayrollRepository.GetCount(UserIdRange));

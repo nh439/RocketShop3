@@ -3,6 +3,7 @@
 @using Radzen.Blazor
 @using RocketShop.Database.Model.Identity
 @using RocketShop.Framework.Extension
+@using RocketShop.HR.Components.Roles.Modal
 @using RocketShop.HR.Components.Roles.Partial
 @using RocketShop.HR.ServicePermissions
 @using RocketShop.HR.Services
@@ -20,6 +21,7 @@
     pagingSummaryFormat = "Displaying page {0} of {1} (total {2} records)";
     int count, currentPage = 1, lastPage = 1;
     bool majorException, minorException;
+    DeleteModal? delete;
     protected override async Task OnInitializedAsync()
     {
         var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -89,6 +91,11 @@
         query = _query;
         GetData();
     }
+    void OnDeleteBtnClicked(Role role)
+    {
+        delete!.AfterSubmitAction = GetData;
+        delete.Open(role);
+    }
 }
 
 <CascadingAuthenticationState>
@@ -125,7 +132,7 @@
                     </div>
                     <br />
                     <br />
-                    <button class="btn btn-primary"><i class="plus icon"></i> Create New Role</button>
+                    <a href="/role/create" class="btn btn-primary rounded-full text-semibold"><i class="plus icon"></i> Create New Role</a>
                     <br />
                     <br />
                     <NHIF Condition="@roles.HasData()">
@@ -134,35 +141,35 @@
                                 <XSmallOnly>
                                     <div class="grid grid-cols-1 gap-1">
                                         <NHForeach Items="roles" Context="role">
-                                            <RoleCard Name="@role.RoleName" Id="@role.Id" />
+                                            <RoleCard Name="@role.RoleName" Id="@role.Id" OnDeleteAction="()=>OnDeleteBtnClicked(role)" />
                                         </NHForeach>
                                     </div>
                                 </XSmallOnly>
                                 <SmallOnly>
                                     <div class="grid grid-cols-2 gap-1">
                                         <NHForeach Items="roles" Context="role">
-                                            <RoleCard Name="@role.RoleName" Id="@role.Id" />
+                                            <RoleCard Name="@role.RoleName" Id="@role.Id" OnDeleteAction="()=>OnDeleteBtnClicked(role)" />
                                         </NHForeach>
                                     </div>
                                 </SmallOnly>
                                 <MediumOnly>
                                     <div class="grid grid-cols-3 gap-2">
                                         <NHForeach Items="roles" Context="role">
-                                            <RoleCard Name="@role.RoleName" Id="@role.Id" />
+                                            <RoleCard Name="@role.RoleName" Id="@role.Id" OnDeleteAction="()=>OnDeleteBtnClicked(role)" />
                                         </NHForeach>
                                     </div>
                                 </MediumOnly>
                                 <LargeOnly>
                                     <div class="grid grid-cols-4 gap-3">
                                         <NHForeach Items="roles" Context="role">
-                                            <RoleCard Name="@role.RoleName" Id="@role.Id" />
+                                            <RoleCard Name="@role.RoleName" Id="@role.Id" OnDeleteAction="()=>OnDeleteBtnClicked(role)" />
                                         </NHForeach>
                                     </div>
                                 </LargeOnly>
                                 <XLargeOnly>
                                     <div class="grid grid-cols-6 gap-5">
                                         <NHForeach Items="roles" Context="role">
-                                            <RoleCard Name="@role.RoleName" Id="@role.Id" />
+                                            <RoleCard Name="@role.RoleName" Id="@role.Id" OnDeleteAction="()=>OnDeleteBtnClicked(role)" />
                                         </NHForeach>
                                     </div>
                                 </XLargeOnly>
@@ -191,3 +198,4 @@
         </NotAuthorized>
     </AuthorizeView>
 </CascadingAuthenticationState>
+<RocketShop.HR.Components.Roles.Modal.DeleteModal @ref="delete" />

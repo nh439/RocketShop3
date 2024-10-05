@@ -10,6 +10,7 @@ using RocketShop.Database.Model.Identity;
 using RocketShop.Database.NonEntityFramework.QueryGenerator;
 using RocketShop.Framework.Extension;
 using RocketShop.Identity.Configuration;
+using RocketShop.Identity.Helper;
 using RocketShop.Identity.IdentityBaseServices;
 using RocketShop.Identity.Models;
 using RocketShop.Identity.Service;
@@ -49,7 +50,7 @@ namespace RocketShop.Identity.Controllers
                 var authenicate = HttpContext.User.Identity?.IsAuthenticated;
                 if (authenicate.IsTrue())
                 {
-                    var token = BuildToken();
+                    var token = TokenHelper.BuildToken(HttpContext);
                     return Redirect(returnUrl.HasMessage() ? $"{returnUrl}?id_token={token}" : "/");
                 }
                 ViewBag.ReturnUrl = returnUrl;
@@ -83,7 +84,7 @@ namespace RocketShop.Identity.Controllers
                         await signInManager.SignInWithClaimsAsync(user!, null, SetClaims(user!,roleNames,permissions.GetRight()));
                         user.LastLoggedIn = DateTime.UtcNow;
                         await userManager.UpdateAsync(user);
-                        var token = BuildToken();
+                        var token = TokenHelper.BuildToken(HttpContext);
                         return Redirect(returnUrl.HasMessage() ? $"{returnUrl}?id_token={token}" : "/");
                     }
                     if(res.IsLockedOut)
@@ -151,7 +152,7 @@ x-client-ver=7.1.2.0";
                 await signInManager.SignInWithClaimsAsync(user!, null, claims);
                 user.LastLoggedIn= DateTime.UtcNow;
                 await userManager.UpdateAsync(user);
-                var token = BuildToken();
+                var token = TokenHelper.BuildToken(HttpContext);
                 if (redirect.IsSome)
                     return Redirect(redirect.Extract().Tranform(r => $"{r}?id_token={token}")!);
                 return Redirect($"/");
@@ -206,26 +207,7 @@ x-client-ver=7.1.2.0";
         public IActionResult AccessDeined(int? mode) =>
             View("./Views/Home/AccessFailed.cshtml", mode);
 
-        public string BuildToken()
-        {
-            var claims = HttpContext.User.Claims;
-            string secretKey = "828db15b-65f0-4492-a1eb-a89afb182e30"; // Replace with a strong, secure key
-            SymmetricSecurityKey signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
-
-            var signingCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
-            var jwtHandler = new JwtSecurityTokenHandler();
-
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(claims),
-                SigningCredentials = signingCredentials,
-                Expires = DateTime.Now.AddHours(10)
-            };
-
-            var securityToken = jwtHandler.CreateToken(tokenDescriptor);
-            return jwtHandler.WriteToken(securityToken);
-
-        }
+      
         [Authorize]
         public IActionResult AuthSample() => View();
     }

@@ -1,0 +1,55 @@
+﻿@using RocketShop.Database.Model.Identity
+@using RocketShop.Framework.Extension
+@using RocketShop.HR.Services
+@using RocketShop.SharedBlazor.Modal
+@using RocketShop.SharedBlazor.Modal.ModalCompenment
+@using RocketShop.SharedBlazor.Tools
+@inject IPayrollServices payrollService
+@rendermode InteractiveServer
+
+@code {
+    UserPayroll payroll = new UserPayroll();
+    Modal? e;
+    LoadingModal? loading;
+    int currentPage = 1;
+    public void Open(UserPayroll _payroll,int page =1)
+    {
+        payroll = _payroll;
+        currentPage = page;
+        e!.Show();
+    }
+    async Task Accepted()
+    {
+        loading!.Open("Processing...");
+        try
+        {
+            var result = await payrollService.CancelPayroll(payroll);
+            if (result.IsLeft)
+                throw result.GetLeft()!;
+            e!.Close();
+            await activityLogService.Create("HR", "Payroll", $"Cancel Payroll '{payroll.PayRollId}' {(payroll.CancelledReason.HasMessage() ? $"Because '{payroll.CancelledReason}'":string.Empty)}");
+            await loading.Then(true, "Payroll Cancelled", "Success",$"/payroll?page={currentPage}");
+        }
+        catch
+        {
+           await loading.Then(false, "Error While Cancel Item", "Failed");
+        }
+    }
+}
+<Modal @ref="e" Title="Payroll Cancel Confirmation">
+    <ModalBody>
+        <div class="form-group">
+            <label for="a">Payroll Id</label>
+            <input id="a" @bind-value="payroll.PayRollId" type="text" class="form-control">
+        </div>
+        <div class="form-group">
+            <label for="c">Reason Of Cancel</label>
+            <input id="c" @bind-value="payroll.CancelledReason" type="text" class="form-control">
+        </div>
+    </ModalBody>
+    <ModalFooter>
+        <button class="btn btn-danger mx-1" @onclick="Accepted">Accepted</button>
+        <button class="btn btn-secondary mx-1" @onclick="()=>e!.Close()">Decline</button>
+    </ModalFooter>
+</Modal>
+<LoadingModal @ref="loading" />

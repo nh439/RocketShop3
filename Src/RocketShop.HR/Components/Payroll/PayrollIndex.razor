@@ -1,15 +1,18 @@
 ﻿@page "/Payroll"
 @using LanguageExt
+@using Microsoft.AspNetCore.WebUtilities
 @using Radzen
 @using Radzen.Blazor
 @using RocketShop.Database.Model.Identity
 @using RocketShop.Database.Model.Identity.Views
 @using RocketShop.Framework.Extension
+@using RocketShop.HR.Components.Payroll.Modal
 @using RocketShop.HR.Components.Shared
 @using RocketShop.HR.ServicePermissions
 @using RocketShop.HR.Services
 @using RocketShop.SharedBlazor.Condition
 @using RocketShop.SharedBlazor.Table
+@using RocketShop.SharedBlazor.Extension
 @inject IPayrollServices payrollServices
 @inject IUserServices userServices
 @inject NavigationManager navigationManager
@@ -21,6 +24,7 @@
     [CascadingParameter]
     public AuthenticationState? state { get; set; }
     EmployeeSlip? slip;
+    PayrollCancellation? cancel;
     const string Headers = "Id;Date;Employee Id;Employee Name;Salary;Social Securities;Provident Fund;Travel Expense;Other Pay;Salary Received;";
     int currentPage = 1,
     count = 0,
@@ -34,9 +38,11 @@
     {
         state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var authenicated = state.If(x => x.IsNotNull() && x!.User!.Identity!.IsAuthenticated);
-        if (authenicated)
+        if (authenicated){
+            currentPage = navigationManager.GetValueFromUrlQueryAsInt32("page",1);
             await FetchingData();
-
+           
+        }
         else navigationManager.NavigateTo("/login", true);
 
     }
@@ -84,7 +90,7 @@
                     if (lastPageResult.IsLeft)
                         LogMinorException(lastPageResult.GetLeft()!);
                     else
-                        count = lastPageResult.GetRight()!;
+                        lastpage = lastPageResult.GetRight()!;
                 }),
                  Task.Run(() =>
                 {
@@ -106,7 +112,7 @@
         finally
         {
             isLoading = false;
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
         }
     }
 
@@ -133,6 +139,11 @@
 
         currentPage = args.PageIndex + 1;
         await FetchingData();
+    }
+
+    void PayrollCancelBtnClick(UserPayroll payroll)
+    {
+        cancel!.Open(payroll,currentPage);
     }
 }
 <CascadingAuthenticationState>
@@ -173,7 +184,7 @@
                         <tr class="@(payroll.Cancelled ? "table-secondary":"table-info")">
                             <td>
                                 <NHIF Condition="payroll.Cancelled">
-                                    <YesOperation><span class="badge badge-secondary">Cancelled</span></YesOperation>
+                                    <YesOperation><span class="badge badge-danger">Cancelled</span></YesOperation>
                                 </NHIF>
                                 @payroll.PayRollId
                                 </td>
@@ -187,7 +198,13 @@
                             <td>@payroll.TotalAdditionalPay.ToMoneyFormat()</td>
                             <td>@payroll.TotalPayment.ToMoneyFormat()</td>
                             <td>
-                                <button class="btn btn-info" @onclick="async () => slip!.Open(payroll.PayRollId)"><i class="eye icon" /></button>
+                                <button class="btn btn-info mx-1" @onclick="async () => await slip!.Open(payroll!.PayRollId)"><i class="eye icon" /></button>
+                                <NHIF Condition="payroll.Cancelled">
+                                    <NoOperation>
+                                        <button class="btn btn-danger mx-1" @onclick="()=> PayrollCancelBtnClick(payroll)"><i class="x icon" /></button>
+                                    </NoOperation>
+                                </NHIF>
+                                
                             </td>
                         </tr>
                     </NHTypeTable>
@@ -212,3 +229,4 @@
     </AuthorizeView>
 </CascadingAuthenticationState>
 <EmployeeSlip @ref="slip" />
+<PayrollCancellation @ref="cancel"/>

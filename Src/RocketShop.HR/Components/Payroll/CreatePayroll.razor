@@ -63,7 +63,7 @@
     }
     async Task<IEnumerable<UserView>> SearchEmployee(string searchTerm)
     {
-        var result = await userService.ListActiveUsers(searchTerm, 1, 10);
+        var result = await userService.ListActiveUsers(searchTerm, 1, 10,true);
         if (result.IsLeft)
         {
             alertDisplay = true;
