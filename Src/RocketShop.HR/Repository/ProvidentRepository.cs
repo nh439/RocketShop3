@@ -50,10 +50,11 @@ namespace RocketShop.HR.Repository
             if (existsData.IsSome)
             {
                 var data = existsData.Extract();
+                var newBalance = (data!.Balance) + secondOperand;
                 return await condQuery.UpdateAsync(new
-                    {
-                        Balance = (data!.Balance)+secondOperand
-                    }, transaction).GeAsync(0);
+                {
+                    Balance = newBalance.Le(0) ? 0 : newBalance
+                }, transaction).GeAsync(0);
             }
             return await query.InsertAsync(new UserProvidentFund
             {

@@ -37,7 +37,7 @@ namespace RocketShop.HR.Services
         Task<Either<Exception, bool>> UnlockUser(string userId);
         Task<Either<Exception, bool>> LockUser(string userId, int lockedHours);
         Task<Either<Exception, List<UserView>>> ListUserByUserIdIn(params string[] userIds);
-        Task<Either<Exception, List<UserView>>> ListActiveUsers(string? searchTerm = null, int? page = null, int per = 20);
+        Task<Either<Exception, List<UserView>>> ListActiveUsers(string? searchTerm = null, int? page = null, int per = 20,bool hasFinancialData = false);
     }
     public class UserServices(
         ILogger<UserServices> logger,
@@ -197,7 +197,13 @@ namespace RocketShop.HR.Services
         public async Task<Either<Exception, List<UserView>>> ListUserByUserIdIn(params string[] userIds)=>
             await InvokeServiceAsync(async () =>await userRepository.ListUserIn(userIds));
 
-        public async Task<Either<Exception, List<UserView>>> ListActiveUsers(string? searchTerm = null, int? page = null, int per = 20) =>
-            await InvokeServiceAsync(async () => await userRepository.GetActiveUsers(searchTerm, page, per));
+        public async Task<Either<Exception, List<UserView>>> ListActiveUsers(string? searchTerm = null, int? page = null, int per = 20, bool hasFinancialData = false) =>
+            await InvokeServiceAsync(async () => {
+               var users = await userRepository.GetActiveUsers(searchTerm, page, per);
+                if (!hasFinancialData)
+                    return users;
+                var financialData = await userFinacialRepository.ListFinancialDataByUserIn(users.Select(s => s.UserId));
+                return users.Where(x=>financialData.Select(s=>s.UserId).Contains(x.UserId)).ToList();
+                });
     }
 }

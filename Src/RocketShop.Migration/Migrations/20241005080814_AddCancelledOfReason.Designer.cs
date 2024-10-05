@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using RocketShop.Database.EntityFramework;
@@ -11,9 +12,11 @@ using RocketShop.Database.EntityFramework;
 namespace RocketShop.Migration.Migrations
 {
     [DbContext(typeof(IdentityContext))]
-    partial class IdentityContextModelSnapshot : ModelSnapshot
+    [Migration("20241005080814_AddCancelledOfReason")]
+    partial class AddCancelledOfReason
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -547,9 +550,6 @@ namespace RocketShop.Migration.Migrations
 
                     b.Property<bool>("Cancelled")
                         .HasColumnType("boolean");
-
-                    b.Property<string>("CancelledReason")
-                        .HasColumnType("text");
 
                     b.Property<string>("Currency")
                         .IsRequired()
