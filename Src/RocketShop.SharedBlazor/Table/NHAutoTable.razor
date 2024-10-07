@@ -1,5 +1,7 @@
-﻿@using RocketShop.Framework.Extension
+﻿@using RocketShop.Framework.Attribute
+@using RocketShop.Framework.Extension
 @using System.Reflection
+
 @typeparam TItem
 @code {
     [Parameter]
@@ -17,27 +19,84 @@
     [Parameter]
     public IEnumerable<TItem>? Items { get; set; }
 
+    List<string> GetHeaders()
+    {
+        var properties = typeof(TItem).GetProperties();
+        List<string> headers = new List<string>();
+        foreach (var property in properties)
+        {
+            bool hasCustomDisplay = false;
+            object[] attrs = property.GetCustomAttributes(true);
+            foreach (var attr in attrs)
+            {
+                if (attr is NHAutoTableColumnDisplay)
+                {
+                    var display = attr as NHAutoTableColumnDisplay;
+                    headers.Add(display!.ColumnDisplay);
+                    hasCustomDisplay = true;
+                    break;
+                }
+                if (attr is NHAutoTableSkipColumn)
+                {
+                    hasCustomDisplay = true;
+                    break;
+                }
+
+            }
+            if (!hasCustomDisplay)
+                headers.Add(property.Name);
+        }
+        return headers;
+    }
+
 }
 
-<NHTable Columns="@(string.Join( ";",typeof(TItem).GetProperties().Select(s=>s.Name)))"
-    HasDataFlagment="@Items.HasData()"
-    LoadingDisplayText="@LoadingDisplayText"
-    LoadingFlagment="@LoadingFlagment"
-    TableBodyClass="@TableBodyClass"
-    NoDataDisplayText="@NoDataDisplayText"
-    TableClass="@TableClass"
-    TableHeaderClass="@TableHeaderClass">
-    @code{
+<NHTable Columns="@(string.Join( ";",GetHeaders()))"
+         HasDataFlagment="@Items.HasData()"
+         LoadingDisplayText="@LoadingDisplayText"
+         LoadingFlagment="@LoadingFlagment"
+         TableBodyClass="@TableBodyClass"
+         NoDataDisplayText="@NoDataDisplayText"
+         TableClass="@TableClass"
+         TableHeaderClass="@TableHeaderClass">
+    @code {
         PropertyInfo[] properties = typeof(TItem).GetProperties();
     }
-    @foreach(var item in Items!)
+    @foreach (var item in Items!)
     {
         <tr>
-            @foreach(var property in properties)
+            @foreach (var property in properties)
             {
-                <td>@property.GetValue(item)</td>
+                @if (property.GetCustomAttribute(typeof(NHAutoTableSkipColumn)) is null)
+                {
+                    var value = property.GetValue(item);
+                    if (value.IsNotNull() && value!.GetType() == typeof(bool) && ((bool?)value).IsTrue() && property.GetCustomAttribute(typeof(NHAutoTableTrueDisplay)).IsNotNull())
+                    {
+                        var attr = property.GetCustomAttribute(typeof(NHAutoTableTrueDisplay)) as NHAutoTableTrueDisplay;
+
+                        <td>@((MarkupString)attr!.HtmlContent)</td>
+                    }
+                    else if (value.IsNotNull() && value!.GetType() == typeof(bool) && ((bool?)value).IsFalse() && property.GetCustomAttribute(typeof(NHAutoTableFalseDisplay)).IsNotNull())
+                    {
+                        var attr = property.GetCustomAttribute(typeof(NHAutoTableFalseDisplay)) as NHAutoTableFalseDisplay;
+
+                        <td>@((MarkupString)attr!.HtmlContent)</td>
+                    }
+                    else
+                    {
+                        @if (value is null && property.GetCustomAttribute(typeof(NHAutoTableNullDisplay)) is not null)
+                        {
+                            var attr = property.GetCustomAttribute(typeof(NHAutoTableNullDisplay)) as NHAutoTableNullDisplay;
+
+                            <td>@((MarkupString)attr!.DisplayWhileNull)</td>
+                        }
+                        else
+                        {
+                            <td>@value</td>
+                        }
+                    }
+                }
             }
         </tr>
     }
 </NHTable>
-    

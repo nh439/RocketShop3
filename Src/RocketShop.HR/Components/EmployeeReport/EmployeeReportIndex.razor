@@ -1,0 +1,30 @@
+﻿@page "/EmployeeReport"
+@using RocketShop.Database.Model.NonDatabaseModel
+@using RocketShop.SharedBlazor.Table
+<h3>UserReport</h3>
+
+@code {
+    List<EmployeeDataReport> reports = new();
+    protected override void OnInitialized()
+    {
+        reports.Add(new EmployeeDataReport
+            {
+                Active = true,
+                CreateByName = "Tx10",
+                CreateDate = DateTime.UtcNow,
+                Department = "IT",
+                Email = "Email@dmsx.com",
+                EmployeeCode = "001",
+                Firstname = "F1",
+                HasFinancial = false,
+                HasInformation = true,
+                Surname = "xx",
+                UserId = Guid.NewGuid().ToString()
+            });
+    }
+}
+
+<NHAutoTable Items="@reports"
+    TableBodyClass="table-info"
+    TableClass="table table-hover"
+    TableHeaderClass="table-dark" />
