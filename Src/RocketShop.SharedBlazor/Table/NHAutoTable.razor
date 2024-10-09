@@ -92,7 +92,22 @@
                         }
                         else
                         {
+                            @if (value is not null && value.IsNumericType() && property.GetCustomAttribute(typeof(NHAutoTableNumberFormatDisplay)) is not null)
+                            {
+                                var attr = property.GetCustomAttribute(typeof(NHAutoTableNumberFormatDisplay)) as NHAutoTableNumberFormatDisplay;
+                                var val = (decimal)value;
+                                <td>@val.ToString(attr!.FormatType)</td>
+                            }
+                            else if (value is not null && value.GetType() == typeof(DateTime) && property.GetCustomAttribute(typeof(NHAutoTableDateTimeFormatDisplay)) is not null)
+                            {
+
+                                var attr = property.GetCustomAttribute(typeof(NHAutoTableDateTimeFormatDisplay)) as NHAutoTableDateTimeFormatDisplay;
+                                var val = (DateTime)value;
+                                <td>@val.ToString(attr!.FormatType)</td>
+                            }
+                            else{
                             <td>@value</td>
+                            }
                         }
                     }
                 }

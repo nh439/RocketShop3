@@ -4,8 +4,10 @@
 @using RocketShop.HR.ServicePermissions
 @using RocketShop.HR.Services
 @using RocketShop.Shared.SharedService.Scoped
+@using RocketShop.SharedBlazor.Condition
 @using RocketShop.SharedBlazor.SharedBlazorServices.Scope
 @using RocketShop.SharedBlazor.Table
+@using RocketShop.SharedBlazor.Tools
 @inject IUserReportServices userReportServices
 @inject IExportExcelServices exportService
 @inject IDownloadServices downloadService
@@ -14,10 +16,11 @@
 <h3>UserReport</h3>
 
 @code {
-    int count = 1, lastpage = 1,currentPage =1;
+    int count = 1, lastpage = 1, currentPage = 1;
     string? query, _query;
-    bool hasMajorException, hasMinorException;
+    bool hasMajorException, hasMinorException, isLoading;
     List<EmployeeDataReport> reports = new();
+    LoadingModal? loading;
     protected override async Task OnInitializedAsync()
     {
         var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -34,9 +37,50 @@
     }
     async Task FetchData()
     {
-        var reportResult = await userReportServices.ListReport(query,currentPage);
-        reports = reportResult.GetRight()!;
-        StateHasChanged();
+        try
+        {
+            hasMajorException = false;
+            hasMinorException = false;
+            isLoading = true;
+            var reportResult = await userReportServices.ListReport(query, currentPage);
+            if (reportResult.IsLeft)
+                throw reportResult.GetLeft()!;
+            reports = reportResult.GetRight()!;
+            var countResult = await userReportServices.GetReportCount(query);
+            var lastpageResult = await userReportServices.GetReportLastpage(query);
+            await Task.WhenAll(
+            Task.Run(() =>
+            {
+                if (lastpageResult.IsLeft)
+                {
+                    hasMinorException = true;
+                    lastpage = 1;
+                    return;
+                }
+                lastpage = lastpageResult.GetRight();
+            }),
+            Task.Run(() =>
+            {
+                if (countResult.IsLeft)
+                {
+                    hasMinorException = true;
+                    count = 1;
+                    return;
+                }
+                count = countResult.GetRight();
+            })
+            );
+
+        }
+        catch
+        {
+            hasMajorException = true;
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
     }
     async void Export()
     {
@@ -50,7 +94,7 @@
         }
         catch
         {
-            
+
         }
     }
 }
@@ -58,14 +102,38 @@
 <CascadingAuthenticationState>
     <AuthorizeView Policy="@ServicePermission.HREmployeeName">
         <Authorized>
-            <button class="btn btn-success" @onclick="Export"><i class="table-icon" /> Export</button>
-            <NHAutoTable Items="@reports"
-                         TableBodyClass="table-info"
-                         TableClass="table table-hover"
-                         TableHeaderClass="table-dark" />
+            <NHIF Condition="hasMajorException">
+                <YesOperation>
+                    <center>
+                        <div class="alert alert-danger text-4xl font-bold" role="alert">Error While Gethering Payrolls Please <button class="btn btn-link text-4xl font-bold" @onclick="FetchData"> Try Again</button></div>
+                    </center>
+                </YesOperation>
+                <NoOperation>
+                    <br />
+                    <br />
+                    <NHIF Condition="hasMinorException">
+                        <YesOperation>
+                            <div class="alert alert-warning text-3xl font-bold" role="alert">
+                                This Current Operation ran With Problems.
+                                &nbsp;&nbsp;
+                                For a Better experience <button class="btn btn-link text-3xl font-bold" @onclick="FetchData">Please Try Again.</button>
+                            </div>
+                        </YesOperation>
+                    </NHIF>
+                    <button class="btn btn-success" @onclick="Export"><i class="table-icon" /> Export</button>
+                    <br />
+                    <NHAutoTable Items="@reports"
+                                 TableBodyClass="table-info"
+                                 TableClass="table table-hover"
+                                 TableHeaderClass="table-dark"
+                                 LoadingDisplayText="Loading..."
+                                 LoadingFlagment="@isLoading" />
+                </NoOperation>
+            </NHIF>       
         </Authorized>
         <NotAuthorized>
             <h1 class="text-2xl">Access Denied</h1>
         </NotAuthorized>
     </AuthorizeView>
 </CascadingAuthenticationState>
+<LoadingModal @ref="loading" />

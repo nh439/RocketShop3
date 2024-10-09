@@ -4,6 +4,7 @@ using RocketShop.Database.Extension;
 using RocketShop.Database.Model.Identity;
 using RocketShop.Database.Model.NonDatabaseModel;
 using RocketShop.Framework.Extension;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace RocketShop.HR.Repository
 {
@@ -12,13 +13,10 @@ namespace RocketShop.HR.Repository
         public async Task<List<EmployeeDataReport>> ListEmployeeDataReport(
             string? keyword = null,
             int? page = null,
-            int per = 100)
-        {
-            var report = GenerateReportQuery(keyword);
-            var sql = report.ToQueryString();
-            Console.WriteLine(sql);
-            return await report.UsePaging(page,per).ToListAsync();
-        }
+        int per = 100) =>
+             await GenerateReportQuery(keyword)
+            .UsePaging(page, per)
+            .ToListAsync();
 
         public async Task<int> GetEmployeeDataReportCount(string? keyword = null) =>
             await GenerateReportQuery(keyword).CountAsync();

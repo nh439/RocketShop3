@@ -24,6 +24,7 @@ namespace RocketShop.Database.Model.NonDatabaseModel
         public bool Active { get; set; }
 
         [NHAutoTableColumnDisplay("Create Date")]
+        [NHAutoTableDateTimeFormatDisplay("yyyy-MM-dd HH:mm:ss")]
         public DateTime CreateDate { get; set; }
 
         [NHAutoTableColumnDisplay("Create By")]
