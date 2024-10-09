@@ -85,7 +85,8 @@ builder.InstallSerilog()
         .AddScoped<UserAdditionalExpenseRepository>()
         .AddScoped<UserPayrollRepository>()
         .AddScoped<AdditionalPayrollRepository>()
-        .AddScoped<ActivityLogRepository>();
+        .AddScoped<ActivityLogRepository>()
+        .AddScoped<UserReportRepository>();
     })
     .InstallServices(service =>
     {
@@ -99,7 +100,8 @@ builder.InstallSerilog()
         .AddScoped<IDownloadServices, DownloadServices>()
         .AddScoped<IFinacialServices, FinacialServices>()
         .AddScoped<IPayrollServices, PayrollServices>()
-        .AddScoped<IActivityLogService, ActivityLogService>();
+        .AddScoped<IActivityLogService, ActivityLogService>()
+        .AddScoped<IUserReportServices,UserReportServices>();
     });
 // Add services to the container.
 

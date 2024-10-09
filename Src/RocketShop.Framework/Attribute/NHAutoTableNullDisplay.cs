@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace RocketShop.Framework.Attribute
 {
-    public class NHAutoTableNullDisplay(string displayWhileNull) :System.Attribute
+    public class NHAutoTableNullDisplay(string displayWhileNull,string? value = null) :System.Attribute
     {
         public readonly string DisplayWhileNull=displayWhileNull;
+        public readonly string? Value=value;
     }
 }

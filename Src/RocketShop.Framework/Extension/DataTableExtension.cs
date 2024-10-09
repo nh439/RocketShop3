@@ -1,7 +1,9 @@
-﻿using System;
+﻿using RocketShop.Framework.Attribute;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -15,9 +17,9 @@ namespace RocketShop.Framework.Extension
         /// <typeparam name="T">The type of the items in the collection.</typeparam>
         /// <param name="items">The collection of items to convert. If null, an empty <see cref="DataTable"/> is returned.</param>
         /// <returns>A <see cref="DataTable"/> containing the data from the items in the collection.</returns>
-        public static DataTable ToDataTable<T>(this IEnumerable<T>? items)
+        public static DataTable ToDataTable<T>(this IEnumerable<T>? items,string? tableName = null)
         {
-            DataTable table = new DataTable();
+            DataTable table = tableName.IsNullOrEmpty() ?  new DataTable() : new DataTable(tableName);
             var properties = typeof(T).GetProperties();
             foreach (var property in properties)
                 table.Columns.Add(property.Name);
@@ -31,6 +33,71 @@ namespace RocketShop.Framework.Extension
             });
             return table;
         }
+         public static DataTable ToDataTableWithNHAutoTableFormat<T>(this IEnumerable<T>? items, string? tableName = null)
+        {
+            DataTable table = tableName.IsNullOrEmpty() ? new DataTable() : new DataTable(tableName);
+            var properties = typeof(T).GetProperties();
+            int skiped = 0;
+            foreach (var property in properties) {
+                if (property.GetCustomAttribute(typeof(NHAutoTableColumnDisplay)).IsNotNull())
+                {
+                    var display = property.GetCustomAttribute(typeof(NHAutoTableColumnDisplay)) as NHAutoTableColumnDisplay;
+                    table.Columns.Add(display!.ColumnDisplay);
+                    continue;
+                }
+                if (property.GetCustomAttribute(typeof(NHAutoTableSkipColumn)).IsNotNull())
+                {
+                    skiped++;
+                    continue;
+                }
+                table.Columns.Add(property.Name);
+            }
+                
+            items.HasDataAndForEach(item =>
+            {
+
+                var data = new object?[properties.Length-skiped];
+                int isSkip = 0;
+                for (int i = 0; i < properties.Length; i++)
+                {
+                    var j = i - isSkip;
+                    var property = properties[i];
+                    if (property.GetCustomAttribute(typeof(NHAutoTableSkipColumn)).IsNotNull())
+                    {
+                        isSkip++;
+                        continue;
+                    }                        
+                    var value = property.GetValue(item);
+                    if (value.IsNotNull() && value!.GetType() == typeof(bool) && ((bool?)value).IsTrue() && property.GetCustomAttribute(typeof(NHAutoTableTrueDisplay)).IsNotNull())
+                    {
+                        var attr = property.GetCustomAttribute(typeof(NHAutoTableTrueDisplay)) as NHAutoTableTrueDisplay;
+                        data[j] = attr?.Value.IfNull(value?.ToString() ?? string.Empty);
+                    }
+                    else if (value.IsNotNull() && value!.GetType() == typeof(bool) && ((bool?)value).IsFalse() && property.GetCustomAttribute(typeof(NHAutoTableFalseDisplay)).IsNotNull())
+                    {
+                        var attr = property.GetCustomAttribute(typeof(NHAutoTableFalseDisplay)) as NHAutoTableFalseDisplay;
+                        data[j] = attr?.Value.IfNull(value?.ToString() ?? string.Empty);
+                    }
+                    else
+                    {
+                        if (value is null && property.GetCustomAttribute(typeof(NHAutoTableNullDisplay)) is not null)
+                        {
+                            var attr = property.GetCustomAttribute(typeof(NHAutoTableNullDisplay)) as NHAutoTableNullDisplay;
+                            data[j] = attr?.Value.IfNull(value?.ToString() ?? string.Empty);
+                        }
+                        else
+                        {
+                            data[j] = value;
+                        }
+                    }
+                }
+                    
+
+                table.Rows.Add(data);
+            });
+            return table;
+        }
+
         /// <summary>
         /// Asynchronously converts an enumerable collection of items into a <see cref="DataTable"/>.
         /// </summary>

@@ -128,12 +128,11 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         /// <param name="store">Query Store</param>
         /// <param name="transaction">Db Transaction</param>
         /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
-        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
         /// <returns>Enumerable Of Entity</returns>
-        public static IEnumerable<T> Fetch<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30, bool debugMode = false)
+        public static IEnumerable<T> Fetch<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30)
         {
             var compiledResult = store.Compiled();
-            if (debugMode)
+            if (store.DebugMode)
                 Console.WriteLine($"Executing : {compiledResult.Sql}");
             return store.connection.Query<T>(compiledResult.Sql, compiledResult.Parameters, transaction, commandTimeout: commandTimeout);
         }
@@ -144,12 +143,12 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         /// <param name="store">Query Store</param>
         /// <param name="transaction">Db Transaction</param>
         /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
-        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
+        
         /// <returns>Enumerable Of Entity</returns>
-        public static async Task<IEnumerable<T>> FetchAsync<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30,bool debugMode = false)
+        public static async Task<IEnumerable<T>> FetchAsync<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30)
         {
             var compiledResult = await store.CompiledAsync();
-            if (debugMode)
+            if (store.DebugMode)
                 Console.WriteLine($"Executing : {compiledResult.Sql}");
             return await store.connection.QueryAsync<T>(compiledResult.Sql, compiledResult.Parameters, transaction, commandTimeout: commandTimeout);
         }
@@ -160,7 +159,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         /// <param name="store">Query Store</param>
         /// <param name="transaction">Db Transaction</param>
         /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
-        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
+        
         /// <returns>List Of Entity</returns>
         public static List<T> ToList<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30, bool debugMode = false) =>
             store.Fetch<T>(transaction,commandTimeout,debugMode).ToList();
@@ -171,7 +170,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         /// <param name="store">Query Store</param>
         /// <param name="transaction">Db Transaction</param>
         /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
-        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
+        
         /// <returns>List Of Entity</returns>
         public static async Task<List<T>> ToListAsync<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30, bool debugMode = false) =>
           (await store.FetchAsync<T>(transaction,commandTimeout,debugMode)).ToList();
@@ -182,7 +181,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         /// <param name="store">Query Store</param>
         /// <param name="transaction">Db Transaction</param>
         /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
-        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
+        
         /// <returns>Array Of Entity</returns>
         public static T[] ToArray<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30, bool debugMode = false) =>
            store.Fetch<T>(transaction,commandTimeout,debugMode).ToArray();
@@ -193,7 +192,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         /// <param name="store">Query Store</param>
         /// <param name="transaction">Db Transaction</param>
         /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
-        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
+        
         /// <returns>Array Of Entity</returns>
         public static async Task<T[]> ToArrayAsync<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30, bool debugMode = false) =>
           (await store.FetchAsync<T>(transaction,commandTimeout,debugMode)).ToArray();
@@ -204,12 +203,12 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         /// <param name="store">Query Store</param>
         /// <param name="transaction">Db Transaction</param>
         /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
-        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
+        
         /// <returns>Entity</returns>
         public static Option<T> FetchOne<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30, bool debugMode = false)
         {
             var compiledResult = store.Compiled();
-            if (debugMode)
+            if (store.DebugMode)
                 Console.WriteLine($"Executing : {compiledResult.Sql}");
             return store.connection.QueryFirst<T>(compiledResult.Sql, compiledResult.Parameters, transaction, commandTimeout: commandTimeout);
         }
@@ -220,12 +219,12 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         /// <param name="store">Query Store</param>
         /// <param name="transaction">Db Transaction</param>
         /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
-        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
+        
         /// <returns>Entity</returns>
-        public static async Task<Option<T>> FetchOneAsync<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30,bool debugMode = false)
+        public static async Task<Option<T>> FetchOneAsync<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30)
         {
             var compiledResult = await store.CompiledAsync();
-            if (debugMode)
+            if (store.DebugMode)
                 Console.WriteLine($"Executing : {compiledResult.Sql}");
             return await store.connection.QueryFirstAsync<T>(compiledResult.Sql, compiledResult.Parameters, transaction, commandTimeout: commandTimeout);
         }
@@ -237,7 +236,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         /// <param name="insertItem">Data To Insert</param>
         /// <param name="transaction">Db Transaction</param>
         /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
-        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
+        
         /// <returns>Insert Complete Status</returns>
         public static bool Insert<T>(this QueryStore store,
             T insertItem,
@@ -249,7 +248,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
             var properties = type.GetProperties();
             var columns = properties.Select(s => s.Name);
             string sql = $"insert into \"{store.TableName}\" ({string.Join(",", columns.Select(s => $"\"{s}\""))}) values ({string.Join(",", columns.Select(s => $"@{s}"))})";
-            if (debugMode)
+            if (store.DebugMode)
                 Console.WriteLine($"Executing : {sql}");
             return store.connection.Execute(sql, insertItem, transaction, commandTimeout).Ge(0);
         }
@@ -261,7 +260,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         /// <param name="insertItem">Data To Insert</param>
         /// <param name="transaction">Db Transaction</param>
         /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
-        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
+        
         /// <returns>Insert Complete Status</returns>
         public static async Task<bool> InsertAsync<T>(this QueryStore store,
             T insertItem,
@@ -272,7 +271,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
             var properties = type.GetProperties();
             var columns = properties.Select(s => s.Name);
             string sql = $"insert into \"{store.TableName}\" ({string.Join(",", columns.Select(s => $"\"{s}\""))}) values ({string.Join(",", columns.Select(s => $"@{s}"))})";
-            if (debugMode)
+            if (store.DebugMode)
                 Console.WriteLine($"Executing : {sql}");
             return (await store.connection.ExecuteAsync(sql, insertItem, transaction, commandTimeout)).Ge(0);
         }
@@ -284,7 +283,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         /// <param name="insertItem">Data To Insert</param>
         /// <param name="transaction">Db Transaction</param>
         /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
-        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
+        
         /// <returns>Inserted Rows</returns>
         public static int BulkInsert<T>(this QueryStore store,
             IEnumerable<T> insertItem,
@@ -295,7 +294,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
             var properties = type.GetProperties();
             var columns = properties.Select(s => s.Name);
             string sql = $"insert into \"{store.TableName}\" ({string.Join(",", columns.Select(s => $"\"{s}\""))}) values ({string.Join(",", columns.Select(s => $"@{s}"))})";
-            if (debugMode)
+            if (store.DebugMode)
                 Console.WriteLine($"Executing : {sql}");
             return store.connection.Execute(sql, insertItem, transaction, commandTimeout);
         }
@@ -307,7 +306,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         /// <param name="insertItem">Data To Insert</param>
         /// <param name="transaction">Db Transaction</param>
         /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
-        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
+        
         /// <returns>Inserted Rows</returns>
         public static async Task<int> BulkInsertAsync<T>(this QueryStore store,
             IEnumerable<T> insertItem,
@@ -318,7 +317,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
             var properties = type.GetProperties();
             var columns = properties.Select(s => s.Name);
             string sql = $"insert into \"{store.TableName}\" ({string.Join(",", columns.Select(s => $"\"{s}\""))}) values ({string.Join(",", columns.Select(s => $"@{s}"))})";
-            if (debugMode)
+            if (store.DebugMode)
                 Console.WriteLine($"Executing : {sql}");
             return await store.connection.ExecuteAsync(sql, insertItem, transaction, commandTimeout);
         }
@@ -329,7 +328,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         /// <param name="data">New Data To Update</param>
         /// <param name="transaction">Db Transaction</param>
         /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
-        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
+        
         /// <returns>Rows Affected</returns>
         public static int Update(this QueryStore store,
             object data,
@@ -338,7 +337,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
             bool debugMode = false)
         {
             var sqlRes = store.Compiled(StatementType.Update,data);
-            if (debugMode)
+            if (store.DebugMode)
                 Console.WriteLine($"Executing : {sqlRes.Sql}");
             return store.connection.Execute(sqlRes.Sql, sqlRes.Parameters, transaction, commandTimeout);
         }
@@ -349,7 +348,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         /// <param name="data">New Data To Update</param>
         /// <param name="transaction">Db Transaction</param>
         /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
-        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
+        
         /// <returns>Rows Affected</returns>
         public static async Task<int> UpdateAsync(this QueryStore store,
             object data,
@@ -358,7 +357,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
             bool debugMode = false)
         {
             var sqlRes = store.Compiled(StatementType.Update,data);
-            if (debugMode)
+            if (store.DebugMode)
                 Console.WriteLine($"Executing : {sqlRes.Sql}");
             return await store.connection.ExecuteAsync(sqlRes.Sql, sqlRes.Parameters, transaction, commandTimeout);
         }
@@ -368,7 +367,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         /// <param name="store">Query Store</param>
         /// <param name="transaction">Db Transaction</param>
         /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
-        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
+        
         /// <returns>Rows Affected</returns>
 
         public static int Delete(this QueryStore store,
@@ -377,7 +376,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
             bool debugMode = false)
         {
             var sqlRes = store.Compiled(StatementType.Delete);
-            if (debugMode)
+            if (store.DebugMode)
                 Console.WriteLine($"Executing : {sqlRes.Sql}");
             return store.connection.Execute(sqlRes.Sql,sqlRes.Parameters, transaction: transaction, commandTimeout: commandTimeout);
         }
@@ -387,7 +386,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         /// <param name="store">Query Store</param>
         /// <param name="transaction">Db Transaction</param>
         /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
-        /// <param name="debugMode">Log Executing Sql To Console (DO NOT Open On Production)</param>
+        
         /// <returns>Rows Affected</returns>
         public static async Task<int> DeleteAsync(this QueryStore store,
             IDbTransaction? transaction = null,
@@ -395,7 +394,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
             bool debugMode = false)
         {
             var sqlRes = store.Compiled(StatementType.Delete);
-            if (debugMode)
+            if (store.DebugMode)
                 Console.WriteLine($"Executing : {sqlRes.Sql}");
             return await store.connection.ExecuteAsync(sqlRes.Sql,sqlRes.Parameters, transaction: transaction, commandTimeout: commandTimeout);
         }

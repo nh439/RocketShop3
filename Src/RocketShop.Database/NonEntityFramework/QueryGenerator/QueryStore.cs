@@ -17,12 +17,23 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         internal QueryPaging? QueryPaging { get; set; }
         internal List<string> SelectedColumns { get; set; } = new List<string>();
         internal readonly IDbConnection connection;
+        internal bool DebugMode;
         public QueryStore(IDbConnection connection,
-            string tableName)
+            string tableName,
+            bool debugMode = false)
         {
             this.connection = connection;
             this.TableName = tableName;
+            this.DebugMode = debugMode;
         }
+        /// <summary>
+        /// For Open Sql Log To Console(Not Recommend For Production)
+        /// </summary>
+        public void EnabledDebug() => DebugMode = true;
+        /// <summary>
+        /// For Don't Sql Log To Console(Recommend For Production)
+        /// </summary>
+        public void DisableDebug() => DebugMode = false;
 
         
        internal void AddNormalCond(string column,

@@ -1,30 +1,71 @@
 ﻿@page "/EmployeeReport"
 @using RocketShop.Database.Model.NonDatabaseModel
+@using RocketShop.Framework.Extension
+@using RocketShop.HR.ServicePermissions
+@using RocketShop.HR.Services
+@using RocketShop.Shared.SharedService.Scoped
+@using RocketShop.SharedBlazor.SharedBlazorServices.Scope
 @using RocketShop.SharedBlazor.Table
+@inject IUserReportServices userReportServices
+@inject IExportExcelServices exportService
+@inject IDownloadServices downloadService
+@inject NavigationManager navigationManager
+@rendermode InteractiveServer
 <h3>UserReport</h3>
 
 @code {
+    int count = 1, lastpage = 1,currentPage =1;
+    string? query, _query;
+    bool hasMajorException, hasMinorException;
     List<EmployeeDataReport> reports = new();
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        reports.Add(new EmployeeDataReport
-            {
-                Active = true,
-                CreateByName = "Tx10",
-                CreateDate = DateTime.UtcNow,
-                Department = "IT",
-                Email = "Email@dmsx.com",
-                EmployeeCode = "001",
-                Firstname = "F1",
-                HasFinancial = false,
-                HasInformation = true,
-                Surname = "xx",
-                UserId = Guid.NewGuid().ToString()
-            });
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (state.User.Identity.IsNotNull() && state.User.Identity!.IsAuthenticated)
+        {
+            await FetchData();
+        }
+        else
+        {
+            navigationManager.NavigateTo("/login");
+        }
+
+        StateHasChanged();
+    }
+    async Task FetchData()
+    {
+        var reportResult = await userReportServices.ListReport(query,currentPage);
+        reports = reportResult.GetRight()!;
+        StateHasChanged();
+    }
+    async void Export()
+    {
+        try
+        {
+            var repResult = await userReportServices.ListReport(query);
+            if (repResult.IsLeft)
+                throw repResult.GetLeft()!;
+            var table = repResult.GetRight()!.ToDataTableWithNHAutoTableFormat();
+            await downloadService.DownloadAsync($"employee_report.xlsx", exportService.ExportExcel(table).GetRight());
+        }
+        catch
+        {
+            
+        }
     }
 }
 
-<NHAutoTable Items="@reports"
-    TableBodyClass="table-info"
-    TableClass="table table-hover"
-    TableHeaderClass="table-dark" />
+<CascadingAuthenticationState>
+    <AuthorizeView Policy="@ServicePermission.HREmployeeName">
+        <Authorized>
+            <button class="btn btn-success" @onclick="Export"><i class="table-icon" /> Export</button>
+            <NHAutoTable Items="@reports"
+                         TableBodyClass="table-info"
+                         TableClass="table table-hover"
+                         TableHeaderClass="table-dark" />
+        </Authorized>
+        <NotAuthorized>
+            <h1 class="text-2xl">Access Denied</h1>
+        </NotAuthorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>
