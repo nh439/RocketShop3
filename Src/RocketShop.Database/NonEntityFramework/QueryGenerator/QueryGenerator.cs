@@ -161,8 +161,8 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
         
         /// <returns>List Of Entity</returns>
-        public static List<T> ToList<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30, bool debugMode = false) =>
-            store.Fetch<T>(transaction,commandTimeout,debugMode).ToList();
+        public static List<T> ToList<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30) =>
+            store.Fetch<T>(transaction,commandTimeout).ToList();
         /// <summary>
         /// Fetching Data From Database With Asynchronous Pattern
         /// </summary>
@@ -172,8 +172,8 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
         
         /// <returns>List Of Entity</returns>
-        public static async Task<List<T>> ToListAsync<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30, bool debugMode = false) =>
-          (await store.FetchAsync<T>(transaction,commandTimeout,debugMode)).ToList();
+        public static async Task<List<T>> ToListAsync<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30) =>
+          (await store.FetchAsync<T>(transaction,commandTimeout)).ToList();
         /// <summary>
         /// Fetching Data From Database
         /// </summary>
@@ -183,8 +183,8 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
         
         /// <returns>Array Of Entity</returns>
-        public static T[] ToArray<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30, bool debugMode = false) =>
-           store.Fetch<T>(transaction,commandTimeout,debugMode).ToArray();
+        public static T[] ToArray<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30) =>
+           store.Fetch<T>(transaction,commandTimeout).ToArray();
         /// <summary>
         /// Fetching Data From Database With Asynchronous Pattern
         /// </summary>
@@ -194,8 +194,8 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
         
         /// <returns>Array Of Entity</returns>
-        public static async Task<T[]> ToArrayAsync<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30, bool debugMode = false) =>
-          (await store.FetchAsync<T>(transaction,commandTimeout,debugMode)).ToArray();
+        public static async Task<T[]> ToArrayAsync<T>(this QueryStore store, IDbTransaction? transaction = null, int commandTimeout = 30) =>
+          (await store.FetchAsync<T>(transaction,commandTimeout)).ToArray();
         /// <summary>
         /// Fetch Item From Database (1 Row Only)
         /// </summary>
