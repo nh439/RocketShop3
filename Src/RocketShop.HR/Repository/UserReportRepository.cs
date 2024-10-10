@@ -64,12 +64,10 @@ namespace RocketShop.HR.Repository
                 x.EmployeeCode.Contains(keyword!) ||
                 x.Firstname.Contains(keyword!) ||
                 x.Surname.Contains(keyword!) ||
-               (x.Department != null && x.Department.Contains(keyword!)) ||
-               (x.Position != null && x.Position.Contains(keyword!)) ||
-               (x.ManagerName != null && x.ManagerName.Contains(keyword!)) ||
+                x.Department.Contains(keyword!) ||
+                x.Position.Contains(keyword!) ||
                 x.Email.Contains(keyword!) ||
-               (x.CreateByName != null && x.CreateByName.Contains(keyword!)) ||
-               (x.Prefix != null && x.Prefix.Contains(keyword!))
+                x.Prefix.Contains(keyword!)
                 );
             return query;
         }
