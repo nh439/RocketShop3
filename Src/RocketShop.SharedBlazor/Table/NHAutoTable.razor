@@ -106,7 +106,20 @@
                                 <td>@val.ToString(attr!.FormatType)</td>
                             }
                             else{
-                            <td>@value</td>
+
+                                if (value is not null  && property.GetCustomAttribute(typeof(NHAutoTableNewLineSeparator)) is not null)
+                                {
+                                    var attr = property.GetCustomAttribute(typeof(NHAutoTableNewLineSeparator)) as NHAutoTableNewLineSeparator;
+
+                                    <td> @((MarkupString)value.ToString()!.Replace(attr!.Separator, "<br />"))</td>
+                                }
+                                else if(value is not null){
+                                    <td>@value</td>
+                                }
+                                else
+                                {
+                                    <td></td>
+                                }
                             }
                         }
                     }

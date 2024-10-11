@@ -7,6 +7,7 @@ using RocketShop.Database.Model.Identity;
 using RocketShop.Database.NonEntityFramework.QueryGenerator;
 using RocketShop.Framework.Extension;
 using System.Data;
+using System.Linq;
 
 namespace RocketShop.HR.Repository
 {
@@ -58,6 +59,19 @@ namespace RocketShop.HR.Repository
         IQueryable<Role> SearchQuery(string? searchName) =>
             entity.Where(x => !searchName.HasMessage() || x.RoleName.ToLower().Contains(searchName!.ToLower()));
 
-
+        public async Task<List<(string, List<Role>)>> GetRoleByUserIdRange(IEnumerable<string> userIdRange)
+        {
+            var roleIdQuery = context.UserRole.Where(x => userIdRange.Contains(x.UserId));
+            List < (string, List<Role>)> returnValue = new List<(string, List<Role>)>();
+            foreach (var userId in userIdRange)
+            {
+                var relatedRole = roleIdQuery.Where(x=>x.UserId == userId).Select(s=>s.RoleId);
+                var roles =  await context.Role.Where(x => relatedRole.Contains(x.Id))
+               .ToListAsync();
+                returnValue.Add(new(userId, roles));
+            }
+           return returnValue;
+        }
+         
     }
 }

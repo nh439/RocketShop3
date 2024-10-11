@@ -15,7 +15,7 @@
 @inject IDownloadServices downloadService
 @inject NavigationManager navigationManager
 @rendermode InteractiveServer
-<h3>UserReport</h3>
+
 
 @code {
     int count = 1, lastpage = 1, currentPage = 1;
@@ -119,6 +119,7 @@
 <CascadingAuthenticationState>
     <AuthorizeView Policy="@ServicePermission.HREmployeeName">
         <Authorized>
+            <h1 class="text-4xl font-bold">Employee Report</h1>
             <NHIF Condition="hasMajorException">
                 <YesOperation>
                     <center>

@@ -25,8 +25,6 @@ namespace RocketShop.HR.Repository
             await GenerateReportQuery(keyword)
             .GetLastpageAsync();
 
-
-
         IQueryable<EmployeeDataReport> GenerateReportQuery(string? keyword)
         {
             var query = (from user in context.Users
