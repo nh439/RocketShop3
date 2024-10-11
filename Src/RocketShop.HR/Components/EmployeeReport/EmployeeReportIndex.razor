@@ -95,7 +95,7 @@
                 throw repResult.GetLeft()!;
             var table = repResult.GetRight()!.ToDataTableWithNHAutoTableFormat();
             loading!.Close();
-            await downloadService.DownloadAsync($"employee_report.xlsx", exportService.ExportExcel(table).GetRight()!);
+            await downloadService.DownloadAsync($"employee_report_{DateTime.Now.ToString("yyyyMMdd")}.xlsx", exportService.ExportExcel(table).GetRight()!);
         }
         catch
         {

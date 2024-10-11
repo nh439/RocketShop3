@@ -76,7 +76,7 @@
             );
 
         }
-        catch(Exception x)
+        catch (Exception x)
         {
             logger.LogError(x, x.Message);
             hasMajorException = true;
@@ -95,9 +95,17 @@
             var repResult = await userReportServices.ListUserMatrixReport(query);
             if (repResult.IsLeft)
                 throw repResult.GetLeft()!;
+            var rep = repResult.GetRight()!;
+            rep.HasDataAndForEach(f =>
+            {
+                if (f.Roles.HasMessage())
+                    f.Roles = f.Roles.Replace("- ", "");
+                if (f.Permissions.HasMessage())
+                    f.Permissions = f.Permissions.Replace("- ", "");
+            });
             var table = repResult.GetRight()!.ToDataTableWithNHAutoTableFormat();
             loading!.Close();
-            await downloadService.DownloadAsync($"employee_report.xlsx", exportService.ExportExcel(table).GetRight()!);
+            await downloadService.DownloadAsync($"employee_matrix_report_{DateTime.Now.ToString("yyyyMMdd")}.xlsx", exportService.ExportExcel(table).GetRight()!);
         }
         catch
         {
