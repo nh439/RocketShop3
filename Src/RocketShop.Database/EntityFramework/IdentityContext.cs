@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using RocketShop.Database.Extension;
 using RocketShop.Database.Model.Identity;
 using RocketShop.Database.Model.Identity.Views;
@@ -27,6 +28,9 @@ namespace RocketShop.Database.EntityFramework
 
             string connectionString = configuration.GetIdentityConnectionString();
             options.UseNpgsql(connectionString, b => b.MigrationsAssembly("RocketShop.Migration"));
+            var enableLog = configuration.GetSection("EnabledSqlLogging").Get<bool>();
+            if (enableLog)
+                options.LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Information);
         }
         protected override void OnModelCreating(ModelBuilder builder)
         {

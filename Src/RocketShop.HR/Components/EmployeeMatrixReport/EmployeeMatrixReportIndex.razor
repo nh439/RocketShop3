@@ -1,0 +1,188 @@
+﻿@page "/EmployeeMatrixReport"
+@using Radzen
+@using Radzen.Blazor
+@using RocketShop.Database.Model.NonDatabaseModel
+@using RocketShop.Framework.Extension
+@using RocketShop.HR.ServicePermissions
+@using RocketShop.HR.Services
+@using RocketShop.Shared.SharedService.Scoped
+@using RocketShop.SharedBlazor.Condition
+@using RocketShop.SharedBlazor.SharedBlazorServices.Scope
+@using RocketShop.SharedBlazor.Table
+@using RocketShop.SharedBlazor.Tools
+@inject IUserReportServices userReportServices
+@inject IExportExcelServices exportService
+@inject IDownloadServices downloadService
+@inject NavigationManager navigationManager
+@inject ILogger<EmployeeMatrixReportIndex> logger
+@rendermode InteractiveServer
+
+
+@code {
+    int count = 1, lastpage = 1, currentPage = 1;
+    string? query, _query;
+    string pagingSummaryFormat = "Displaying page {0} of {1} (total {2} records)";
+    bool hasMajorException, hasMinorException, isLoading;
+    List<EmployeeMatrixReport> reports = new();
+    LoadingModal? loading;
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (state.User.Identity.IsNotNull() && state.User.Identity!.IsAuthenticated)
+        {
+            await FetchData();
+        }
+        else
+        {
+            navigationManager.NavigateTo("/login");
+        }
+
+        StateHasChanged();
+    }
+    async Task FetchData()
+    {
+        try
+        {
+            hasMajorException = false;
+            hasMinorException = false;
+            isLoading = true;
+            var reportResult = await userReportServices.ListUserMatrixReport(query, currentPage);
+            if (reportResult.IsLeft)
+                throw reportResult.GetLeft()!;
+            reports = reportResult.GetRight()!;
+            var countResult = await userReportServices.GetReportCount(query);
+            var lastpageResult = await userReportServices.GetReportLastpage(query);
+            await Task.WhenAll(
+            Task.Run(() =>
+            {
+                if (lastpageResult.IsLeft)
+                {
+                    hasMinorException = true;
+                    lastpage = 1;
+                    return;
+                }
+                lastpage = lastpageResult.GetRight();
+            }),
+            Task.Run(() =>
+            {
+                if (countResult.IsLeft)
+                {
+                    hasMinorException = true;
+                    count = 1;
+                    return;
+                }
+                count = countResult.GetRight();
+            })
+            );
+
+        }
+        catch (Exception x)
+        {
+            logger.LogError(x, x.Message);
+            hasMajorException = true;
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+    async void Export()
+    {
+        loading!.Open("Exporting...");
+        try
+        {
+            var repResult = await userReportServices.ListUserMatrixReport(query);
+            if (repResult.IsLeft)
+                throw repResult.GetLeft()!;
+            var rep = repResult.GetRight()!;
+            rep.HasDataAndForEach(f =>
+            {
+                if (f.Roles.HasMessage())
+                    f.Roles = f.Roles.Replace("- ", "");
+                if (f.Permissions.HasMessage())
+                    f.Permissions = f.Permissions.Replace("- ", "");
+            });
+            var table = repResult.GetRight()!.ToDataTableWithNHAutoTableFormat();
+            loading!.Close();
+            await downloadService.DownloadAsync($"employee_matrix_report_{DateTime.Now.ToString("yyyyMMdd")}.xlsx", exportService.ExportExcel(table).GetRight()!);
+        }
+        catch
+        {
+            await loading.Then(false, string.Empty, "Export Failed");
+        }
+    }
+    async void SetSearch()
+    {
+        currentPage = 1;
+        query = _query;
+        await FetchData();
+    }
+    async void PageChanged(PagerEventArgs args)
+    {
+
+        currentPage = args.PageIndex + 1;
+        await FetchData();
+    }
+}
+
+<CascadingAuthenticationState>
+    <AuthorizeView Policy="@ServicePermission.HREmployeeName">
+        <Authorized>
+            <h1 class="text-4xl font-bold">Employee Matrix Report</h1>
+            <NHIF Condition="hasMajorException">
+                <YesOperation>
+                    <center>
+                        <div class="alert alert-danger text-4xl font-bold" role="alert">Error While Gethering Payrolls Please <button class="btn btn-link text-4xl font-bold" @onclick="FetchData"> Try Again</button></div>
+                    </center>
+                </YesOperation>
+                <NoOperation>
+                    <br />
+                    <br />
+                    <NHIF Condition="hasMinorException">
+                        <YesOperation>
+                            <div class="alert alert-warning text-3xl font-bold" role="alert">
+                                This Current Operation ran With Problems.
+                                &nbsp;&nbsp;
+                                For a Better experience <button class="btn btn-link text-3xl font-bold" @onclick="FetchData">Please Try Again.</button>
+                            </div>
+                        </YesOperation>
+                    </NHIF>
+                    <div class="row">
+                        <div class="col">
+                            <div class="input-group mb-3">
+                                <input type="text" class="form-control" placeholder="Search Role Name..." aria-label="Recipient's username" aria-describedby="basic-addon2" @bind-value="_query">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-info" type="button" @onclick="SetSearch"><i class="search icon"></i></button>
+                                </div>
+                            </div>
+                            <button class="btn btn-success" @onclick="Export"><i class="table-icon" /> Export</button>
+                        </div>
+                        <div class="col"></div>
+                        <div class="col"></div>
+                    </div>
+
+                    <br />
+                    <NHAutoTable Items="@reports"
+                                 TableBodyClass="table-info"
+                                 TableClass="table table-hover"
+                                 TableHeaderClass="table-dark"
+                                 LoadingDisplayText="Loading..."
+                                 LoadingFlagment="@isLoading" />
+                    <br />
+                    <RadzenPager ShowPagingSummary="true"
+                                 PagingSummaryFormat="@pagingSummaryFormat"
+                                 HorizontalAlign="HorizontalAlign.Right"
+                                 Count="@count"
+                                 PageSize="20"
+                                 PageNumbersCount="@lastpage"
+                                 PageChanged="@PageChanged" />
+                </NoOperation>
+            </NHIF>
+        </Authorized>
+        <NotAuthorized>
+            <h1 class="text-2xl">Access Denied</h1>
+        </NotAuthorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>
+<LoadingModal @ref="loading" />

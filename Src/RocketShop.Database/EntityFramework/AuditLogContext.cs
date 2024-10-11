@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using RocketShop.Database.Extension;
 using RocketShop.Database.Model.AuditLog;
 using System;
@@ -18,6 +19,9 @@ namespace RocketShop.Database.EntityFramework
 
             string connectionString = configuration.GetAuditLogConnectionString();
             options.UseNpgsql(connectionString, b => b.MigrationsAssembly("RocketShop.Migration"));
+            var enableLog = configuration.GetSection("EnabledSqlLogging").Get<bool>();
+            if(enableLog)
+            options.LogTo(Console.WriteLine,Microsoft.Extensions.Logging.LogLevel.Information);
         }
         protected override void OnModelCreating(ModelBuilder builder)
         {
