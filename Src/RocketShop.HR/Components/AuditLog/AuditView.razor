@@ -1,0 +1,17 @@
+﻿@page "/Audit"
+@using RocketShop.HR.ServicePermissions
+<h3>AuditView</h3>
+
+@code {
+
+}
+<CascadingAuthenticationState>
+    <AuthorizeView Policy="@ServicePermission.HRAuditName">
+        <Authorized>
+
+        </Authorized>
+        <NotAuthorized>
+            <h1 class="text-4xl font-bold">Access Denied</h1>
+        </NotAuthorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>

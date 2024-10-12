@@ -1,4 +1,6 @@
-﻿
+﻿@using RocketShop.Framework.Extension
+@using RocketShop.SharedBlazor.Domain
+
 @code {
     [Parameter]
     public string Columns { get; set; }
@@ -21,10 +23,13 @@
     [Parameter]
     public bool HasDataFlagment { get; set; } = true;
 
+    [Parameter]
+    public Action<NHTableColumnClickedArgs>? OnSelectedColumn { get; set; } = null;
+
 }
 
 <table class="@TableClass">
-    <TableHeader CSSClass="@TableHeaderClass" Headers="@Columns" Sperator="@ColumnSperator" />
+    <TableHeader CSSClass="@TableHeaderClass" Headers="@Columns" Sperator="@ColumnSperator" OnSelectedColumn="@(OnSelectedColumn.IsNotNull() ?  OnSelectedColumn! : default!)" />
     <tbody class="@TableBodyClass">
         @if (LoadingFlagment)
         {
