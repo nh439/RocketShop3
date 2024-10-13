@@ -44,6 +44,9 @@ namespace RocketShop.SharedBlazor.Domain
         /// The human-readable position (1-based index).
         /// </summary>
         public readonly long HumanPosition = 1 + position;
+        /// <summary>
+        /// Returns a string representation of the clicked cell's data.
+        /// </summary>
         public override string ToString() => $"{VariableName}->{Value},{HumanPosition}({HumanRow},{HumanColumn})";
     }
 }
