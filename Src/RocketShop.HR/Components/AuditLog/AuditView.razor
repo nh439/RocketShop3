@@ -1,13 +1,105 @@
 ﻿@page "/Audit"
+@using RocketShop.AuditService.Domain
+@using RocketShop.Database.Model.AuditLog
+@using RocketShop.Framework.Extension
 @using RocketShop.HR.ServicePermissions
-<h3>AuditView</h3>
+@inject IActivityLogService activityLogService
+@inject NavigationManager navigationManager
 
 @code {
+    List<ActivityLog> activityLogs = new();
+    string? _query, query;
+    int count = 0, currentPage = 1, lastPage = 1;
+    bool hasMajorException, hasMinorException;
+    ActivityLogAdvanceSearch? advanceSearch;
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (state.User.Identity.IsNotNull() && state.User.Identity!.IsAuthenticated)
+        {
+            await FetchData();
+        }
+        else
+        {
+            navigationManager.NavigateTo("/login");
+        }
+    }
+    async Task FetchData()
+    {
+        if (advanceSearch.IsNotNull()) await GetDataWithAdvanceSearch();
+        else await GetData();
+    }
+   
+    async Task GetData()
+    {
+        try
+        {
+            var logResult = await activityLogService.GetActivityLogs(query, currentPage);
+            if (logResult.IsLeft)
+                throw logResult.GetLeft()!;
+            activityLogs = logResult.GetRight()!;
+            var countResult = await activityLogService.GetCount(query);
+            var lastPageResult = await activityLogService.GetLastpage(query);
+            if (countResult.IsLeft.Or(lastPageResult.IsLeft))
+            {
+                hasMinorException = true;
+                count = 1;
+                lastPage = 1;
+                return;
+            }
+            await Task.WhenAll(
+            Task.Run(() =>
+            count = countResult.GetRight()!
+        ),
+        Task.Run(() =>
+            lastPage = lastPageResult.GetRight()!
+        )
+            );
+
+        }
+        catch
+        {
+            hasMajorException = true;
+        }
+    }
+    async Task GetDataWithAdvanceSearch()
+    {
+        try
+        {
+            var logResult = await activityLogService.GetActivityLogs(advanceSearch!, currentPage);
+            if (logResult.IsLeft)
+                throw logResult.GetLeft()!;
+            activityLogs = logResult.GetRight()!;
+            var countResult = await activityLogService.GetCount(advanceSearch!);
+            var lastPageResult = await activityLogService.GetLastpage(advanceSearch!);
+            if (countResult.IsLeft.Or(lastPageResult.IsLeft))
+            {
+                hasMinorException = true;
+                count = 1;
+                lastPage = 1;
+                return;
+            }
+            await Task.WhenAll(
+            Task.Run(() =>
+            count = countResult.GetRight()!
+        ),
+        Task.Run(() =>
+            lastPage = lastPageResult.GetRight()!
+        )
+            );
+
+        }
+        catch
+        {
+            hasMajorException = true;
+        }
+    }
 
 }
 <CascadingAuthenticationState>
     <AuthorizeView Policy="@ServicePermission.HRAuditName">
         <Authorized>
+            <h3 class="text-4xl font-bold">Audit View</h3>
 
         </Authorized>
         <NotAuthorized>
