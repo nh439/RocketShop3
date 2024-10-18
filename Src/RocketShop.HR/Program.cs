@@ -101,7 +101,8 @@ builder.InstallSerilog()
         .AddScoped<IFinacialServices, FinacialServices>()
         .AddScoped<IPayrollServices, PayrollServices>()
         .AddScoped<IActivityLogService, ActivityLogService>()
-        .AddScoped<IUserReportServices,UserReportServices>();
+        .AddScoped<IUserReportServices,UserReportServices>()
+        .AddSingleton<IRocketShopDivisionServices, RocketShopDivisionServices>();
     });
 // Add services to the container.
 
