@@ -185,6 +185,10 @@
                 <button class="btn btn-info rounded-full text-white font-bold" @onclick="AddExpenseClicked"><i class="plus icon"></i>Add Expenses</button>
                 <br />
                 <br />
+                <small class="font-bold text-red" style="color:darkred">
+                   * If subtracting, enter -, for example, subtracting 500, enter -500 in the Balance field.
+                </small>
+                <br />
                 <NHTypeTable Items="addiontialExpenses"
                              TItem="UserAddiontialExpense"
                              TableClass="table table-hover"

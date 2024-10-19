@@ -63,7 +63,7 @@ namespace RocketShop.AuditService.Services
             await InvokeServiceAsync(async () => await repository.GetByUserId(userId, page, per));
 
         public async Task<Either<Exception, List<ActivityLog>>> GetActivityLogs(ActivityLogAdvanceSearch advanceSearch, int? page, int per=50)=>
-            await InvokeServiceAsync(async () => await repository.GetActivityLogs(advanceSearch,page, per));
+            await InvokeServiceAsync(async () => await repository.GetActivityLogs(SpecifyLocate(advanceSearch), page, per));
 
         public async Task<Either<Exception, int>> GetCount(string? searchKeyword)=>
             await InvokeServiceAsync(async () =>await repository.GetCount(searchKeyword));
@@ -72,11 +72,19 @@ namespace RocketShop.AuditService.Services
             await InvokeServiceAsync(async () => await repository.GetLastpage(searchKeyword, per));
 
         public async Task<Either<Exception, int>> GetCount(ActivityLogAdvanceSearch advanceSearch)=>
-            await InvokeServiceAsync(async () =>await repository.GetCount(advanceSearch));
+            await InvokeServiceAsync(async () =>await repository.GetCount(SpecifyLocate(advanceSearch)));
 
         public async Task<Either<Exception, int>> GetLastpage(ActivityLogAdvanceSearch advanceSearch, int per =50) =>
-            await InvokeServiceAsync(async () => await repository.GetLastpage(advanceSearch, per));
+            await InvokeServiceAsync(async () => await repository.GetLastpage(SpecifyLocate(advanceSearch), per));
 
+        ActivityLogAdvanceSearch SpecifyLocate(ActivityLogAdvanceSearch advanceSearch)
+        {
+            if (advanceSearch.DateFrom.HasValue)
+                advanceSearch.DateFrom = DateTime.SpecifyKind(advanceSearch.DateFrom.Value, DateTimeKind.Utc);
+            if(advanceSearch.DateTo.HasValue)
+                advanceSearch.DateTo = DateTime.SpecifyKind(advanceSearch.DateTo.Value, DateTimeKind.Utc);
+            return advanceSearch;
+        }
     }
 
 }

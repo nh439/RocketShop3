@@ -1,29 +1,40 @@
 ﻿@page "/Audit"
+@using Blazored.Typeahead
+@using Radzen
+@using Radzen.Blazor
 @using RocketShop.AuditService.Domain
 @using RocketShop.AuditService.Helper
 @using RocketShop.Database.Model.AuditLog
+@using RocketShop.Database.Model.Identity.Views
 @using RocketShop.Framework.Extension
 @using RocketShop.HR.ServicePermissions
 @using RocketShop.HR.Services
+@using RocketShop.Shared.SharedService.Singletion
 @using RocketShop.SharedBlazor.Condition
+@using RocketShop.SharedBlazor.Loop
 @using RocketShop.SharedBlazor.Table
 @inject IActivityLogService activityLogService
 @inject NavigationManager navigationManager
 @inject IUserServices userService
+@inject IRocketShopDivisionServices rocketShopDivisionServices;
 @rendermode InteractiveServer
 
 @code {
-        List<ActivityLog> activityLogs = new();
-        string? _query, query;
-        int count = 0, currentPage = 1, lastPage = 1;
-        bool hasMajorException, hasMinorException, isLoading;
-        ActivityLogAdvanceSearch? advanceSearch;
-        const string headers = "Date;Id;Division;Service;Actor;Email;Message";
+    List<ActivityLog> activityLogs = new();
+    string? _query, query;
+    int count = 0, currentPage = 1, lastPage = 1;
+    bool hasMajorException, hasMinorException, isLoading;
+    ActivityLogAdvanceSearch advanceSearch = new();
+    UserView? selectedActor;
+    const string headers = "Date;Id;Division;Service;Actor;Email;Message";
+    List<string> divisions = new();
+    string pagingSummaryFormat = "Displaying page {0} of {1} (total {2} records)";
     protected override async Task OnInitializedAsync()
     {
         var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         if (state.User.Identity.IsNotNull() && state.User.Identity!.IsAuthenticated)
         {
+
             await FetchData();
         }
         else
@@ -34,7 +45,8 @@
     async Task FetchData()
     {
         isLoading = true;
-        if (advanceSearch.IsNotNull()) await GetDataWithAdvanceSearch();
+        advanceSearch.Actor = selectedActor.IsNotNull() ? selectedActor!.UserId : null;
+        if (advanceSearch.IsNotNull().And(advanceSearch != new ActivityLogAdvanceSearch())) await GetDataWithAdvanceSearch();
         else await GetData();
         var relatedUserCode = MessageHelper.GetCodeFromActivityLog(activityLogs)
             .Select(s => s.Replace("<", string.Empty).Replace(">", string.Empty))
@@ -45,7 +57,8 @@
             var userList = relatedUser.GetRight()!;
             activityLogs.HasDataAndForEach(f =>
             {
-                if ((f.LogDetail.Contains("<") && f.LogDetail.Contains(">"))){
+                if ((f.LogDetail.Contains("<") && f.LogDetail.Contains(">")))
+                {
                     foreach (var u in userList)
                     {
                         f.LogDetail = f.LogDetail.Replace($"<{u.UserId}>", $"{u.Firstname} {u.Surname}");
@@ -56,6 +69,9 @@
             });
         }
         else hasMinorException = true;
+        var divisionResult = await rocketShopDivisionServices.GetDivisions();
+        if (divisionResult.IsLeft) hasMinorException = true;
+        else divisions = divisionResult.GetRight()!;
         isLoading = false;
         StateHasChanged();
     }
@@ -124,7 +140,27 @@
             hasMajorException = true;
         }
     }
+    void ClearSearch() {
+        selectedActor = null;
+        advanceSearch = new(); 
+    }
 
+    async Task<IEnumerable<UserView>> ListUsers(string searchTerm)
+    {
+        var result = await userService.ListUsers(searchTerm, 1, 10);
+        if (result.IsLeft)
+        {
+            hasMinorException = true;
+            return Enumerable.Empty<UserView>();
+        }
+        return result.GetRight()!;
+    }
+    async void PageChanged(PagerEventArgs args)
+    {
+
+        currentPage = args.PageIndex + 1;
+        await OnInitializedAsync();
+    }
 }
 <CascadingAuthenticationState>
     <AuthorizeView Policy="@ServicePermission.HRAuditName">
@@ -158,10 +194,11 @@
                                     <div class="form-group">
                                         <label for="select">Division</label>
                                         <div>
-                                            <select id="select" name="select" class="form-select form-select-lg mb-3">
-                                                <option value="rabbit">Rabbit</option>
-                                                <option value="duck">Duck</option>
-                                                <option value="fish">Fish</option>
+                                            <select id="select" name="select" @bind="advanceSearch.Division" class="form-select form-select-lg mb-3">
+                                                <option value="" selected>All Divisions</option>
+                                                <NHForeach Context="division" Items="divisions">
+                                                    <option value="@division">@division</option>
+                                                </NHForeach>
                                             </select>
                                         </div>
                                     </div>
@@ -169,7 +206,7 @@
                                 <div class="col">
                                     <div class="form-group ">
                                         <label for="text">Service</label>
-                                        <input id="text" name="text" type="text" class="form-control form-control-lg">
+                                        <input id="text" name="text" type="text" class="form-control form-control-lg" @bind-value="advanceSearch.ServiceName">
                                     </div>
                                 </div>
                             </div>
@@ -178,13 +215,25 @@
                                 <div class="col">
                                     <div class="form-group">
                                         <label for="text1">Actor</label>
-                                        <input id="text1" name="text1" type="text" class="form-control form-control-lg">
+                                        <BlazoredTypeahead
+                                        SearchMethod="ListUsers"
+                                        @bind-Value="selectedActor"
+                                        class="form-control form-control-lg"
+                                        Context="user"
+                                        EnableDropDown="true">
+                                    <SelectedTemplate>
+                                        [@user?.EmployeeCode] @user?.Firstname @user?.Surname
+                                        </SelectedTemplate>
+                                    <ResultTemplate>
+                                                [@user?.EmployeeCode] @user?.Firstname @user?.Surname
+                                    </ResultTemplate>
+                                    </BlazoredTypeahead>
                                     </div>
                                 </div>
                                 <div class="col">
                                     <div class="form-group">
                                         <label for="text2">Email</label>
-                                        <input id="text2" name="text2" type="text" class="form-control form-control-lg">
+                                        <input id="text2" name="text2" type="text" class="form-control form-control-lg" @bind-value="advanceSearch.Email">
                                     </div>
                                 </div>
                             </div>
@@ -193,19 +242,20 @@
                                 <div class="col">
                                     <div class="form-group">
                                         <label for="text3">From</label>
-                                        <input id="text3" name="text3" type="date" class="form-control form-control-lg">
+                                        <input id="text3" name="text3" type="date" class="form-control form-control-lg" @bind-value="advanceSearch.DateFrom">
                                     </div>
                                 </div>
                                 <div class="col">
                                     <div class="form-group">
                                         <label for="text4">Until</label>
-                                        <input id="text4" name="text4" type="date" class="form-control form-control-lg">
+                                        <input id="text4" name="text4" type="date" class="form-control form-control-lg" @bind-value="advanceSearch.DateTo">
                                     </div>
                                 </div>
                             </div>
                             <br />
                             <div class="form-group">
-                                <button name="submit" class="btn btn-primary btn-lg"><i class="search icon" /> Search</button>
+                                <button name="submit" class="btn btn-primary btn-lg mx-1" @onclick="FetchData"><i class="search icon" /> Search</button>
+                                <button name="submits" class="btn btn-info btn-lg mx-1" @onclick="ClearSearch"><i class="undo icon" /> Clear</button>
                             </div>
                         </div>
                     </div>
@@ -234,6 +284,16 @@
                                     <td>@log.LogDetail</td>
                                 </tr>
                             </NHTypeTable>
+                             <br />
+        <br />
+        <RadzenPager 
+            ShowPagingSummary="true" 
+            PagingSummaryFormat="@pagingSummaryFormat" 
+            HorizontalAlign="HorizontalAlign.Right" 
+            Count="count" 
+            PageSize="50" 
+            PageNumbersCount="lastPage" 
+            PageChanged="@PageChanged" />
                         </div>
                     </div>
                 </NoOperation>
