@@ -266,6 +266,10 @@
                             Audit Result
                         </div>
                         <div class="card-body text-2xl font-semibold">
+                            <br />
+                            <button class="btn btn-success font-bold rounded-full text-2xl">Export</button>
+                            <br />
+                            <br />
                             <NHTypeTable Columns="@headers"
                                          Items="activityLogs"
                                          TableClass="table table-hover"
@@ -275,7 +279,7 @@
                                          LoadingFlagment="@isLoading"
                                          LoadingDisplayText="Loading...">
                                 <tr>
-                                    <td>@log.LogDate.ToDateAndTimeFormat()</td>
+                                    <td>@log.LogDate.ToLocalTime().ToDateAndTimeFormat()</td>
                                     <td>@log.Id</td>
                                     <td>@log.Division</td>
                                     <td>@log.ServiceName</td>

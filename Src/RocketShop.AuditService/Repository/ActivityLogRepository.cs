@@ -77,16 +77,16 @@ namespace RocketShop.AuditService.Repository
                 query = query.Where(x => x.Division.ToLower() == advanceSearch.Division!.ToLower());
             if (advanceSearch.ServiceName.HasMessage())
                 query = query.Where(x => x.ServiceName.ToLower() == advanceSearch.ServiceName!.ToLower());
-            return query;
+            return query.OrderByDescending(x=>x.LogDate);
         }
 
         IQueryable<ActivityLog> GenerateLogQuery(string? searchKeyword) =>
-            searchKeyword.HasMessage() ?
+            (searchKeyword.HasMessage() ?
              entity
             .Where(x => x.ServiceName.Contains(searchKeyword!) ||
             x.ActorName.Contains(searchKeyword!) ||
             x.Division.Contains(searchKeyword!)) :
-            entity;
+            entity).OrderByDescending(x=>x.LogDate);
 
 
 
