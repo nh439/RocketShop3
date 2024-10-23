@@ -69,6 +69,7 @@ namespace RocketShop.Migration
                     Console.WriteLine("Create First User");
                     using var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
                     var exists = await userManager.FindByEmailAsync(startUser!.Email);
+                    string userId = string.Empty;
                     if (exists.IsNull())
                     {
                         var user = new User
@@ -82,15 +83,10 @@ namespace RocketShop.Migration
                             UserName = startUser.Username,
                             Surname = "Admin",
                             Resigned = false,
-                            CreateBy="SYSTEM"
+                            CreateBy = "SYSTEM"
                         };
                         await userManager.CreateAsync(user, startUser.Password);
-                        var newUser = new UserRole
-                        {
-                            RoleId = 1,
-                            UserId = user.Id
-                        };
-                        context.UserRole.Add(newUser);
+
                         context.UserInformation.Add(new UserInformation
                         {
                             BrithDay = DateTime.UtcNow,
@@ -99,10 +95,26 @@ namespace RocketShop.Migration
                         });
 
                         await context.SaveChangesAsync();
+                        userId = user.Id;
                         Console.WriteLine("First User Create Successful");
                     }
                     else
+                    {
+                        userId = exists!.Id;
                         Console.WriteLine("First User Already Exists Skipped");
+                    }
+                    var hasStarterRole = await context.UserRole.AnyAsync(x => x.UserId == userId && x.RoleId == 1);
+                    if (!hasStarterRole)
+                    {
+                        var newRole = new UserRole
+                        {
+                            RoleId = 1,
+                            UserId = userId
+                        };
+                        context.UserRole.Add(newRole);
+                        await context.SaveChangesAsync();
+                    }
+
                     for (int i = 10; i > 0; i--)
                     {
                         Thread.Sleep(1000);

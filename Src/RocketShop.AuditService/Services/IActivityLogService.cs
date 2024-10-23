@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using RocketShop.AuditService.Domain;
 using RocketShop.AuditService.Repository;
 using RocketShop.Database.EntityFramework;
 using RocketShop.Database.Model.AuditLog;
@@ -19,8 +20,14 @@ namespace RocketShop.AuditService.Services
     public interface IActivityLogService
     {
         Task<Either<Exception, bool>> Create(string division, string service, string logDetail);
-        Task<Either<Exception, List<ActivityLog>>> GetActivityLogs(string? searchKeyword, int? page, int per);
-        Task<Either<Exception, List<ActivityLog>>> GetByService(string division, string serviceName, int? page, int per);
+        Task<Either<Exception, List<ActivityLog>>> GetActivityLogs(string? searchKeyword, int? page, int per=50);
+        Task<Either<Exception, List<ActivityLog>>> GetByService(string division, string serviceName, int? page, int per=50);
+        Task<Either<Exception, List<ActivityLog>>> GetByUserId(string userId, int? page, int per = 50);
+        Task<Either<Exception, int>> GetCount(string? searchKeyword);
+        Task<Either<Exception, int>> GetLastpage(string? searchKeyword, int per =50);
+        Task<Either<Exception, int>> GetCount(ActivityLogAdvanceSearch advanceSearch);
+        Task<Either<Exception, int>> GetLastpage(ActivityLogAdvanceSearch advanceSearch, int per=50);
+        Task<Either<Exception, List<ActivityLog>>> GetActivityLogs(ActivityLogAdvanceSearch advanceSearch, int? page, int per = 50);
     }
     public class ActivityLogService(
         ILogger<ActivityLogService> logger,
@@ -46,12 +53,38 @@ namespace RocketShop.AuditService.Services
                 return await repository.Create(item);
             });
 
-        public async Task<Either<Exception, List<ActivityLog>>> GetActivityLogs(string? searchKeyword, int? page, int per) =>
+        public async Task<Either<Exception, List<ActivityLog>>> GetActivityLogs(string? searchKeyword, int? page, int per=50) =>
             await InvokeServiceAsync(async () => await repository.GetActivityLogs(searchKeyword, page, per));
 
-        public async Task<Either<Exception, List<ActivityLog>>> GetByService(string division,string serviceName, int? page, int per) =>
+        public async Task<Either<Exception, List<ActivityLog>>> GetByService(string division,string serviceName, int? page, int per = 50) =>
             await InvokeServiceAsync(async () => await repository.GetByService(division,serviceName, page, per));
 
+        public async Task<Either<Exception, List<ActivityLog>>> GetByUserId(string userId, int? page, int per = 50) =>
+            await InvokeServiceAsync(async () => await repository.GetByUserId(userId, page, per));
+
+        public async Task<Either<Exception, List<ActivityLog>>> GetActivityLogs(ActivityLogAdvanceSearch advanceSearch, int? page, int per=50)=>
+            await InvokeServiceAsync(async () => await repository.GetActivityLogs(SpecifyLocate(advanceSearch), page, per));
+
+        public async Task<Either<Exception, int>> GetCount(string? searchKeyword)=>
+            await InvokeServiceAsync(async () =>await repository.GetCount(searchKeyword));
+
+        public async Task<Either<Exception, int>> GetLastpage(string? searchKeyword, int per = 50) =>
+            await InvokeServiceAsync(async () => await repository.GetLastpage(searchKeyword, per));
+
+        public async Task<Either<Exception, int>> GetCount(ActivityLogAdvanceSearch advanceSearch)=>
+            await InvokeServiceAsync(async () =>await repository.GetCount(SpecifyLocate(advanceSearch)));
+
+        public async Task<Either<Exception, int>> GetLastpage(ActivityLogAdvanceSearch advanceSearch, int per =50) =>
+            await InvokeServiceAsync(async () => await repository.GetLastpage(SpecifyLocate(advanceSearch), per));
+
+        ActivityLogAdvanceSearch SpecifyLocate(ActivityLogAdvanceSearch advanceSearch)
+        {
+            if (advanceSearch.DateFrom.HasValue)
+                advanceSearch.DateFrom = DateTime.SpecifyKind(advanceSearch.DateFrom.Value, DateTimeKind.Utc);
+            if(advanceSearch.DateTo.HasValue)
+                advanceSearch.DateTo = DateTime.SpecifyKind(advanceSearch.DateTo.Value, DateTimeKind.Utc);
+            return advanceSearch;
+        }
     }
 
 }

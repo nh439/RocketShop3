@@ -1,4 +1,6 @@
-﻿
+﻿@using RocketShop.Framework.Extension
+@using RocketShop.SharedBlazor.Domain
+
 @code{
     [Parameter]
     public string Headers { get; set; }
@@ -6,13 +8,29 @@
     public string CSSClass { get; set; }
     [Parameter]
     public char Sperator { get; set; } = ';';
+
+    [Parameter]
+    public Action<NHTableColumnClickedArgs>? OnSelectedColumn { get; set; } = null;
+
+    void ColumnBtnClicked(string value,int index)
+    {
+        if (OnSelectedColumn.IsNotNull())
+            OnSelectedColumn!(new(value,index));
+    }
+    int index = 0;
 }
 
 <thead class="@CSSClass">
     <tr>
+        @{
+            index = 0;
+        }
         @foreach(var header in Headers.Split(Sperator))
         {
-            <th>@header</th>
+            int j = index;
+            <th @onclick="() => ColumnBtnClicked(header,j)">@header</th>
+
+            index++;
         }
     </tr>
 </thead>

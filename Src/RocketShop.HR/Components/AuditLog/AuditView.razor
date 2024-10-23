@@ -1,0 +1,376 @@
+﻿@page "/Audit"
+@using Blazored.Typeahead
+@using Radzen
+@using Radzen.Blazor
+@using RocketShop.AuditService.Domain
+@using RocketShop.AuditService.Helper
+@using RocketShop.Database.Model.AuditLog
+@using RocketShop.Database.Model.Identity.Views
+@using RocketShop.Framework.Extension
+@using RocketShop.HR.ServicePermissions
+@using RocketShop.HR.Services
+@using RocketShop.Shared.SharedService.Scoped
+@using RocketShop.Shared.SharedService.Singletion
+@using RocketShop.SharedBlazor.Condition
+@using RocketShop.SharedBlazor.Loop
+@using RocketShop.SharedBlazor.SharedBlazorServices.Scope
+@using RocketShop.SharedBlazor.Table
+@using RocketShop.SharedBlazor.Tools
+@inject IActivityLogService activityLogService
+@inject NavigationManager navigationManager
+@inject IUserServices userService
+@inject IRocketShopDivisionServices rocketShopDivisionServices;
+@inject IExportExcelServices exportExcelServices
+@inject IDownloadServices downloadService
+@inject ILogger<AuditView> logger
+@rendermode InteractiveServer
+
+@code {
+    List<ActivityLog> activityLogs = new();
+    string? _query, query;
+    int count = 0, currentPage = 1, lastPage = 1;
+    bool hasMajorException, hasMinorException, isLoading;
+    ActivityLogAdvanceSearch advanceSearch = new();
+    UserView? selectedActor;
+    const string headers = "Date;Id;Division;Service;Actor;Email;Message";
+    List<string> divisions = new();
+    string pagingSummaryFormat = "Displaying page {0} of {1} (total {2} records)";
+    LoadingModal? loading;
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (state.User.Identity.IsNotNull() && state.User.Identity!.IsAuthenticated)
+        {
+
+            await FetchData();
+        }
+        else
+        {
+            navigationManager.NavigateTo("/login");
+        }
+    }
+    async Task FetchData()
+    {
+        isLoading = true;
+        advanceSearch.Actor = selectedActor.IsNotNull() ? selectedActor!.UserId : null;
+        if (advanceSearch.IsNotNull().And(advanceSearch != new ActivityLogAdvanceSearch())) await GetDataWithAdvanceSearch();
+        else await GetData();
+        var relatedUserCode = MessageHelper.GetCodeFromActivityLog(activityLogs)
+            .Select(s => s.Replace("<", string.Empty).Replace(">", string.Empty))
+            .ToArray();
+        var relatedUser = await userService.ListUserByUserIdIn(relatedUserCode);
+        if (relatedUser.IsRight)
+        {
+            var userList = relatedUser.GetRight()!;
+            activityLogs.HasDataAndForEach(f =>
+            {
+                if ((f.LogDetail.Contains("<") && f.LogDetail.Contains(">")))
+                {
+                    foreach (var u in userList)
+                    {
+                        f.LogDetail = f.LogDetail.Replace($"<{u.UserId}>", $"{u.Firstname} {u.Surname}");
+                        if (!(f.LogDetail.Contains("<") && f.LogDetail.Contains(">")))
+                            break;
+                    }
+                }
+            });
+        }
+        else hasMinorException = true;
+        var divisionResult = await rocketShopDivisionServices.GetDivisions();
+        if (divisionResult.IsLeft) hasMinorException = true;
+        else divisions = divisionResult.GetRight()!;
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    async Task GetData()
+    {
+        try
+        {
+            var logResult = await activityLogService.GetActivityLogs(query, currentPage);
+            if (logResult.IsLeft)
+                throw logResult.GetLeft()!;
+            activityLogs = logResult.GetRight()!;
+            var countResult = await activityLogService.GetCount(query);
+            var lastPageResult = await activityLogService.GetLastpage(query);
+            if (countResult.IsLeft.Or(lastPageResult.IsLeft))
+            {
+                hasMinorException = true;
+                count = 1;
+                lastPage = 1;
+                return;
+            }
+            await Task.WhenAll(
+            Task.Run(() =>
+            count = countResult.GetRight()!
+        ),
+        Task.Run(() =>
+            lastPage = lastPageResult.GetRight()!
+        )
+            );
+
+        }
+        catch
+        {
+            hasMajorException = true;
+        }
+    }
+    async Task GetDataWithAdvanceSearch()
+    {
+        try
+        {
+            var logResult = await activityLogService.GetActivityLogs(advanceSearch!, currentPage);
+            if (logResult.IsLeft)
+                throw logResult.GetLeft()!;
+            activityLogs = logResult.GetRight()!;
+            var countResult = await activityLogService.GetCount(advanceSearch!);
+            var lastPageResult = await activityLogService.GetLastpage(advanceSearch!);
+            if (countResult.IsLeft.Or(lastPageResult.IsLeft))
+            {
+                hasMinorException = true;
+                count = 1;
+                lastPage = 1;
+                return;
+            }
+            await Task.WhenAll(
+            Task.Run(() =>
+            count = countResult.GetRight()!
+        ),
+        Task.Run(() =>
+            lastPage = lastPageResult.GetRight()!
+        )
+            );
+
+        }
+        catch
+        {
+            hasMajorException = true;
+        }
+    }
+    void ClearSearch() {
+        selectedActor = null;
+        advanceSearch = new(); 
+    }
+
+    async Task<IEnumerable<UserView>> ListUsers(string searchTerm)
+    {
+        var result = await userService.ListUsers(searchTerm, 1, 10);
+        if (result.IsLeft)
+        {
+            hasMinorException = true;
+            return Enumerable.Empty<UserView>();
+        }
+        return result.GetRight()!;
+    }
+    async void PageChanged(PagerEventArgs args)
+    {
+
+        currentPage = args.PageIndex + 1;
+        await OnInitializedAsync();
+    }
+    async Task Export()
+    {
+        loading!.Open("Exporting...");
+        try{
+            var result = advanceSearch.IsNotNull().And(advanceSearch != new ActivityLogAdvanceSearch()) ?
+    await activityLogService.GetActivityLogs(advanceSearch, null) : await activityLogService.GetActivityLogs(string.Empty, null);
+            if (result.IsLeft)
+                throw result.GetLeft()!;
+            var auditReport = result.GetRight()!;
+            var relatedUserCode = MessageHelper.GetCodeFromActivityLog(auditReport)
+           .Select(s => s.Replace("<", string.Empty).Replace(">", string.Empty))
+           .ToArray();
+            var relatedUser = await userService.ListUserByUserIdIn(relatedUserCode);
+            if (relatedUser.IsRight)
+            {
+                var userList = relatedUser.GetRight()!;
+                auditReport.HasDataAndForEach(f =>
+                {
+                    if ((f.LogDetail.Contains("<") && f.LogDetail.Contains(">")))
+                    {
+                        foreach (var u in userList)
+                        {
+                            f.LogDetail = f.LogDetail.Replace($"<{u.UserId}>", $"{u.Firstname} {u.Surname}");
+                            if (!(f.LogDetail.Contains("<") && f.LogDetail.Contains(">")))
+                                break;
+                        }
+                    }
+                });
+            }
+            else throw relatedUser.GetLeft()!;
+            var report = auditReport
+            .Select(s => new
+            {
+                Date = s.LogDate.ToLocalTime().ToDateAndTimeFormat(),
+                Id = s.Id,
+                Division =s.Division,
+                Service =s.ServiceName,
+                Actor =s.ActorName,
+                Email = s.ActorEmail,
+                Message =s.LogDetail
+            })
+            .ToDataTable();
+            var excelContent = exportExcelServices.ExportExcel(report);
+            if (excelContent.IsLeft)
+                throw excelContent.GetLeft()!;
+            await downloadService.DownloadAsync(
+                $"Audit_Report_{DateTime.Now.ToString("yyyyMMdd")}.xlsx",
+                excelContent.GetRight()!
+            );
+            loading.Close();
+
+        }
+        catch(Exception x)
+        {
+            logger.LogError(x, x.Message);
+            await loading.Then(false, string.Empty, "Export Failed");
+        }
+    }
+}
+<CascadingAuthenticationState>
+    <AuthorizeView Policy="@ServicePermission.HRAuditName">
+        <Authorized>
+            <h3 class="text-4xl font-bold">Audit View</h3>
+            <NHIF Condition="hasMajorException">
+                <YesOperation>
+                    <center>
+                        <div class="alert alert-danger text-4xl font-bold" role="alert">Error While Gethering Audit Log Please <button class="btn btn-link text-4xl font-bold" @onclick="FetchData"> Try Again</button></div>
+                    </center>
+                </YesOperation>
+                <NoOperation>
+                    <NHIF Condition="hasMinorException">
+                        <YesOperation>
+                            <div class="alert alert-warning text-3xl font-bold" role="alert">
+                                This Current Operation ran With Problems.
+                                &nbsp;&nbsp;
+                                For a Better experience <button class="btn btn-link text-3xl font-bold" @onclick="FetchData">Please Try Again.</button>
+                            </div>
+                        </YesOperation>
+                    </NHIF>
+                    <br />
+                    <br />
+                    <div class="card">
+                        <div class="card-header text-3xl font-bold" style="background-color:#00CCFF">
+                            Log Search
+                        </div>
+                        <div class="card-body text-xl font-semibold">
+                            <div class="row">
+                                <div class="col">
+                                    <div class="form-group">
+                                        <label for="select">Division</label>
+                                        <div>
+                                            <select id="select" name="select" @bind="advanceSearch.Division" class="form-select form-select-lg mb-3">
+                                                <option value="" selected>All Divisions</option>
+                                                <NHForeach Context="division" Items="divisions">
+                                                    <option value="@division">@division</option>
+                                                </NHForeach>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="form-group ">
+                                        <label for="text">Service</label>
+                                        <input id="text" name="text" type="text" class="form-control form-control-lg" @bind-value="advanceSearch.ServiceName">
+                                    </div>
+                                </div>
+                            </div>
+                            <br />
+                            <div class="row">
+                                <div class="col">
+                                    <div class="form-group">
+                                        <label for="text1">Actor</label>
+                                        <BlazoredTypeahead
+                                        SearchMethod="ListUsers"
+                                        @bind-Value="selectedActor"
+                                        class="form-control form-control-lg"
+                                        Context="user"
+                                        EnableDropDown="true">
+                                    <SelectedTemplate>
+                                        [@user?.EmployeeCode] @user?.Firstname @user?.Surname
+                                        </SelectedTemplate>
+                                    <ResultTemplate>
+                                                [@user?.EmployeeCode] @user?.Firstname @user?.Surname
+                                    </ResultTemplate>
+                                    </BlazoredTypeahead>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="form-group">
+                                        <label for="text2">Email</label>
+                                        <input id="text2" name="text2" type="text" class="form-control form-control-lg" @bind-value="advanceSearch.Email">
+                                    </div>
+                                </div>
+                            </div>
+                            <br />
+                            <div class="row">
+                                <div class="col">
+                                    <div class="form-group">
+                                        <label for="text3">From</label>
+                                        <input id="text3" name="text3" type="date" class="form-control form-control-lg" @bind-value="advanceSearch.DateFrom">
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="form-group">
+                                        <label for="text4">Until</label>
+                                        <input id="text4" name="text4" type="date" class="form-control form-control-lg" @bind-value="advanceSearch.DateTo">
+                                    </div>
+                                </div>
+                            </div>
+                            <br />
+                            <div class="form-group">
+                                <button name="submit" class="btn btn-primary btn-lg mx-1" @onclick="FetchData"><i class="search icon" /> Search</button>
+                                <button name="submits" class="btn btn-info btn-lg mx-1" @onclick="ClearSearch"><i class="undo icon" /> Clear</button>
+                            </div>
+                        </div>
+                    </div>
+                    <br />
+                    <br />
+                    <div class="card">
+                        <div class="card-header text-3xl font-bold" style="background-color:#00CCFF">
+                            Audit Result
+                        </div>
+                        <div class="card-body text-2xl font-semibold">
+                            <br />
+                            <button class="btn btn-success font-bold rounded-full text-2xl" @onclick="Export">Export</button>
+                            <br />
+                            <br />
+                            <NHTypeTable Columns="@headers"
+                                         Items="activityLogs"
+                                         TableClass="table table-hover"
+                                         Context="log"
+                                         TableBodyClass="table-info"
+                                         TableHeaderClass="table-dark"
+                                         LoadingFlagment="@isLoading"
+                                         LoadingDisplayText="Loading...">
+                                <tr>
+                                    <td>@log.LogDate.ToLocalTime().ToDateAndTimeFormat()</td>
+                                    <td>@log.Id</td>
+                                    <td>@log.Division</td>
+                                    <td>@log.ServiceName</td>
+                                    <td>@log.ActorName</td>
+                                    <td>@log.ActorEmail</td>
+                                    <td>@log.LogDetail</td>
+                                </tr>
+                            </NHTypeTable>
+                             <br />
+        <br />
+        <RadzenPager 
+            ShowPagingSummary="true" 
+            PagingSummaryFormat="@pagingSummaryFormat" 
+            HorizontalAlign="HorizontalAlign.Right" 
+            Count="count" 
+            PageSize="50" 
+            PageNumbersCount="lastPage" 
+            PageChanged="@PageChanged" />
+                        </div>
+                    </div>
+                </NoOperation>
+            </NHIF>
+        </Authorized>
+        <NotAuthorized>
+            <h1 class="text-4xl font-bold">Access Denied</h1>
+        </NotAuthorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>
+<LoadingModal @ref="loading" />

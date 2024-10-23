@@ -1,23 +1,53 @@
 ﻿@using RocketShop.Framework.Attribute
 @using RocketShop.Framework.Extension
 @using System.Reflection
+@using RocketShop.SharedBlazor.Domain
 
 @typeparam TItem
 @code {
+    /// <summary>
+    /// Table CSS Class
+    /// </summary>
     [Parameter]
     public string? TableClass { get; set; }
+    /// <summary>
+    /// thead CSS Class
+    /// </summary>
     [Parameter]
     public string? TableHeaderClass { get; set; }
+    /// <summary>
+    /// tbody CSS Class
+    /// </summary>
     [Parameter]
     public string? TableBodyClass { get; set; }
+    /// <summary>
+    ///  value indicating whether the fragment is currently loading.
+    /// </summary>
     [Parameter]
     public bool LoadingFlagment { get; set; } = false;
+    /// <summary>
+    /// Message Display While Loading.
+    /// </summary>
     [Parameter]
     public string LoadingDisplayText { get; set; } = "Loading...";
+    /// <summary>
+    /// Message Display If No Data In Collection
+    /// </summary>
     [Parameter]
     public string NoDataDisplayText { get; set; } = "No Data";
+    /// <summary>
+    /// Item To Display In Table.
+    /// </summary>
     [Parameter]
     public IEnumerable<TItem>? Items { get; set; }
+    /// <summary>
+    /// Gets or sets the action to be called when a column is selected, with a column name and index.
+    /// </summary>
+    [Parameter]
+    public Action<NHTableColumnClickedArgs>? OnSelectedColumn { get; set; } = null;
+
+    [Parameter]
+    public Action<NHAutoTableRowCellClickedArgs>? OnCellClicked { get; set; } = null;
 
     List<string> GetHeaders()
     {
@@ -48,6 +78,12 @@
         }
         return headers;
     }
+    int row = 0,column =0,position =0;
+    void OnCellClick(string value,string propName ,int row,int col,int pos)
+    {
+        if (OnCellClicked.IsNotNull())
+            OnCellClicked!(new(value,propName,row,col,pos));
+    }
 
 }
 
@@ -58,15 +94,27 @@
          TableBodyClass="@TableBodyClass"
          NoDataDisplayText="@NoDataDisplayText"
          TableClass="@TableClass"
-         TableHeaderClass="@TableHeaderClass">
+         TableHeaderClass="@TableHeaderClass"
+         OnSelectedColumn="@(OnSelectedColumn.IsNotNull() ?  OnSelectedColumn! : default!)">
     @code {
         PropertyInfo[] properties = typeof(TItem).GetProperties();
+    }
+    @{
+        row = 0;
+        column = 0;
+        position = 0;
     }
     @foreach (var item in Items!)
     {
         <tr>
+            @{
+                column = 0;
+            }
             @foreach (var property in properties)
             {
+                var _col = column;
+                var _row = row;
+                var _pos = position;
                 @if (property.GetCustomAttribute(typeof(NHAutoTableSkipColumn)) is null)
                 {
                     var value = property.GetValue(item);
@@ -74,13 +122,13 @@
                     {
                         var attr = property.GetCustomAttribute(typeof(NHAutoTableTrueDisplay)) as NHAutoTableTrueDisplay;
 
-                        <td>@((MarkupString)attr!.HtmlContent)</td>
+                        <td @onclick="()=>OnCellClick(value.IsNotNull() ? value.ToString()! :string.Empty,property.Name,_row,_col,_pos)">@((MarkupString)attr!.HtmlContent)</td>
                     }
                     else if (value.IsNotNull() && value!.GetType() == typeof(bool) && ((bool?)value).IsFalse() && property.GetCustomAttribute(typeof(NHAutoTableFalseDisplay)).IsNotNull())
                     {
                         var attr = property.GetCustomAttribute(typeof(NHAutoTableFalseDisplay)) as NHAutoTableFalseDisplay;
 
-                        <td>@((MarkupString)attr!.HtmlContent)</td>
+                        <td @onclick="()=>OnCellClick(value.IsNotNull() ? value.ToString()! :string.Empty,property.Name,_row,_col,_pos)">@((MarkupString)attr!.HtmlContent)</td>
                     }
                     else
                     {
@@ -88,7 +136,7 @@
                         {
                             var attr = property.GetCustomAttribute(typeof(NHAutoTableNullDisplay)) as NHAutoTableNullDisplay;
 
-                            <td>@((MarkupString)attr!.DisplayWhileNull)</td>
+                            <td @onclick="()=>OnCellClick(value.IsNotNull() ? value.ToString()! :string.Empty,property.Name,_row,_col,_pos)">@((MarkupString)attr!.DisplayWhileNull)</td>
                         }
                         else
                         {
@@ -96,14 +144,14 @@
                             {
                                 var attr = property.GetCustomAttribute(typeof(NHAutoTableNumberFormatDisplay)) as NHAutoTableNumberFormatDisplay;
                                 var val = (decimal)value;
-                                <td>@val.ToString(attr!.FormatType)</td>
+                                <td @onclick="()=>OnCellClick(value.IsNotNull() ? value.ToString()! :string.Empty,property.Name,_row,_col,_pos)">@val.ToString(attr!.FormatType)</td>
                             }
                             else if (value is not null && value.GetType() == typeof(DateTime) && property.GetCustomAttribute(typeof(NHAutoTableDateTimeFormatDisplay)) is not null)
                             {
 
                                 var attr = property.GetCustomAttribute(typeof(NHAutoTableDateTimeFormatDisplay)) as NHAutoTableDateTimeFormatDisplay;
                                 var val = (DateTime)value;
-                                <td>@val.ToString(attr!.FormatType)</td>
+                                <td @onclick="()=>OnCellClick(value.IsNotNull() ? value.ToString()! :string.Empty,property.Name,_row,_col,_pos)">@val.ToString(attr!.FormatType)</td>
                             }
                             else{
 
@@ -111,20 +159,24 @@
                                 {
                                     var attr = property.GetCustomAttribute(typeof(NHAutoTableNewLineSeparator)) as NHAutoTableNewLineSeparator;
 
-                                    <td> @((MarkupString)value.ToString()!.Replace(attr!.Separator, "<br />"))</td>
+                                    <td @onclick="()=>OnCellClick(value.IsNotNull() ? value.ToString()! :string.Empty,property.Name,_row,_col,_pos)"> @((MarkupString)value.ToString()!.Replace(attr!.Separator, "<br />"))</td>
                                 }
                                 else if(value is not null){
-                                    <td>@value</td>
+                                    <td @onclick="()=>OnCellClick(value.IsNotNull() ? value.ToString()! :string.Empty,property.Name,_row,_col,_pos)">@value</td>
                                 }
                                 else
                                 {
-                                    <td></td>
+                                    <td @onclick="()=>OnCellClick(value.IsNotNull() ? value.ToString()! :string.Empty,property.Name,_row,_col,_pos)"></td>
                                 }
+                                
                             }
                         }
                     }
+                    position++;
+                    column++;
                 }
             }
         </tr>
+            row++;        
     }
 </NHTable>

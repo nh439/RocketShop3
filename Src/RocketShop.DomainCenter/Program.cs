@@ -1,5 +1,6 @@
 
 using LanguageExt;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RocketShop.DomainCenter.Model;
 using RocketShop.DomainCenter.Services;
@@ -118,6 +119,7 @@ namespace RocketShop.DomainCenter
                 return sendResult.GetRight();
             });
             app.MapGet("bind", (HttpContext httpContext) => configuration.GetSection("BindMount").Value);
+            app.MapGet("/services", (HttpContext httpContext) => configuration.GetRequiredSection("RegisterdServices").Get<string[]>());
             app.Run();
         }
     }

@@ -1,28 +1,61 @@
 ﻿@using RocketShop.Framework.Extension
 @using System.Reflection
+@using RocketShop.SharedBlazor.Domain
 @using RocketShop.SharedBlazor.Loop
 @typeparam TItem
 @code {
+    /// <summary>
+    /// Gets or sets the column names to be displayed, with a delimiter to separate cells.
+    /// </summary>
     [Parameter]
     public string? Columns { get; set; }
+    /// <summary>
+    /// Table CSS Class
+    /// </summary>
     [Parameter]
     public string? TableClass { get; set; }
+    /// <summary>
+    /// thead CSS Class
+    /// </summary>
     [Parameter]
     public string? TableHeaderClass { get; set; }
+    /// <summary>
+    /// tbody CSS Class
+    /// </summary>
     [Parameter]
     public string? TableBodyClass { get; set; }
+    /// <summary>
+    ///  value indicating whether the fragment is currently loading.
+    /// </summary>
     [Parameter]
     public bool LoadingFlagment { get; set; } = false;
+    /// <summary>
+    /// Message Display While Loading.
+    /// </summary>
     [Parameter]
     public string LoadingDisplayText { get; set; } = "Loading...";
+    /// <summary>
+    /// Message Display If No Data In Collection
+    /// </summary>
     [Parameter]
     public string NoDataDisplayText { get; set; } = "No Data";
+    /// <summary>
+    /// Item To Display In Table.
+    /// </summary>
     [Parameter]
     public IEnumerable<TItem>? Items { get; set; }
     [Parameter]
     public RenderFragment<TItem>? ChildContent { get; set; }
+    /// <summary>
+    /// Columns Delimiter.
+    /// </summary>
     [Parameter]
     public char ColumnSperator { get; set; } = ';';
+    /// <summary>
+    /// Gets or sets the action to be called when a column is selected, with a column name and index.
+    /// </summary>
+    [Parameter]
+    public Action<NHTableColumnClickedArgs>? OnSelectedColumn { get; set; } = null;
 }
 <NHTable Columns="@(Columns.HasMessage() ? Columns : string.Join( ";",typeof(TItem).GetProperties().Select(s=>s.Name)))"
          HasDataFlagment="@Items.HasData()"
@@ -32,7 +65,8 @@
          NoDataDisplayText="@NoDataDisplayText"
          TableClass="@TableClass"
          TableHeaderClass="@TableHeaderClass"
-            ColumnSperator="@ColumnSperator">
+         ColumnSperator="@ColumnSperator"
+         OnSelectedColumn="@(OnSelectedColumn.IsNotNull() ?  OnSelectedColumn! : default!)">
     <NHForeach TItem="TItem"
                Items="Items">
         @if (ChildContent.IsNotNull())
