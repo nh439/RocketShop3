@@ -9,14 +9,20 @@
 @using RocketShop.Framework.Extension
 @using RocketShop.HR.ServicePermissions
 @using RocketShop.HR.Services
+@using RocketShop.Shared.SharedService.Scoped
 @using RocketShop.Shared.SharedService.Singletion
 @using RocketShop.SharedBlazor.Condition
 @using RocketShop.SharedBlazor.Loop
+@using RocketShop.SharedBlazor.SharedBlazorServices.Scope
 @using RocketShop.SharedBlazor.Table
+@using RocketShop.SharedBlazor.Tools
 @inject IActivityLogService activityLogService
 @inject NavigationManager navigationManager
 @inject IUserServices userService
 @inject IRocketShopDivisionServices rocketShopDivisionServices;
+@inject IExportExcelServices exportExcelServices
+@inject IDownloadServices downloadService
+@inject ILogger<AuditView> logger
 @rendermode InteractiveServer
 
 @code {
@@ -29,6 +35,7 @@
     const string headers = "Date;Id;Division;Service;Actor;Email;Message";
     List<string> divisions = new();
     string pagingSummaryFormat = "Displaying page {0} of {1} (total {2} records)";
+    LoadingModal? loading;
     protected override async Task OnInitializedAsync()
     {
         var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -160,6 +167,18 @@
 
         currentPage = args.PageIndex + 1;
         await OnInitializedAsync();
+    }
+    async Task Export()
+    {
+        loading!.Open("Exporting...");
+        try{
+           
+        }
+        catch(Exception x)
+        {
+            logger.LogError(x, x.Message);
+            await loading.Then(false, string.Empty, "Export Failed");
+        }
     }
 }
 <CascadingAuthenticationState>
@@ -308,3 +327,4 @@
         </NotAuthorized>
     </AuthorizeView>
 </CascadingAuthenticationState>
+<LoadingModal @ref="loading" />

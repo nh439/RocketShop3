@@ -241,8 +241,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         public static bool Insert<T>(this QueryStore store,
             T insertItem,
             IDbTransaction? transaction = null,
-            int commandTimeout = 100, 
-            bool debugMode = false)
+            int commandTimeout = 100)
         {
             var type = typeof(T);
             var properties = type.GetProperties();
@@ -252,6 +251,8 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
                 Console.WriteLine($"Executing : {sql}");
             return store.connection.Execute(sql, insertItem, transaction, commandTimeout).Ge(0);
         }
+
+
         /// <summary>
         /// Insert Row Into Database With Asynchronous Pattern
         /// </summary>
@@ -265,7 +266,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         public static async Task<bool> InsertAsync<T>(this QueryStore store,
             T insertItem,
             IDbTransaction? transaction = null,
-            int commandTimeout = 100, bool debugMode = false)
+            int commandTimeout = 100)
         {
             var type = typeof(T);
             var properties = type.GetProperties();
@@ -276,6 +277,52 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
             return (await store.connection.ExecuteAsync(sql, insertItem, transaction, commandTimeout)).Ge(0);
         }
         /// <summary>
+        /// Inserts an item of type <typeparamref name="T"/> into the specified store and returns the inserted item.
+        /// Generates an SQL insert query dynamically based on the properties of the type <typeparamref name="T"/> and executes it, returning the inserted row.
+        /// </summary>
+        /// <typeparam name="T">The type of the item to insert.</typeparam>
+        /// <param name="store">The query store containing the table information.</param>
+        /// <param name="insertItem">The item to insert into the table.</param>
+        /// <param name="transaction">An optional database transaction.</param>
+        /// <param name="commandTimeout">The maximum time (in seconds) to wait for the command to execute. Default is 100 seconds.</param>
+        /// <returns>The inserted item of type <typeparamref name="T"/> 
+        public static T? InsertAndReturnItem<T>(this QueryStore store,
+            T insertItem,
+            IDbTransaction? transaction = null,
+            int commandTimeout = 100)
+        {
+            var type = typeof(T);
+            var properties = type.GetProperties();
+            var columns = properties.Select(s => s.Name);
+            string sql = $"insert into \"{store.TableName}\" ({string.Join(",", columns.Select(s => $"\"{s}\""))}) values ({string.Join(",", columns.Select(s => $"@{s}"))}) RETURNING *";
+            if (store.DebugMode)
+                Console.WriteLine($"Executing : {sql}");
+            return store.connection.QueryFirstOrDefault<T>(sql, insertItem, transaction, commandTimeout);
+        }
+        /// <summary>
+        /// Asynchronously inserts an item of type <typeparamref name="T"/> into the specified store and returns the inserted item.
+        /// Generates an SQL insert query dynamically based on the properties of the type <typeparamref name="T"/> and executes it asynchronously, returning the inserted row.
+        /// </summary>
+        /// <typeparam name="T">The type of the item to insert.</typeparam>
+        /// <param name="store">The query store containing the table information.</param>
+        /// <param name="insertItem">The item to insert into the table.</param>
+        /// <param name="transaction">An optional database transaction.</param>
+        /// <param name="commandTimeout">The maximum time (in seconds) to wait for the command to execute. Default is 100 seconds.</param>    
+        /// <returns>A task representing the asynchronous operation, with the inserted item of type <typeparamref name="T"/> or null if no row was inserted.</returns>
+        public static async Task<T?> InsertAndReturnItemAsync<T>(this QueryStore store,
+           T insertItem,
+           IDbTransaction? transaction = null,
+           int commandTimeout = 100)
+        {
+            var type = typeof(T);
+            var properties = type.GetProperties();
+            var columns = properties.Select(s => s.Name);
+            string sql = $"insert into \"{store.TableName}\" ({string.Join(",", columns.Select(s => $"\"{s}\""))}) values ({string.Join(",", columns.Select(s => $"@{s}"))}) RETURNING *";
+            if (store.DebugMode)
+                Console.WriteLine($"Executing : {sql}");
+            return (await store.connection.QueryFirstOrDefaultAsync<T>(sql, insertItem, transaction, commandTimeout));
+        }
+        /// <summary>
         /// Insert Mulitple Item
         /// </summary>
         /// <typeparam name="T">Entity To Insert</typeparam>
@@ -283,7 +330,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         /// <param name="insertItem">Data To Insert</param>
         /// <param name="transaction">Db Transaction</param>
         /// <param name="commandTimeout">Connection Maximum Time (Second)</param>
-        
+
         /// <returns>Inserted Rows</returns>
         public static int BulkInsert<T>(this QueryStore store,
             IEnumerable<T> insertItem,
