@@ -45,6 +45,31 @@ services:
     networks :
       - rcs_network
 
+  retail :
+    build :
+      context : .
+      dockerfile : Src\RocketShop.Retail\Dockerfile
+    ports :
+      - "12006:8080"
+    env_file:
+      - retail.env
+    depends_on :
+      - migration
+    networks :
+      - rcs_network
+
+  warehouse :
+    build :
+      context : .
+      dockerfile : Src\RocketShop.Warehouse\Dockerfile
+    ports :
+      - "12004:8080"
+    env_file:
+      - warehouse.env
+    depends_on :
+      - migration
+    networks :
+      - rcs_network
   
   
   domainservice :
