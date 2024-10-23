@@ -172,7 +172,53 @@
     {
         loading!.Open("Exporting...");
         try{
-           
+            var result = advanceSearch.IsNotNull().And(advanceSearch != new ActivityLogAdvanceSearch()) ?
+    await activityLogService.GetActivityLogs(advanceSearch, null) : await activityLogService.GetActivityLogs(string.Empty, null);
+            if (result.IsLeft)
+                throw result.GetLeft()!;
+            var auditReport = result.GetRight()!;
+            var relatedUserCode = MessageHelper.GetCodeFromActivityLog(auditReport)
+           .Select(s => s.Replace("<", string.Empty).Replace(">", string.Empty))
+           .ToArray();
+            var relatedUser = await userService.ListUserByUserIdIn(relatedUserCode);
+            if (relatedUser.IsRight)
+            {
+                var userList = relatedUser.GetRight()!;
+                auditReport.HasDataAndForEach(f =>
+                {
+                    if ((f.LogDetail.Contains("<") && f.LogDetail.Contains(">")))
+                    {
+                        foreach (var u in userList)
+                        {
+                            f.LogDetail = f.LogDetail.Replace($"<{u.UserId}>", $"{u.Firstname} {u.Surname}");
+                            if (!(f.LogDetail.Contains("<") && f.LogDetail.Contains(">")))
+                                break;
+                        }
+                    }
+                });
+            }
+            else throw relatedUser.GetLeft()!;
+            var report = auditReport
+            .Select(s => new
+            {
+                Date = s.LogDate.ToLocalTime().ToDateAndTimeFormat(),
+                Id = s.Id,
+                Division =s.Division,
+                Service =s.ServiceName,
+                Actor =s.ActorName,
+                Email = s.ActorEmail,
+                Message =s.LogDetail
+            })
+            .ToDataTable();
+            var excelContent = exportExcelServices.ExportExcel(report);
+            if (excelContent.IsLeft)
+                throw excelContent.GetLeft()!;
+            await downloadService.DownloadAsync(
+                $"Audit_Report_{DateTime.Now.ToString("yyyyMMdd")}.xlsx",
+                excelContent.GetRight()!
+            );
+            loading.Close();
+
         }
         catch(Exception x)
         {
@@ -286,7 +332,7 @@
                         </div>
                         <div class="card-body text-2xl font-semibold">
                             <br />
-                            <button class="btn btn-success font-bold rounded-full text-2xl">Export</button>
+                            <button class="btn btn-success font-bold rounded-full text-2xl" @onclick="Export">Export</button>
                             <br />
                             <br />
                             <NHTypeTable Columns="@headers"
