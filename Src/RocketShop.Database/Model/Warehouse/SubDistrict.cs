@@ -15,9 +15,9 @@ namespace RocketShop.Database.Model.Warehouse
         public int Id { get; set; }
         public int DistrictId { get; set; }
         public int Code { get; set; }
-        public string NameTH { get; set; }
-        public string NameEN { get; set; }
-        public int PostalCode { get; set; }
+        public string? NameTH { get; set; }
+        public string? NameEN { get; set; }
+        public int? PostalCode { get; set; }
         public decimal Latitude { get; set; }
         public decimal Longitude { get; set; }
     }

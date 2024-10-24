@@ -74,11 +74,11 @@ services:
   warehouse_admin :
       build :
         context : .
-        dockerfile : Src\RocketShop.Warehouse\Dockerfile
+        dockerfile : Src\RocketShop.Warehouse.Admin\Dockerfile
       ports :
         - "12006:8080"
       env_file:
-        - warehouse_admmin.env
+        - warehouse_admin.env
       depends_on :
         - migration
       networks :

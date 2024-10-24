@@ -17,7 +17,6 @@ COPY ["Src/RocketShop.AuditService/RocketShop.AuditService.csproj", "Src/RocketS
 COPY ["Src/RocketShop.Database/RocketShop.Database.csproj", "Src/RocketShop.Database/"]
 COPY ["Src/RocketShop.Shared/RocketShop.Shared.csproj", "Src/RocketShop.Shared/"]
 COPY ["Src/RocketShop.Framework/RocketShop.Framework.csproj", "Src/RocketShop.Framework/"]
-COPY ["Src/RocketShop.Retail/RocketShop.Retail.csproj", "Src/RocketShop.Retail/"]
 COPY ["Src/RocketShop.SharedBlazor/RocketShop.SharedBlazor.csproj", "Src/RocketShop.SharedBlazor/"]
 RUN dotnet restore "./Src/RocketShop.Warehouse.Admin/RocketShop.Warehouse.Admin.csproj"
 COPY . .

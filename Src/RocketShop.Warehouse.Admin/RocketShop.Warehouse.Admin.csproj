@@ -17,7 +17,6 @@
     <ProjectReference Include="..\RocketShop.AuditService\RocketShop.AuditService.csproj" />
     <ProjectReference Include="..\RocketShop.Database\RocketShop.Database.csproj" />
     <ProjectReference Include="..\RocketShop.Framework\RocketShop.Framework.csproj" />
-    <ProjectReference Include="..\RocketShop.Retail\RocketShop.Retail.csproj" />
     <ProjectReference Include="..\RocketShop.Shared\RocketShop.Shared.csproj" />
   </ItemGroup>
 
