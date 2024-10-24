@@ -118,6 +118,11 @@ inner join ""AspNetUsers"" s on s.""Id""=u.""UserId"";");
         #region Audit Log
         #endregion
 
+        #region Warehouse
+        public static CreateViewSql CreateAddrView = new CreateViewSql(
+            @$"create or replace view ""{TableConstraint.AddressView}"" as SELECT d.""Code"" AS ""DistrictCode"", d.""Id"" AS ""DistrictId"", d.""NameEN"" AS ""DistrictNameEN"", d.""NameTH"" AS ""DistrictNameTH"", s.""Code"" AS ""Id"", s.""Latitude"", s.""Longitude"", s.""PostalCode"", p.""Code"" AS ""ProvinceCode"", p.""Id"" AS ""ProvinceId"", p.""NameEN"" AS ""ProvinceNameEN"", p.""NameTH"" AS ""ProvinceNameTH"", s.""Id"" AS ""SubDistrictId"", s.""NameEN"" AS ""SubDistrictNameEN"", s.""NameTH"" AS ""SubDistrictNameTH"" FROM ""Provinces"" AS p INNER JOIN ""Districts"" AS d ON p.""Id"" = d.""ProvinceId"" INNER JOIN ""SubDistricts"" AS s ON d.""Id"" = s.""DistrictId""; ",
+            $"drop view \"{TableConstraint.AddressView}\"");
+        #endregion
     }
 
 

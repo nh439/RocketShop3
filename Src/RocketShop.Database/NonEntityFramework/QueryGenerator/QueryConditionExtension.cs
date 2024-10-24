@@ -55,6 +55,11 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
                 data.Add($"{compileId}__max", queryCondition.ValueMax);
                 return (sql, data);
             }
+            if(queryCondition.Operator == SqlOperator.Contains)
+            {
+                data.Add(compileId,$"%{queryCondition.Value}%");
+                return ($"\"{queryCondition.ColumnName}\" like @{compileId}", data);
+            }
             if(queryCondition.Operator == SqlOperator.WhereSub)
             {
                 var queryresult = CompiledConditionWithParameterizedMode(queryCondition.queryStore.conditions!);

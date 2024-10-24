@@ -30,7 +30,7 @@ namespace RocketShop.Database
         public const string Province = "Provinces";
         public const string District = "Districts";
         public const string SubDistrict = "SubDistricts";
-        public const string Address = "V_Address";
+        public const string AddressView = "V_Address";
         #endregion
     }
 }

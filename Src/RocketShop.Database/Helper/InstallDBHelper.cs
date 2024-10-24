@@ -25,6 +25,12 @@ namespace RocketShop.Database.Helper
             services.AddDbContext<AuditLogContext>();
             return services;
         }
+          public static IServiceCollection InstallWarehouseContext(this IServiceCollection services)
+        {
+            services.AddDbContext<WarehouseContext>();
+            return services;
+        }
+
 
         public static IServiceCollection InstallDatabase<TContext> (this IServiceCollection services)
             where TContext : DbContext

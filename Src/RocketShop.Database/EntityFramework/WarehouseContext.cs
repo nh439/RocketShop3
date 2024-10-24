@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using RocketShop.Database.Extension;
 using RocketShop.Database.Model.Warehouse;
+using RocketShop.Database.Model.Warehouse.Views;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,10 +30,16 @@ namespace RocketShop.Database.EntityFramework
             builder.Entity<SubDistrict>().HasIndex(i=>i.Code).IsUnique();
             builder.Entity<SubDistrict>().HasIndex(i => i.PostalCode);
             builder.Entity<SubDistrict>().HasIndex(i => i.DistrictId);
+
+            builder.Entity<AddressView>()
+                .HasNoKey().ToView(TableConstraint.AddressView);
         }
 
         public DbSet<Province> Province { get; set; }
         public DbSet<District> District { get; set; }
         public DbSet<SubDistrict> SubDistrict { get; set; }
+
+        //Views
+        public virtual DbSet<AddressView> AddressView { get; set; }
     }
 }

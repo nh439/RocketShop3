@@ -1,14 +1,49 @@
+using RocketShop.AuditService.Repository;
+using RocketShop.AuditService.Services;
+using RocketShop.Database.EntityFramework;
+using RocketShop.Database.Helper;
+using RocketShop.Framework.Helper;
+using RocketShop.Shared.SharedService.Scoped;
+using RocketShop.Shared.SharedService.Singletion;
+using RocketShop.Warehouse.GraphQL;
+using RocketShop.Warehouse.Repository;
+using RocketShop.Warehouse.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+var configuration = builder.InstallConfiguration();
+builder.InstallSerilog()  
+    .InstallServices(repository =>
+    {
+        repository.AddScoped<ActivityLogRepository>()
+        .AddScoped<ProvinceRepository>()
+        .AddScoped<DistrictRepository>()
+        .AddScoped<SubDistrictRepository>()
+        .AddScoped<AddressViewRepository>();
+    })
+    .InstallServices(service =>
+    {
+        service.AddScoped<IActivityLogService, ActivityLogService>()
+      .AddScoped<IExportExcelServices, ExportExcelServices>()
+      .AddScoped<IImportExcelServices, ImportExcelServices>()
+      .AddSingleton<IGetRoleAndPermissionService, GetRoleAndPermissionService>()
+      .AddSingleton<IUrlIndeiceServices, UrlIndeiceServices>()
+      .AddSingleton<IHttpContextAccessor,HttpContextAccessor>()
+      .AddScoped<IAddressService,AddressServices>();
+    })
+     .InstallServices(services =>
+     {
+         services.AddControllers();
+         services.AddSwaggerGen()
+         .AddEndpointsApiExplorer()
+         .InstallDatabase<AuditLogContext, IdentityContext>()
+         .AddGraphQLServer()
+         .AddQueryType<GraphQuery>();
+     });
 
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
-
+app.MapGraphQL(path:"/query");
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

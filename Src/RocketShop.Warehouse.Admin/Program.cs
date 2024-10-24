@@ -29,7 +29,8 @@ builder.InstallServices(install =>
         .AddScoped<IExportExcelServices, ExportExcelServices>()
         .AddScoped<IImportExcelServices, ImportExcelServices>()
         .AddSingleton<IGetRoleAndPermissionService, GetRoleAndPermissionService>()
-        .AddSingleton<IUrlIndeiceServices, UrlIndeiceServices>();
+        .AddSingleton<IUrlIndeiceServices, UrlIndeiceServices>()
+        .AddSingleton<IHttpContextAccessor,HttpContextAccessor>();
     });
 // Add services to the container.
 

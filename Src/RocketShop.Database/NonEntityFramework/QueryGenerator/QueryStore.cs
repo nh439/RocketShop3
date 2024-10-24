@@ -83,7 +83,8 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         NotBetween,
         Null,
         NotNull,
-        WhereSub
+        WhereSub,
+        Contains
     }
     public class OrderBy
     {
