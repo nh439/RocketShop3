@@ -7,8 +7,9 @@ using System.Data;
 
 namespace RocketShop.Warehouse.Repository
 {
-    public class SubDistrictRepository
+    public class SubDistrictRepository(IConfiguration configuration)
     {
+        readonly bool enabledSqlLogging = configuration.GetSection("EnabledSqlLogging").Get<bool>();
         readonly string tableName = TableConstraint.SubDistrict;
         public async Task<List<SubDistrict>> ListSubDistricts(string? search,
             int? districtId,
@@ -16,7 +17,7 @@ namespace RocketShop.Warehouse.Repository
             IDbConnection warehouseConnection,
             IDbTransaction? transaction = null)
         {
-            var query = warehouseConnection.CreateQueryStore(tableName,true);
+            var query = warehouseConnection.CreateQueryStore(tableName,enabledSqlLogging);
             if (search.HasMessage())
                 query = query.Where(x =>
                 x.Where(nameof(SubDistrict.NameTH), SqlOperator.Contains, search!)
@@ -32,7 +33,7 @@ namespace RocketShop.Warehouse.Repository
         public async Task<Option<SubDistrict>> GetSubDistrict(int id,
             IDbConnection warehouseConnection,
             IDbTransaction? transaction = null) =>
-            await warehouseConnection.CreateQueryStore(tableName, true)
+            await warehouseConnection.CreateQueryStore(tableName, enabledSqlLogging)
             .Where(nameof(SubDistrict.Id), id)
             .FetchOneAsync<SubDistrict>();
     }

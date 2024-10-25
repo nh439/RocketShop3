@@ -7,17 +7,17 @@ using System.Data;
 
 namespace RocketShop.Warehouse.Repository
 {
-    public class AddressViewRepository
+    public class AddressViewRepository(IConfiguration configuration)
     {
         readonly string tableName = TableConstraint.AddressView;
-
+        readonly bool enabledSqlLogging = configuration.GetSection("EnabledSqlLogging").Get<bool>();
         public async Task< List<AddressView>> ListAddresses(string? search,
             int? page,
             int? pageSize,
             IDbConnection warehouseConnection,
             IDbTransaction? transaction =null)
         {
-            var query = warehouseConnection.CreateQueryStore(tableName, true);
+            var query = warehouseConnection.CreateQueryStore(tableName, enabledSqlLogging);
             if (search.HasMessage())
             {
                 var cols = new[]
@@ -42,7 +42,7 @@ namespace RocketShop.Warehouse.Repository
         public async Task<Option<AddressView>> GetAddress(int id,
             IDbConnection warehouseConnection,
             IDbTransaction? transaction = null) =>
-            await warehouseConnection.CreateQueryStore(tableName, true)
+            await warehouseConnection.CreateQueryStore(tableName, enabledSqlLogging)
             .Where(nameof(AddressView.Id), id)
             .FetchOneAsync<AddressView>(transaction);
     }

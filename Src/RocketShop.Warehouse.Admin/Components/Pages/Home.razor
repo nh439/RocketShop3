@@ -7,39 +7,14 @@
     string sql = string.Empty;
     protected override void OnInitialized()
     {
-        var query = (from prov in context.Province
-                     join dist in context.District on prov.Id equals dist.ProvinceId
-                     join sub in context.SubDistrict on dist.Id equals sub.DistrictId
-                     select new AddressView
-                     {
-DistrictCode=dist.Code,
-DistrictId=dist.Id,
-DistrictNameEN=dist.NameEN,
-DistrictNameTH=dist.NameTH,
-Id=sub.Code,
-Latitude=sub.Latitude,
-Longitude=sub.Longitude,
-PostalCode=sub.PostalCode,
-ProvinceCode=prov.Code,
-ProvinceId=prov.Id,
-ProvinceNameEN=prov.NameEN,
-ProvinceNameTH=prov.NameTH,
-SubDistrictId=sub.Id,
-SubDistrictNameEN=sub.NameEN,
-SubDistrictNameTH=sub.NameTH
-                     }
-     );
-        sql = query.ToQueryString();
-        StateHasChanged();
+      
     }
    
 }
-<PageTitle>Home</PageTitle>
+<PageTitle>Warehouse Admin Center</PageTitle>
 
-<h1>Hello, world!</h1>
+<center>
+    <h1>Rocket Shop</h1>
+    <h2>Warehouse Admin Center</h2>
+</center>
 
-Welcome to your new app.
-
-<h1>
-    <b>@sql</b>
-</h1>
