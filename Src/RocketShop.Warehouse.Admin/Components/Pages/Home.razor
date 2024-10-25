@@ -2,6 +2,7 @@
 @using Microsoft.EntityFrameworkCore
 @using RocketShop.Database.EntityFramework
 @using RocketShop.Database.Model.Warehouse.Views
+@using RocketShop.Warehouse.Admin.ServicePermission
 @inject WarehouseContext context
 @code{
     string sql = string.Empty;
@@ -17,4 +18,21 @@
     <h1>Rocket Shop</h1>
     <h2>Warehouse Admin Center</h2>
 </center>
+<CascadingAuthenticationState>
+    <AuthorizeView>
+        <Authorized>
+            <AuthorizeView Policy="@PolicyNames.AppAdminName" Context="policied">
+                <Authorized>
+                    <h2>You're Logged In</h2>
+                </Authorized>
+                <NotAuthorized>Access Denied</NotAuthorized>
+            </AuthorizeView>
+        </Authorized>
+        <NotAuthorized>
+            <h2>You're Not Logged In</h2>
+            <h3>Please <MudButton Href="/login" Variant="Variant.Filled" Size="Size.Small" Color="Color.Primary">Login</MudButton></h3>
+        </NotAuthorized>
+    </AuthorizeView>
+    
+</CascadingAuthenticationState>
 

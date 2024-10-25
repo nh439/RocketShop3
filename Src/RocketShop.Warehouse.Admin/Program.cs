@@ -6,6 +6,15 @@ using RocketShop.Shared.SharedService.Singletion;
 using RocketShop.Warehouse.Admin.Components;
 using RocketShop.Database.Helper;
 using RocketShop.Database.EntityFramework;
+using MudBlazor.Services;
+using Radzen;
+using RocketShop.SharedBlazor.SharedBlazorServices.Scope;
+using Microsoft.AspNetCore.Identity;
+using RocketShop.Database.Model.Identity;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using RocketShop.Warehouse.Admin.ServicePermission;
+using RocketShop.Warehouse.Admin.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.InstallSerilog()
@@ -17,7 +26,34 @@ builder.InstallServices(install =>
 })
     .InstallServices(baseService =>
     {
-        baseService.InstallDatabase<IdentityContext, AuditLogContext, WarehouseContext>();
+        baseService.AddIdentity<User, IdentityRole>(option =>
+        {
+            option.SignIn.RequireConfirmedAccount = false;
+            option.Password.RequireNonAlphanumeric = false;
+        }).AddEntityFrameworkStores<IdentityContext>()
+.AddDefaultTokenProviders();
+        baseService.AddIdentityCore<User>(s =>
+        {
+        })
+.AddRoles<IdentityRole>()
+.AddClaimsPrincipalFactory<UserClaimsPrincipalFactory<User, IdentityRole>>()
+.AddEntityFrameworkStores<IdentityContext>()
+.AddDefaultTokenProviders();
+        baseService.InstallDatabase<IdentityContext, AuditLogContext, WarehouseContext>()
+        .AddAuthentication(options =>
+        {
+            options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+        }).AddCookie(c => c.ExpireTimeSpan = TimeSpan.FromHours(10));
+        baseService.AddAuthorization(a =>
+        {
+            a.AddPolicy(PolicyNames.AppAdminName, p =>
+            {
+                p.RequireClaim("Permission", PolicyPermissions.AppAdminPermissions);
+            });
+        })
+        .AddMudServices()
+        .AddRadzenComponents();
     })
     .InstallServices(repository =>
     {
@@ -30,7 +66,8 @@ builder.InstallServices(install =>
         .AddScoped<IImportExcelServices, ImportExcelServices>()
         .AddSingleton<IGetRoleAndPermissionService, GetRoleAndPermissionService>()
         .AddSingleton<IUrlIndeiceServices, UrlIndeiceServices>()
-        .AddSingleton<IHttpContextAccessor,HttpContextAccessor>();
+        .AddSingleton<IHttpContextAccessor,HttpContextAccessor>()
+        .AddScoped<ISharedUserServices, SharedUserServices>();
     });
 // Add services to the container.
 
@@ -53,5 +90,5 @@ app.UseAntiforgery();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
-
+app.UsePermissionMiddleware();
 app.Run();
