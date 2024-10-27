@@ -63,7 +63,7 @@ where ""tablename"" not like 'pg_%' and
      });
             foreach(var table in collections)
             {
-                int columns = tableColumns.Where(x=>x.TableName==table.Name).Count();
+                int columns = tableColumns.Count(x=>x.TableName==table.Name);
                 long rows = await warehouseConnection.QueryFirstOrDefaultAsync<long>(
                     $"select count(*) from \"{table.Name}\";",
                     transaction: transaction

@@ -1,25 +1,33 @@
 ﻿@page "/"
-@using Microsoft.EntityFrameworkCore
-@using RocketShop.Database.EntityFramework
-@using RocketShop.Database.Model.Warehouse.Views
+@using RocketShop.Framework.Extension
 @using RocketShop.Warehouse.Admin.ServicePermission
 @using RocketShop.Warehouse.Admin.Services
- 
-@inject ITableInformationService tableInformationService;
+@inject  ITableInformationService tableInformationService
 @code{
-    string sql = string.Empty;
-    protected override async void OnInitialized()
+    int tableCount = 0;
+    bool hasMajorException, hasMinorException;
+    protected override async Task OnInitializedAsync()
     {
-
+        var tables = await tableInformationService.ListTableNames();
+        var views = await tableInformationService.ListViewNames();
+        if (tables.IsLeft.Or(views.IsLeft))
+        {
+            hasMinorException = true;
+        }
+        else
+        {
+            tableCount = tables.GetRight()!.Count() + views.GetRight()!.Count();
+        }
+        StateHasChanged();
     }
-   
+
 }
 <PageTitle>Warehouse Admin Center</PageTitle>
 
-<center>
+<div style="text-align: center;" >
     <h1>Rocket Shop</h1>
     <h2>Warehouse Admin Center</h2>
-</center>
+</div>
 <CascadingAuthenticationState>
     <AuthorizeView>
         <Authorized>
@@ -30,9 +38,9 @@
                         <div class="col">
                             <div class="card bg-primary" style="color:whitesmoke">
                                 <div class="card-body">
-                                    <h2 style="text-align:left">All Client</h2>
+                                    <h2 style="text-align:left">Collections</h2>
                                     <br />
-                                    <h3 style="text-align:right">70</h3>
+                                    <h3 style="text-align:right">@tableCount.ToString("#,##0")</h3>
                                 </div>
                             </div>
                         </div>
