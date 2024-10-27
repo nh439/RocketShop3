@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using RocketShop.Database.EntityFramework;
@@ -11,9 +12,11 @@ using RocketShop.Database.EntityFramework;
 namespace RocketShop.Migration.Migrations.Warehouse
 {
     [DbContext(typeof(WarehouseContext))]
-    partial class WarehouseContextModelSnapshot : ModelSnapshot
+    [Migration("20241027064633_Add_Warehouse_Authorization")]
+    partial class Add_Warehouse_Authorization
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -77,9 +80,6 @@ namespace RocketShop.Migration.Migrations.Warehouse
 
                     b.Property<int?>("MaxinumnAccess")
                         .HasColumnType("integer");
-
-                    b.Property<bool>("RequireSecret")
-                        .HasColumnType("boolean");
 
                     b.Property<int?>("TokenExpiration")
                         .HasColumnType("integer");

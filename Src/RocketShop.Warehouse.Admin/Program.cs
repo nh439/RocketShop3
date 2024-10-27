@@ -15,6 +15,8 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using RocketShop.Warehouse.Admin.ServicePermission;
 using RocketShop.Warehouse.Admin.Middleware;
+using RocketShop.Warehouse.Admin.Repository;
+using RocketShop.Warehouse.Admin.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.InstallSerilog()
@@ -57,7 +59,8 @@ builder.InstallServices(install =>
     })
     .InstallServices(repository =>
     {
-        repository.AddScoped<ActivityLogRepository>();
+        repository.AddScoped<ActivityLogRepository>()
+        .AddScoped<TableInformationRepository>();
     })
     .InstallServices(service =>
     {
@@ -67,7 +70,8 @@ builder.InstallServices(install =>
         .AddSingleton<IGetRoleAndPermissionService, GetRoleAndPermissionService>()
         .AddSingleton<IUrlIndeiceServices, UrlIndeiceServices>()
         .AddSingleton<IHttpContextAccessor,HttpContextAccessor>()
-        .AddScoped<ISharedUserServices, SharedUserServices>();
+        .AddScoped<ISharedUserServices, SharedUserServices>()
+        .AddScoped<ITableInformationService,TableInformationService>();
     });
 // Add services to the container.
 

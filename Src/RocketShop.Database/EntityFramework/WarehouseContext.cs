@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using RocketShop.Database.Extension;
 using RocketShop.Database.Model.Warehouse;
+using RocketShop.Database.Model.Warehouse.Authorization;
 using RocketShop.Database.Model.Warehouse.Views;
 using System;
 using System.Collections.Generic;
@@ -30,6 +31,9 @@ namespace RocketShop.Database.EntityFramework
             builder.Entity<SubDistrict>().HasIndex(i=>i.Code).IsUnique();
             builder.Entity<SubDistrict>().HasIndex(i => i.PostalCode);
             builder.Entity<SubDistrict>().HasIndex(i => i.DistrictId);
+            builder.Entity<AllowedObject>().HasIndex(i => new { i.Client, i.ObjectName });
+            builder.Entity<ClientSecret>().HasIndex(i => i.Client);
+            builder.Entity<Token>().HasIndex(i => i.Client);
 
             builder.Entity<AddressView>()
                 .HasNoKey().ToView(TableConstraint.AddressView);
@@ -38,6 +42,11 @@ namespace RocketShop.Database.EntityFramework
         public DbSet<Province> Province { get; set; }
         public DbSet<District> District { get; set; }
         public DbSet<SubDistrict> SubDistrict { get; set; }
+        
+        public DbSet<Client> Client {  get; set; }
+        public DbSet<ClientSecret> ClientSecret { get; set; }
+        public DbSet<AllowedObject> AllowedObject { get; set; }
+        public DbSet<Token> Token { get; set; }
 
         //Views
         public virtual DbSet<AddressView> AddressView { get; set; }

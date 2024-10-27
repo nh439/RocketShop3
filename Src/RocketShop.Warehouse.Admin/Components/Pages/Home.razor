@@ -3,12 +3,14 @@
 @using RocketShop.Database.EntityFramework
 @using RocketShop.Database.Model.Warehouse.Views
 @using RocketShop.Warehouse.Admin.ServicePermission
-@inject WarehouseContext context
+@using RocketShop.Warehouse.Admin.Services
+ 
+@inject ITableInformationService tableInformationService;
 @code{
     string sql = string.Empty;
-    protected override void OnInitialized()
+    protected override async void OnInitialized()
     {
-      
+
     }
    
 }
@@ -24,6 +26,35 @@
             <AuthorizeView Policy="@PolicyNames.AppAdminName" Context="policied">
                 <Authorized>
                     <h2>You're Logged In</h2>
+                    <div class="row" style="font-weight:bolder">
+                        <div class="col">
+                            <div class="card bg-primary" style="color:whitesmoke">
+                                <div class="card-body">
+                                    <h2 style="text-align:left">All Client</h2>
+                                    <br />
+                                    <h3 style="text-align:right">70</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="card bg-warning">
+                                <div class="card-body">
+                                    <h2 style="text-align:left">UnSafe Client</h2>
+                                    <br />
+                                    <h3 style="text-align:right">12</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="card bg-danger" style="color:whitesmoke">
+                                <div class="card-body">
+                                    <h2 style="text-align:left">Incomplete Client</h2>
+                                    <br />
+                                    <h3 style="text-align:right">312</h3>
+                                </div>
+                            </div>
+                        </div>                   
+                    </div>
                 </Authorized>
                 <NotAuthorized>Access Denied</NotAuthorized>
             </AuthorizeView>
