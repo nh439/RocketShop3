@@ -73,6 +73,24 @@ where ""tablename"" not like 'pg_%' and
             return returnValues;
         }
 
+        public async Task<int> CountCollections(string? search,IDbConnection warehouseConnection, IDbTransaction? transaction = null) =>
+            search.HasMessage() ?
+            await warehouseConnection.QueryFirstOrDefaultAsync<int>(@"select
+(SELECT count(*)::int FROM pg_catalog.pg_tables 
+where ""tablename"" not like 'pg_%' and 
+""tablename"" not like 'Authorization_%' and
+""tablename"" <> '__EFMigrationsHistory' and
+""tablename"" like @search and
+""schemaname"" <> 'information_schema')+
+(select count(*)::int from INFORMATION_SCHEMA.views WHERE ""table_name"" like 'V_%' and ""table_name"" like @search);", new {search = $"%{search}%"}, transaction: transaction)
+            :
+            await warehouseConnection.QueryFirstOrDefaultAsync<int>(@"select
+(SELECT count(*)::int FROM pg_catalog.pg_tables 
+where ""tablename"" not like 'pg_%' and 
+""tablename"" not like 'Authorization_%' and
+""tablename"" <> '__EFMigrationsHistory' and
+""schemaname"" <> 'information_schema')+
+(select count(*)::int from INFORMATION_SCHEMA.views WHERE ""table_name"" like 'V_%');", transaction: transaction);
 
             
     }

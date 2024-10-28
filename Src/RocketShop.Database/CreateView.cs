@@ -11,18 +11,18 @@ namespace RocketShop.Database
     public static class CreateView
     {
         #region IdentityContext
-        public static CreateViewSql UserView = new CreateViewSql($@"
+        public static readonly CreateViewSql UserView = new CreateViewSql($@"
 create or replace view ""{TableConstraint.UserView}"" as SELECT a.""Id"", a.""EmployeeCode"", a.""Email"", a.""Firstname"", a.""Surname"", a.""Prefix"", u.""Department"", u.""CurrentPosition"", u.""ManagerId"", NOT (a.""Resigned"") as ""Active"" FROM ""AspNetUsers"" AS a LEFT JOIN ""UserInformations"" AS u ON a.""Id"" = u.""UserId""
 ", $"Drop View \"{TableConstraint.UserView}\"");
 
-        public static CreateViewSql UserFinacialView = new CreateViewSql($@"
+        public static readonly CreateViewSql UserFinacialView = new CreateViewSql($@"
 create or replace view ""{TableConstraint.UserFinacialView}"" as
 SELECT u.""UserId"", u.""AccountNo"", u.""BanckName"", u.""Currency"", u.""ProvidentFund"" AS ""ProvidentFundPerMonth"", p.""Balance"" AS ""AccumulatedProvidentFund"", u.""Salary"", u.""SocialSecurites"", u.""TotalAddiontialExpense"", u.""TotalPayment"", u.""TravelExpenses""
 FROM ""UserFinancal"" AS u
 INNER JOIN ""ProvidentFund"" AS p ON u.""UserId"" = p.""UserId"";",
            $"Drop View \"{TableConstraint.UserFinacialView}\"");
 
-        public static CreateViewSql UserFinacialViewV2 = new CreateViewSql($@"
+        public static readonly CreateViewSql UserFinacialViewV2 = new CreateViewSql($@"
 create or replace view ""{TableConstraint.UserFinacialView}"" as
 SELECT u.""UserId"", u.""AccountNo"", u.""BankName"", u.""Currency"", u.""ProvidentFund"" AS ""ProvidentFundPerMonth"", p.""Balance"" AS ""AccumulatedProvidentFund"", u.""Salary"", u.""SocialSecurites"", u.""TotalAddiontialExpense"", u.""TotalPayment"", u.""TravelExpenses""
 FROM ""UserFinancal"" AS u
@@ -33,7 +33,7 @@ SELECT u.""UserId"", u.""AccountNo"", u.""BanckName"", u.""Currency"", u.""Provi
 FROM ""UserFinancal"" AS u
 INNER JOIN ""ProvidentFund"" AS p ON u.""UserId"" = p.""UserId"";");
 
-        public static CreateViewSql UserFinacialViewV3 = new CreateViewSql($@"
+        public static readonly CreateViewSql UserFinacialViewV3 = new CreateViewSql($@"
 create or replace view ""{TableConstraint.UserFinacialView}"" as
 SELECT u.""UserId"",s.""EmployeeCode"" as ""EmployeeCode"",s.""Prefix""||' '|| s.""Firstname"" || ' '|| s.""Surname"" as ""EmployeeName"", u.""AccountNo"", u.""BankName"", u.""Currency"", u.""ProvidentFund"" AS ""ProvidentFundPerMonth"", p.""Balance"" AS ""AccumulatedProvidentFund"", u.""Salary"", u.""SocialSecurites"", u.""TotalAddiontialExpense"", u.""TotalPayment"", u.""TravelExpenses""
 FROM ""UserFinancal"" AS u
@@ -44,7 +44,7 @@ create or replace view ""{TableConstraint.UserFinacialView}"" as
 SELECT u.""UserId"", u.""AccountNo"", u.""BankName"", u.""Currency"", u.""ProvidentFund"" AS ""ProvidentFundPerMonth"", p.""Balance"" AS ""AccumulatedProvidentFund"", u.""Salary"", u.""SocialSecurites"", u.""TotalAddiontialExpense"", u.""TotalPayment"", u.""TravelExpenses""
 FROM ""UserFinancal"" AS u
 INNER JOIN ""ProvidentFund"" AS p ON u.""UserId"" = p.""UserId"";");
-         public static CreateViewSql UserFinacialViewV4 = new CreateViewSql($@"
+         public static readonly CreateViewSql UserFinacialViewV4 = new CreateViewSql($@"
 create or replace view ""{TableConstraint.UserFinacialView}"" as
 SELECT u.""UserId"",s.""EmployeeCode"" as ""EmployeeCode"",COALESCE(s.""Prefix"",'')||' '|| s.""Firstname"" || ' '|| s.""Surname"" as ""EmployeeName"", u.""AccountNo"", u.""BankName"", u.""Currency"", u.""ProvidentFund"" AS ""ProvidentFundPerMonth"", p.""Balance"" AS ""AccumulatedProvidentFund"", u.""Salary"", u.""SocialSecurites"", u.""TotalAddiontialExpense"", u.""TotalPayment"", u.""TravelExpenses""
 FROM ""UserFinancal"" AS u
@@ -57,7 +57,7 @@ FROM ""UserFinancal"" AS u
 INNER JOIN ""ProvidentFund"" AS p ON u.""UserId"" = p.""UserId""
 inner join ""AspNetUsers"" s on s.""Id""=u.""UserId"";");
 
-        public static CreateViewSql UserViewV2 = new CreateViewSql(
+        public static readonly CreateViewSql UserViewV2 = new CreateViewSql(
             $@"
             create or replace view ""{TableConstraint.UserView}"" as SELECT a.""Id"",
     a.""EmployeeCode"",
@@ -78,7 +78,7 @@ inner join ""AspNetUsers"" s on s.""Id""=u.""UserId"";");
             "
             );
 
-        public static CreateViewSql UserViewV3 = new CreateViewSql($@"
+        public static readonly CreateViewSql UserViewV3 = new CreateViewSql($@"
   create or replace view ""{TableConstraint.UserView}"" as SELECT a.""Id"",
     a.""EmployeeCode"",
     a.""Email"",
@@ -119,7 +119,7 @@ inner join ""AspNetUsers"" s on s.""Id""=u.""UserId"";");
         #endregion
 
         #region Warehouse
-        public static CreateViewSql CreateAddrView = new CreateViewSql(
+        public static readonly CreateViewSql CreateAddrView = new CreateViewSql(
             @$"create or replace view ""{TableConstraint.AddressView}"" as SELECT d.""Code"" AS ""DistrictCode"", d.""Id"" AS ""DistrictId"", d.""NameEN"" AS ""DistrictNameEN"", d.""NameTH"" AS ""DistrictNameTH"", s.""Code"" AS ""Id"", s.""Latitude"", s.""Longitude"", s.""PostalCode"", p.""Code"" AS ""ProvinceCode"", p.""Id"" AS ""ProvinceId"", p.""NameEN"" AS ""ProvinceNameEN"", p.""NameTH"" AS ""ProvinceNameTH"", s.""Id"" AS ""SubDistrictId"", s.""NameEN"" AS ""SubDistrictNameEN"", s.""NameTH"" AS ""SubDistrictNameTH"" FROM ""Provinces"" AS p INNER JOIN ""Districts"" AS d ON p.""Id"" = d.""ProvinceId"" INNER JOIN ""SubDistricts"" AS s ON d.""Id"" = s.""DistrictId""; ",
             $"drop view \"{TableConstraint.AddressView}\"");
         #endregion

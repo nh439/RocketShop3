@@ -1,0 +1,89 @@
+﻿@page "/collections"
+@using RocketShop.Framework.Extension
+@using RocketShop.SharedBlazor.Condition
+@using RocketShop.SharedBlazor.Table
+@using RocketShop.Warehouse.Admin.Model
+@using RocketShop.Warehouse.Admin.Services
+@inject ITableInformationService tableInformationService
+
+@code {
+    List<TableDescription> collections = new();
+    bool majorException, minorException, isLoading;
+    const string Headers = "Collection Name;Collection Type;Columns;Rows;";
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (state.User.Identity.IsNotNull().And(state.User.Identity!.IsAuthenticated))
+        {
+            await FetchData();
+        }
+        else
+        {
+            navigationManager.NavigateTo("/login");
+        }
+    }
+    async Task FetchData()
+    {
+        isLoading = true;
+        try
+        {
+            var collectionResult = await tableInformationService.ListTableInformation();
+            if (collectionResult.IsLeft)
+                throw collectionResult.GetLeft()!;
+            collections = collectionResult.GetRight()!;
+        }
+        catch
+        {
+            majorException = true;
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+}
+
+<CascadingAuthenticationState>
+    <AuthorizeView Policy="@ServicePermission.PolicyNames.AppAdminName">
+        <Authorized>
+            <div style="text-align:center">
+                <h1>Collections</h1>
+            </div>
+            <br />
+            <br />
+            <br />
+            <NHTypeTable Items="collections"
+                         Columns="@Headers"
+                         Context="collection"
+                         TableClass="table table-hover"
+                         LoadingFlagment="isLoading"
+                         TableHeaderClass="table-dark"
+                         TableBodyClass="table-success"
+                         LoadingDisplayText="Loading..."
+                         NoDataDisplayText="No Collections">
+                <tr>
+                    <td>@collection.TableName</td>
+                    <td>
+                        <NHIF Condition="collection.Table">
+                            <YesOperation>
+                                <b>Physical</b>
+                            </YesOperation>
+                            <NoOperation>
+                                <b>Virtual</b>
+                            </NoOperation>
+                        </NHIF>
+                    </td>
+                    <td>@collection.Columns.ToString("#,##0")</td>
+                    <td>@collection.Rows.ToString("#,##0")</td>
+                    <td>
+                        <button class="btn btn-primary"><i class="edit icon" /></button>
+                    </td>
+                </tr>
+            </NHTypeTable>
+        </Authorized>
+        <NotAuthorized>
+            <h1>Access Denied</h1>
+        </NotAuthorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>

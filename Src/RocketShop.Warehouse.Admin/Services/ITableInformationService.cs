@@ -4,6 +4,7 @@ using RocketShop.Database.Extension;
 using RocketShop.Framework.Services;
 using RocketShop.Warehouse.Admin.Model;
 using RocketShop.Warehouse.Admin.Repository;
+using System.Data;
 
 namespace RocketShop.Warehouse.Admin.Services
 {
@@ -12,6 +13,8 @@ namespace RocketShop.Warehouse.Admin.Services
         Task<Either<Exception, IEnumerable<string>>> ListTableNames();
         Task<Either<Exception, IEnumerable<string>>> ListViewNames();
         Task<Either<Exception, List<TableDescription>>> ListTableInformation(string? search = null, int? page = null, int per = 5);
+        Task<Either<Exception, int>> CountCollections(string? search = null);
+        Task<Either<Exception, int>> GetCollectionsLastPage(string? search = null, int per = 5);
     }
     public class TableInformationService(
         ILogger<TableInformationService> logger,
@@ -36,5 +39,15 @@ namespace RocketShop.Warehouse.Admin.Services
                 return await tableInformationRepository.GetTableInformations(search, page, per, warehouseConnection);
             });
 
+        public async Task<Either<Exception, int>> CountCollections(string? search = null) =>
+        await InvokeDapperServiceAsync(async warehouseConnection => await tableInformationRepository.CountCollections(search,warehouseConnection));
+
+        public async Task<Either<Exception, int>> GetCollectionsLastPage(string? search = null, int per = 5) =>
+             await InvokeDapperServiceAsync(async warehouseConnection =>
+             {
+                 var count = await tableInformationRepository.CountCollections(search, warehouseConnection);
+                 return (int)Math.Ceiling((decimal)count / (decimal)per);
+             });
             }
+    
 }
