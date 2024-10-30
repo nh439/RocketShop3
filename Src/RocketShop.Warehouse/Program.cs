@@ -29,6 +29,7 @@ builder.InstallSerilog()
       .AddSingleton<IGetRoleAndPermissionService, GetRoleAndPermissionService>()
       .AddSingleton<IUrlIndeiceServices, UrlIndeiceServices>()
       .AddSingleton<IHttpContextAccessor,HttpContextAccessor>()
+      .AddSingleton<IMemoryStorageServices, MemoryStorageServices>()
       .AddScoped<IAddressService,AddressServices>();
     })
      .InstallServices(services =>
