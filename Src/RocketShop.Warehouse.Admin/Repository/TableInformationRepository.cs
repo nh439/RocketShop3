@@ -30,26 +30,27 @@ where ""tablename"" not like 'pg_%' and
             if (!tables.HasData())
                 tables = new List<string>();
             var collections = tables.Select(s => new
-            {
+            NameTable{
                 Name = s,
                 Table = true
-            });
+            }).ToList();
             if (views.HasData())
-                collections = collections.Union(views.Select(s =>
-               new
-               {
-                   Name = s,
-                   Table = false
-               }));
+                collections.AddRange(views.Select(s =>
+                new
+                NameTable
+                {
+                    Name = s,
+                    Table = false
+                }).ToList());
             
             if(!collections.HasData())return new();
-            collections = collections.OrderBy(x=> x.Name);
+            collections = collections.OrderBy(x=> x.Name).ToList();
             if (search.HasData())
-                collections = collections.Where(x => x.Name.ToLower().Contains(search!));
+                collections = collections.Where(x => x.Name.ToLower().Contains(search!.ToLower())).ToList();
             if (page.HasValue)
             {
                 int pageSize = per ?? 5;
-                collections = collections.Skip((page.Value - 1) * pageSize).Take(pageSize);
+                collections = collections.Skip((page.Value - 1) * pageSize).Take(pageSize).ToList();
             }
             List<TableDescription> returnValues = new List<TableDescription>();
             var tableColumns =( await warehouseConnection.QueryAsync(@$"SELECT table_name,column_name
@@ -80,9 +81,9 @@ where ""tablename"" not like 'pg_%' and
 where ""tablename"" not like 'pg_%' and 
 ""tablename"" not like 'Authorization_%' and
 ""tablename"" <> '__EFMigrationsHistory' and
-""tablename"" like @search and
+lower(""tablename"") like @search and
 ""schemaname"" <> 'information_schema')+
-(select count(*)::int from INFORMATION_SCHEMA.views WHERE ""table_name"" like 'V_%' and ""table_name"" like @search);", new {search = $"%{search}%"}, transaction: transaction)
+(select count(*)::int from INFORMATION_SCHEMA.views WHERE ""table_name"" like 'V_%' and lower(""table_name"") like @search);", new {search = $"%{search!.ToLower()}%"}, transaction: transaction)
             :
             await warehouseConnection.QueryFirstOrDefaultAsync<int>(@"select
 (SELECT count(*)::int FROM pg_catalog.pg_tables 
@@ -92,6 +93,10 @@ where ""tablename"" not like 'pg_%' and
 ""schemaname"" <> 'information_schema')+
 (select count(*)::int from INFORMATION_SCHEMA.views WHERE ""table_name"" like 'V_%');", transaction: transaction);
 
-            
+        sealed class NameTable
+        {
+            public string Name { get; set; }
+            public bool Table { get; set; }
+        }
     }
 }
