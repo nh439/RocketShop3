@@ -1,0 +1,21 @@
+﻿@page "/collection/{name}"
+@using RocketShop.Warehouse.Admin.Model
+<h3>@name</h3>
+
+@code {
+    [Parameter]
+    public string name { get; set; }
+    bool majorException, minorException;
+    FlexibleDataReport? collection = new();
+
+}
+<CascadingAuthenticationState>
+    <AuthorizeView Policy="@ServicePermission.PolicyNames.AppAdminName">
+        <Authorized>
+
+        </Authorized>
+        <NotAuthorized>
+            <h1>Access Denied</h1>
+        </NotAuthorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>
