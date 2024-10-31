@@ -60,7 +60,8 @@ builder.InstallServices(install =>
     .InstallServices(repository =>
     {
         repository.AddScoped<ActivityLogRepository>()
-        .AddScoped<TableInformationRepository>();
+        .AddScoped<TableInformationRepository>()
+        .AddScoped<CollectionRepository>();
     })
     .InstallServices(service =>
     {
@@ -71,7 +72,8 @@ builder.InstallServices(install =>
         .AddSingleton<IUrlIndeiceServices, UrlIndeiceServices>()
         .AddSingleton<IHttpContextAccessor,HttpContextAccessor>()
         .AddScoped<ISharedUserServices, SharedUserServices>()
-        .AddScoped<ITableInformationService,TableInformationService>();
+        .AddScoped<ITableInformationService,TableInformationService>()
+        .AddScoped<ICollectionServices,CollectionServices>();
     });
 // Add services to the container.
 
