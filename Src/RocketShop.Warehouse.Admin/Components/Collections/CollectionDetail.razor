@@ -16,7 +16,7 @@
     bool majorException, isLoading;
     string? condition, pagingSummaryFormat = "Displaying page {0} of {1} (total {2} records)";
     FlexibleDataReport? collection = new();
-    int currentPage = 1, lastPage = 1, per = 50;
+    int currentPage = 1, lastPage = 1, per = 50,_per = 50;
     long count = 0;
     protected override async Task OnInitializedAsync()
     {
@@ -64,6 +64,7 @@
     async Task SearchBtnClicked()
     {
         currentPage = 1;
+        per = _per;
         await FetchData();
     }
 }
@@ -81,8 +82,16 @@
             <br />
             <div class="form-group">
                 <label for="textarea">Query Pad</label>
-                <textarea id="textarea" name="textarea" cols="40" rows="5" class="form-control" @bind="condition" placeholder="@("Use SQL Express \"[Column]\" operator '[Value]' e.g ' \"Name\" = 'Joe'")"></textarea>
+                <textarea id="textarea" name="textarea" cols="40" rows="5" class="form-control" @bind="condition" placeholder="@("Use SQL Expression \"[Column]\" operator '[Value]' e.g ' \"Name\" = 'Joe'")"></textarea>
 
+            </div>
+            <div class="form-group col-5">
+                <label>Items Per Page</label>
+                <select class="form-select" aria-label="Default select example" @bind="_per">
+          <NHForeach Items="@(new[]{10,20,30,50,100,150,200,250,500})" Context="ctx">
+              <option value="@ctx" selected="@(ctx==_per)">@ctx Items</option>
+          </NHForeach>
+                </select>
             </div>
             <br />
             <button class="btn btn-primary" @onclick="SearchBtnClicked"><i class="search icon"></i> Search</button>
