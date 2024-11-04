@@ -11,8 +11,6 @@ namespace RocketShop.Warehouse.Admin.Services
     {
         Task<Either<Exception, FlexibleDataReport>> CallData(
             string collectionName,
-            string? orderBy = null,
-            bool asc = true,
             int? page = null,
             int per = 50
             );
@@ -20,8 +18,6 @@ namespace RocketShop.Warehouse.Admin.Services
         Task<Either<Exception, FlexibleDataReport>> CallDataWithCondition(
             string collectionName,
             string where,
-            string? orderBy = null,
-            bool asc = true,
             int? page = null,
             int per = 50
             );
@@ -41,16 +37,12 @@ namespace RocketShop.Warehouse.Admin.Services
     {
         public async Task<Either<Exception, FlexibleDataReport>> CallData(
             string collectionName, 
-            string? orderBy = null, 
-            bool asc = true, 
             int? page = null, 
             int per = 50
             ) =>
             await InvokeDapperServiceAsync(async warehouseConnection => await repository.CallData
             (
                 collectionName, 
-                orderBy, 
-                asc, 
                 page, 
                 per, 
                 (warehouseConnection as NpgsqlConnection)!)
@@ -58,8 +50,6 @@ namespace RocketShop.Warehouse.Admin.Services
         public async Task<Either<Exception, FlexibleDataReport>> CallDataWithCondition(
             string collectionName, 
             string where,
-            string? orderBy = null, 
-            bool asc = true, 
             int? page = null, 
             int per = 50
             ) =>
@@ -67,8 +57,6 @@ namespace RocketShop.Warehouse.Admin.Services
             (
                 collectionName, 
                 where,
-                orderBy, 
-                asc, 
                 page, 
                 per, 
                 (warehouseConnection as NpgsqlConnection)!)

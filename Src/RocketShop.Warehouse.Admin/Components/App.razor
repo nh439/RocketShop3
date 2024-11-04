@@ -97,6 +97,23 @@
         .table {
             text-align: center;
         }
+
+        div.scrollmenu {
+            overflow: auto;
+            white-space: nowrap;
+        }
+
+            div.scrollmenu a {
+                display: inline-block;
+                color: white;
+                text-align: center;
+                padding: 14px;
+                text-decoration: none;
+            }
+
+                div.scrollmenu a:hover {
+                    background-color: #777;
+                }
     </style>
     <Routes @rendermode="InteractiveServer" />
     <script src="_framework/blazor.web.js"></script>

@@ -1,17 +1,125 @@
 ﻿@page "/collection/{name}"
+@using Radzen
+@using Radzen.Blazor
+@using RocketShop.Framework.Extension
+@using RocketShop.SharedBlazor.Condition
+@using RocketShop.SharedBlazor.Loop
+@using RocketShop.SharedBlazor.Table
 @using RocketShop.Warehouse.Admin.Model
-<h3>@name</h3>
+@using RocketShop.Warehouse.Admin.Services
+@inject ICollectionServices collectionServices
+
 
 @code {
     [Parameter]
     public string name { get; set; }
-    bool majorException, minorException;
+    bool majorException, isLoading;
+    string? condition, pagingSummaryFormat = "Displaying page {0} of {1} (total {2} records)";
     FlexibleDataReport? collection = new();
+    int currentPage = 1, lastPage = 1, per = 50;
+    long count = 0;
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
 
+        if (state.User.Identity.IsNotNull().And(state.User.Identity!.IsAuthenticated))
+            await FetchData();
+        else
+            navigationManager.NavigateTo("/login");
+    }
+    async Task FetchData()
+    {
+        majorException = false;
+        try
+        {
+            isLoading = true;
+            var taskResult = condition.HasMessage() ?
+                collectionServices.CallDataWithCondition(name, condition!, currentPage, per) :
+                collectionServices.CallData(name, currentPage, per);
+            var result = await taskResult;
+            if (result.IsLeft)
+                throw result.GetLeft()!;
+            collection = result.GetRight()!;
+            currentPage = collection.CurrentPage;
+            count = collection.TotalCount;
+            lastPage = collection.TotalPages;
+
+        }
+        catch
+        {
+            majorException = true;
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+    async void PageChanged(PagerEventArgs args)
+    {
+
+        currentPage = args.PageIndex + 1;
+        await FetchData();
+    }
+    async Task SearchBtnClicked()
+    {
+        currentPage = 1;
+        await FetchData();
+    }
 }
 <CascadingAuthenticationState>
     <AuthorizeView Policy="@ServicePermission.PolicyNames.AppAdminName">
         <Authorized>
+            <h1 style="text-align:center">Collection</h1>
+            <br />
+            <NHIF Condition="collection.IsNotNull()">
+                <h2>Collection Name : @name</h2>
+                <h2>Column Size : @collection?.Columns?.Length.ToString("#,##0")</h2>
+                <h2>Row Size : @collection?.GetDataCount().ToString("#,##0")</h2>
+                <h2>Collection Size : @collection?.GetCellCount().ToString("#,##0") Cells</h2>
+            </NHIF>
+            <br />
+            <div class="form-group">
+                <label for="textarea">Query Pad</label>
+                <textarea id="textarea" name="textarea" cols="40" rows="5" class="form-control" @bind="condition" placeholder="@("Use SQL Express \"[Column]\" operator '[Value]' e.g ' \"Name\" = 'Joe'")"></textarea>
+
+            </div>
+            <br />
+            <button class="btn btn-primary" @onclick="SearchBtnClicked"><i class="search icon"></i> Search</button>
+            <br />
+            <NHIF Condition="majorException">
+                <YesOperation><h1 style="text-align:center">Something Went Wrong</h1></YesOperation>
+                <NoOperation>
+                    <div class="scrollmenu">
+                        <NHTable Columns="@collection!.GetColumns()"
+                                 HasDataFlagment="@collection.Data.HasData()"
+                                 LoadingFlagment="@isLoading"
+                                 NoDataDisplayText="No Item In Collection"
+                                 LoadingDisplayText="Loading Data..."
+                                 TableHeaderClass="table-dark"
+                                 TableBodyClass="table-success"
+                                 TableClass="table table-hover">
+                            <NHForeach Items="@collection.Data" Context="data">
+                                <tr>
+                                    <NHForeach Items="@collection.Columns" Context="column">
+                                        <td>@data[column]</td>
+                                    </NHForeach>
+                                </tr>
+                            </NHForeach>
+                        </NHTable>
+                    </div>
+                    <RadzenPager ShowPagingSummary="true"
+                                 PagingSummaryFormat="@pagingSummaryFormat"
+                                 HorizontalAlign="HorizontalAlign.Right"
+                                 Count="@((int)count)"
+                                 PageSize="@per"
+                                 PageNumbersCount="5"
+                                 PageChanged="@PageChanged"
+                                 FirstPageTitle="First"
+                                 LastPageTitle="Last" />
+
+                </NoOperation>
+            </NHIF>
 
         </Authorized>
         <NotAuthorized>
