@@ -94,7 +94,8 @@ namespace RocketShop.Migration
                         {
                             BrithDay = DateTime.UtcNow,
                             StartWorkDate = DateTime.UtcNow,
-                            UserId = user.Id
+                            UserId = user.Id,
+                            CreateBy="SYSTEM"
                         });
 
                         await context.SaveChangesAsync();
