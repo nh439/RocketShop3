@@ -1,0 +1,172 @@
+﻿@page "/collections"
+@using Radzen
+@using Radzen.Blazor
+@using RocketShop.Framework.Extension
+@using RocketShop.SharedBlazor.Condition
+@using RocketShop.SharedBlazor.Table
+@using RocketShop.Warehouse.Admin.Model
+@using RocketShop.Warehouse.Admin.Services
+@inject ITableInformationService tableInformationService
+
+@code {
+    List<TableDescription> collections = new();
+    bool majorException, minorException, isLoading;
+    string? query,_query;
+    int currentPage = 1, count = 0, lastpage = 1;
+    const string Headers = "Collection Name;Collection Type;Columns;Rows;";
+    string pagingSummaryFormat = "Displaying page {0} of {1} (total {2} records)";
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (state.User.Identity.IsNotNull().And(state.User.Identity!.IsAuthenticated))
+        {
+            await FetchData();
+        }
+        else
+        {
+            navigationManager.NavigateTo("/login");
+        }
+    }
+    async Task FetchData()
+    {
+        isLoading = true;
+        minorException = false;
+        majorException = false;
+        try
+        {
+            var collectionResult = await tableInformationService.ListTableInformation(query);
+            if (collectionResult.IsLeft)
+                throw collectionResult.GetLeft()!;
+            collections = collectionResult.GetRight()!;
+            var countResult = await tableInformationService.CountCollections(query);
+            var lastpageResult = await tableInformationService.GetCollectionsLastPage(query);
+            await Task.WhenAll(
+            Task.Run(() =>
+            {
+                if (countResult.IsLeft)
+                {
+                    minorException = true;
+                    count = -1;
+                    return;
+                }
+                count = countResult.GetRight()!;
+            }),
+            Task.Run(() =>
+            {
+                if (lastpageResult.IsLeft)
+                {
+                    minorException = true;
+                    lastpage = -1;
+                    return;
+                }
+                lastpage = lastpageResult.GetRight()!;
+            })
+            );
+        }
+        catch
+        {
+            majorException = true;
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+    async void PageChanged(PagerEventArgs args)
+    {
+
+        currentPage = args.PageIndex + 1;
+        await FetchData();
+    }
+    async Task SetSearch()
+    {
+        currentPage = 1;
+        query = _query;
+        await FetchData();
+    }
+}
+
+<CascadingAuthenticationState>
+    <AuthorizeView Policy="@ServicePermission.PolicyNames.AppAdminName">
+        <Authorized>
+            <NHIF Condition="majorException">
+                <NoOperation>
+                    <div style="text-align:center">
+                        <h1>Collections</h1>
+                    </div>
+                    <NHIF Condition="minorException">
+                        <div class="alert alert-warning text-3xl font-bold" role="alert">
+                            This Current Operation ran With Problems.
+                            &nbsp;&nbsp;
+                            For a Better experience <button class="btn btn-link text-3xl font-bold" @onclick="FetchData">Please Try Again.</button>
+                        </div>
+                    </NHIF>
+                    <br />
+                    <div>
+                        <div Class="row">
+                            <div Class="col-5">
+                                <div class="input-group mb-3">
+                                    <input type="text" class="form-control" @bind-value="_query" placeholder="Collection Name" aria-label="Recipient's username" aria-describedby="basic-addon2">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-info" type="button" @onclick="SetSearch"><i class="search icon"></i> Search</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-5"></div>
+                            <div class="col-2">
+                                <h3 class="text-2xl font-semibold">Count : @count</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <br />
+                    <br />
+                    <NHTypeTable Items="collections"
+                                 Columns="@Headers"
+                                 Context="collection"
+                                 TableClass="table table-hover"
+                                 LoadingFlagment="isLoading"
+                                 TableHeaderClass="table-dark"
+                                 TableBodyClass="table-success"
+                                 LoadingDisplayText="Loading..."
+                                 NoDataDisplayText="No Collections">
+                        <tr>
+                            <td>@collection.TableName</td>
+                            <td>
+                                <NHIF Condition="collection.Table">
+                                    <YesOperation>
+                                        <b>Physical</b>
+                                    </YesOperation>
+                                    <NoOperation>
+                                        <b>Virtual</b>
+                                    </NoOperation>
+                                </NHIF>
+                            </td>
+                            <td>@collection.Columns.ToString("#,##0")</td>
+                            <td>@collection.Rows.ToString("#,##0")</td>
+                            <td>
+                                <MudButton Href="@("/collection/"+@collection.TableName)" Variant="MudBlazor.Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.TableView">View Data</MudButton>
+                            </td>
+                        </tr>
+                    </NHTypeTable>
+                    <RadzenPager ShowPagingSummary="true"
+                                 PagingSummaryFormat="@pagingSummaryFormat"
+                                 HorizontalAlign="HorizontalAlign.Right"
+                                 Count="@count"
+                                 PageSize="20"
+                                 PageNumbersCount="@lastpage"
+                                 PageChanged="@PageChanged" />
+                </NoOperation>
+                <YesOperation>
+                    <center>
+                        <div class="alert alert-danger text-4xl font-bold" role="alert">Error While Gethering Collections Please <button class="btn btn-link text-4xl font-bold" @onclick="FetchData"> Try Again</button></div>
+                    </center>
+                </YesOperation>
+            </NHIF>
+          
+        </Authorized>
+        <NotAuthorized>
+            <h1>Access Denied</h1>
+        </NotAuthorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>

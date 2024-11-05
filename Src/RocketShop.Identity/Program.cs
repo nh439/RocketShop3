@@ -46,6 +46,8 @@ namespace RocketShop.Identity
                 {
                     options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                     options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+                    options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+
                 }).AddCookie(c=>c.ExpireTimeSpan = TimeSpan.FromHours(10));
                 install.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
                 install.AddSession()

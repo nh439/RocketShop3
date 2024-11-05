@@ -374,3 +374,4 @@ FodyWeavers.xsd
 /Src/RocketShop.Migration/appsettings.Development.json
 /Src/*/appsettings.*.json
 /Src/RocketShop.HR/appsettings.Development.json
+/.idea/.idea.RocketShop3/.idea

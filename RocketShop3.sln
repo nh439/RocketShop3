@@ -35,6 +35,17 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RocketShop.IntegrationTest"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RocketShop.AuditService", "Src\RocketShop.AuditService\RocketShop.AuditService.csproj", "{68D3DE91-58A7-4914-A982-A0AC4E3B0298}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RocketShop.Retail", "Src\RocketShop.Retail\RocketShop.Retail.csproj", "{2E5363DB-F015-4DEE-8252-5408AD17E6A4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RocketShop.Warehouse", "Src\RocketShop.Warehouse\RocketShop.Warehouse.csproj", "{3DCC31DB-F342-40F1-A594-70C68186F2CB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RocketShop.Warehouse.Admin", "Src\RocketShop.Warehouse.Admin\RocketShop.Warehouse.Admin.csproj", "{832172DC-6F55-4E70-99A4-254C1E314F77}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Asset", "Asset", "{1E732182-E8CA-422B-A47A-BC30586A4FA9}"
+	ProjectSection(SolutionItems) = preProject
+		SqlQuery_Address.sql = SqlQuery_Address.sql
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -85,6 +96,18 @@ Global
 		{68D3DE91-58A7-4914-A982-A0AC4E3B0298}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{68D3DE91-58A7-4914-A982-A0AC4E3B0298}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{68D3DE91-58A7-4914-A982-A0AC4E3B0298}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E5363DB-F015-4DEE-8252-5408AD17E6A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E5363DB-F015-4DEE-8252-5408AD17E6A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E5363DB-F015-4DEE-8252-5408AD17E6A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E5363DB-F015-4DEE-8252-5408AD17E6A4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3DCC31DB-F342-40F1-A594-70C68186F2CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3DCC31DB-F342-40F1-A594-70C68186F2CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3DCC31DB-F342-40F1-A594-70C68186F2CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3DCC31DB-F342-40F1-A594-70C68186F2CB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{832172DC-6F55-4E70-99A4-254C1E314F77}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{832172DC-6F55-4E70-99A4-254C1E314F77}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{832172DC-6F55-4E70-99A4-254C1E314F77}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{832172DC-6F55-4E70-99A4-254C1E314F77}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -101,6 +124,9 @@ Global
 		{A2EDB4D5-3791-4F4D-9C24-335937D86E43} = {62E552C3-BD37-4E7E-855A-34345833D260}
 		{12887B53-611B-4CDB-A591-E470D840A539} = {F405D7CF-29F6-45F7-B3EB-CA6214A8B285}
 		{68D3DE91-58A7-4914-A982-A0AC4E3B0298} = {62E552C3-BD37-4E7E-855A-34345833D260}
+		{2E5363DB-F015-4DEE-8252-5408AD17E6A4} = {62E552C3-BD37-4E7E-855A-34345833D260}
+		{3DCC31DB-F342-40F1-A594-70C68186F2CB} = {62E552C3-BD37-4E7E-855A-34345833D260}
+		{832172DC-6F55-4E70-99A4-254C1E314F77} = {62E552C3-BD37-4E7E-855A-34345833D260}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4D12E384-EE12-4581-B12B-F75B41D9F8C6}

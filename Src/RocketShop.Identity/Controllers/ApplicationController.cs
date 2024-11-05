@@ -24,6 +24,18 @@ namespace RocketShop.Identity.Controllers
                 var hrUrl = $"{url.HRUrl}/Signed?id_token={token}";
                 return Redirect(hrUrl);
             });
+        [Authorize]
+        [Route("WHAdmin")]
+        public async Task<IActionResult> WarehouseAdmin() =>
+            await InvokeControllerServiceAsync(async () =>
+            {
+                var token = TokenHelper.BuildToken(HttpContext);
+                var urlResult = await urlIndeiceServices.GetUrls();
+                var url = urlResult.GetRight()!;
+                var WHAdminUrl = $"{url.WarehouseAdminUrl}/Signed?id_token={token}";
+                return Redirect(WHAdminUrl);
+            });
+
         
     }
 }

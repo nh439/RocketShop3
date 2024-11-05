@@ -36,7 +36,7 @@ namespace RocketShop.Migration
     .AddClaimsPrincipalFactory<UserClaimsPrincipalFactory<User, IdentityRole>>()
     .AddEntityFrameworkStores<IdentityContext>()
     .AddDefaultTokenProviders();
-                service.InstallDatabase<IdentityContext,AuditLogContext>()
+                service.InstallDatabase<IdentityContext,AuditLogContext,WarehouseContext>()
                 .AddAuthorization()
                 .AddEndpointsApiExplorer()
                 .AddSwaggerGen();
@@ -61,10 +61,13 @@ namespace RocketShop.Migration
                     Console.WriteLine("Start Migrate");
                     var context = scope.ServiceProvider.GetRequiredService<IdentityContext>();
                     var auditContext = scope.ServiceProvider.GetRequiredService<AuditLogContext>();
+                    var warehouseContext = scope.ServiceProvider.GetRequiredService<WarehouseContext>();
                     context!.Database.Migrate();
                     Console.WriteLine("Identity Migrate Success");
                     auditContext!.Database.Migrate();
                     Console.WriteLine("Audit Log Migrate Success");
+                     warehouseContext!.Database.Migrate();
+                    Console.WriteLine("Warehouse Migrate Success");
                     Console.WriteLine("End Migrate");
                     Console.WriteLine("Create First User");
                     using var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
@@ -91,7 +94,8 @@ namespace RocketShop.Migration
                         {
                             BrithDay = DateTime.UtcNow,
                             StartWorkDate = DateTime.UtcNow,
-                            UserId = user.Id
+                            UserId = user.Id,
+                            CreateBy="SYSTEM"
                         });
 
                         await context.SaveChangesAsync();

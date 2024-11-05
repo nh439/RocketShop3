@@ -14,7 +14,7 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
     public static class QueryGenerator
     {
         public static QueryStore CreateQueryStore(this IDbConnection connection,
-            string tableName) => new QueryStore(connection, tableName);
+            string tableName,bool debugMode = false) => new QueryStore(connection, tableName,debugMode);
 
         public static SqlResult Compiled(this QueryStore store,StatementType statementType = StatementType.Select,object? updateValue = null)
         {
@@ -85,13 +85,23 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
                         paramId++;
                         continue;
                     }
-                    if(cond.Operator == SqlOperator.WhereSub)
+                    else if (cond.Operator == SqlOperator.Contains)
+                    {
+                        string pc = $"P_{paramId}";
+                        var cc = $" \"{cond.ColumnName}\" like @{pc}";
+                        data.Add(pc,$"%{cond.Value!}%");
+                        where += cc;
+                        paramId++;
+                        continue;
+                    }
+                    if (cond.Operator == SqlOperator.WhereSub)
                     {
                         var subQueryObj = cond.queryStore.conditions!.CompiledConditionWithParameterizedMode();
                         where += $" ({subQueryObj.Item1})";
                         subQueryObj.Item2.HasDataAndForEach(d => data.Add(d.Key, d.Value));
                         continue;
                     }
+                   
                     string pn = $"P_{paramId}";
                     var ce = $" \"{cond.ColumnName}\" {cond.Operator.GetOperator()} @{pn}";
                     data.Add(pn, cond.Value!);

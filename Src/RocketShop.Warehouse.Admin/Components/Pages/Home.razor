@@ -1,0 +1,102 @@
+﻿@page "/"
+@using RocketShop.Framework.Extension
+@using RocketShop.Warehouse.Admin.ServicePermission
+@using RocketShop.Warehouse.Admin.Services
+@inject ITableInformationService tableInformationService
+@code {
+    int tableCount = 0;
+    bool hasMinorException;
+    protected override async Task OnInitializedAsync()
+    {
+        var tables = await tableInformationService.ListTableNames();
+        var views = await tableInformationService.ListViewNames();
+        if (tables.IsLeft.Or(views.IsLeft))
+        {
+            hasMinorException = true;
+        }
+        else
+        {
+            tableCount = tables.GetRight()!.Count() + views.GetRight()!.Count();
+        }
+        StateHasChanged();
+    }
+
+}
+<PageTitle>Warehouse Admin Center</PageTitle>
+
+<div style="text-align: center;">
+    <h1>Rocket Shop</h1>
+    <h2>Warehouse Admin Center</h2>
+</div>
+<CascadingAuthenticationState>
+    <AuthorizeView>
+        <Authorized>
+            <AuthorizeView Policy="@PolicyNames.AppAdminName" Context="policied">
+                <Authorized>
+                    <h2>You're Logged In</h2>
+                    <div class="row" style="font-weight:bolder">
+                        <div class="col">
+                            <div class="card bg-primary" style="color:whitesmoke">
+                                <div class="card-body">
+                                    <h2 style="text-align:left">Collections</h2>
+                                    <br />
+                                    <h3 style="text-align:right">@tableCount.ToString("#,##0")</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="card bg-warning">
+                                <div class="card-body">
+                                    <h2 style="text-align:left">UnSafe Client</h2>
+                                    <br />
+                                    <h3 style="text-align:right">12</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="card bg-danger" style="color:whitesmoke">
+                                <div class="card-body">
+                                    <h2 style="text-align:left">Incomplete Client</h2>
+                                    <br />
+                                    <h3 style="text-align:right">312</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <br />
+                    <div class="row">
+                        <div class="col-1"></div>
+                        <div class="col-5">
+                            <div class="card">
+                                <img class="card-img-top" src="/Asset/warehouse.jpg" alt="Warehouse Images" width="100" height="220">
+                                <div class="card-body">
+                                    <h5 class="card-title" style="font-weight:bolder">Collections Management</h5>
+                                    <p class="card-text">Oversee and Access System Data.</p>
+                                    <a href="/Collections" class="btn btn-primary btn-lg btn-block">Manage Collections</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-5">
+                            <div class="card">
+                                <img class="card-img-top" src="/Asset/Security01.jpg" alt="Card image cap" width="100" height="220">
+                                <div class="card-body">
+                                    <h5 class="card-title" style="font-weight:bolder">Credential Control</h5>
+                                    <p class="card-text">Manage Access Keys and Permissions for Collection Accessibility.</p>
+                                    <a href="/Clients" class="btn btn-info btn-lg btn-block">Manage Credential</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-1"></div>
+                    </div>
+                </Authorized>
+                <NotAuthorized>Access Denied</NotAuthorized>
+            </AuthorizeView>
+        </Authorized>
+        <NotAuthorized>
+            <h2>You're Not Logged In</h2>
+            <h3>Please <MudButton Href="/login" Variant="Variant.Filled" Size="Size.Small" Color="Color.Primary">Login</MudButton></h3>
+        </NotAuthorized>
+    </AuthorizeView>
+
+</CascadingAuthenticationState>
+
