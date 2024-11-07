@@ -7,7 +7,6 @@
 @using RocketShop.Warehouse.Admin.Model
 @using RocketShop.Warehouse.Admin.Services
 @inject ITableInformationService tableInformationService
-
 @code {
     List<TableDescription> collections = new();
     bool majorException, minorException, isLoading;
@@ -21,6 +20,7 @@
         if (state.User.Identity.IsNotNull().And(state.User.Identity!.IsAuthenticated))
         {
             await FetchData();
+            await activityLogService.Create("Warehouse Admin", "Collection", "View Collections");
         }
         else
         {

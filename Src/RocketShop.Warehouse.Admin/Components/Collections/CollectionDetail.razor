@@ -9,7 +9,6 @@
 @using RocketShop.Warehouse.Admin.Services
 @inject ICollectionServices collectionServices
 
-
 @code {
     [Parameter]
     public string name { get; set; }
@@ -23,7 +22,11 @@
         var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
 
         if (state.User.Identity.IsNotNull().And(state.User.Identity!.IsAuthenticated))
+        {
+            await activityLogService.Create("Warehouse Admin", "Collection", $"View Collection {name}");
             await FetchData();
+        }
+        
         else
             navigationManager.NavigateTo("/login");
     }

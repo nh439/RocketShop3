@@ -8,15 +8,14 @@
     bool hasMinorException;
     protected override async Task OnInitializedAsync()
     {
-        var tables = await tableInformationService.ListTableNames();
-        var views = await tableInformationService.ListViewNames();
-        if (tables.IsLeft.Or(views.IsLeft))
+        var countResult = await tableInformationService.CountCollections();
+        if (countResult.IsLeft)
         {
             hasMinorException = true;
         }
         else
         {
-            tableCount = tables.GetRight()!.Count() + views.GetRight()!.Count();
+            tableCount = countResult.GetRight();
         }
         StateHasChanged();
     }

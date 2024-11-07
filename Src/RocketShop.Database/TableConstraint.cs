@@ -35,6 +35,7 @@ namespace RocketShop.Database
         public const string ClientSecret = "Authorization_Client_Secret";
         public const string Token = "Authorization_Token";
         public const string AllowedObject = "Authorization_Allowed_Object";
+        public const string ClientHistory = "Authorization_Client_History";
         #endregion
     }
 }

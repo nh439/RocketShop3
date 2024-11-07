@@ -37,6 +37,9 @@ namespace RocketShop.Database.EntityFramework
 
             builder.Entity<AddressView>()
                 .HasNoKey().ToView(TableConstraint.AddressView);
+
+            builder.Entity<ClientHistory>().HasIndex(i => i.ClientId);
+            builder.Entity<ClientHistory>().HasIndex(i => i.Key);
         }
 
         public DbSet<Province> Province { get; set; }
@@ -47,6 +50,7 @@ namespace RocketShop.Database.EntityFramework
         public DbSet<ClientSecret> ClientSecret { get; set; }
         public DbSet<AllowedObject> AllowedObject { get; set; }
         public DbSet<Token> Token { get; set; }
+        public DbSet<ClientHistory> ClientHistory { get; set; }
 
         //Views
         public virtual DbSet<AddressView> AddressView { get; set; }
