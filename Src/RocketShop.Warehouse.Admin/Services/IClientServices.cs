@@ -9,6 +9,13 @@ namespace RocketShop.Warehouse.Admin.Services
 {
     public interface IClientServices
     {
+        Task<Either<Exception, List<Client>>> ListClient(string? search = null, int? page = null, int per = 10);
+        Task<Either<Exception, Client?>> GetClient(long clientId);
+        Task<Either<Exception, int>> CountClient(string? search = null);
+        Task<Either<Exception, int>> GetLastpage(string? search = null, int per = 10);
+        Task<Either<Exception, bool>> Create(Client client);
+        Task<Either<Exception, bool>> Update(Client client);
+        Task<Either<Exception, bool>> Delete(long id);
     }
     public class ClientServices(
         ILogger<ClientServices> logger,
@@ -33,5 +40,11 @@ namespace RocketShop.Warehouse.Admin.Services
 
         public async Task<Either<Exception, bool>> Create(Client client) =>
             await InvokeServiceAsync(async () => await clientRepository.Create(client));
+
+        public async Task<Either<Exception, bool>> Update(Client client)=>
+            await InvokeServiceAsync(async() => await clientRepository.Update(client));
+
+        public async Task<Either<Exception, bool>> Delete(long id)=>
+            await InvokeServiceAsync(async () => await clientRepository.Delete(id));
     }
 }

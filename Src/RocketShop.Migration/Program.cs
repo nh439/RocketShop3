@@ -58,10 +58,22 @@ namespace RocketShop.Migration
             {
                 try
                 {
+                    
                     Console.WriteLine("Start Migrate");
                     var context = scope.ServiceProvider.GetRequiredService<IdentityContext>();
                     var auditContext = scope.ServiceProvider.GetRequiredService<AuditLogContext>();
                     var warehouseContext = scope.ServiceProvider.GetRequiredService<WarehouseContext>();
+                    var whConnStr = warehouseContext.Database.GetConnectionString();
+                    var otherConnStr = new[]
+                    {
+                        auditContext.Database.GetConnectionString(),
+                      context.Database.GetConnectionString()
+                    };
+                    if(otherConnStr.Where(x=>x == whConnStr).HasData())
+                    {
+                        Console.WriteLine("Do not share the warehouse database with other databases.");
+                        return -2;
+                    }
                     context!.Database.Migrate();
                     Console.WriteLine("Identity Migrate Success");
                     auditContext!.Database.Migrate();
