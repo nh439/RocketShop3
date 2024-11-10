@@ -17,7 +17,7 @@ namespace RocketShop.Warehouse.Admin.Repository
             if (search.HasMessage())
                 result = result.Where(x =>
                 x.ClientId.ToLower().Contains(search!.ToLower()) ||
-               (x.Application.HasData() ? x.Application!.ToLower()!.Contains(search!.ToLower()) : false) ||
+                x.Application!.ToLower()!.Contains(search!.ToLower()) ||
                 x.ClientName.ToLower().Contains(search!.ToLower())
                 );
             result = result.OrderByDescending(x => x.Id);
@@ -33,7 +33,7 @@ namespace RocketShop.Warehouse.Admin.Repository
             search.HasMessage() ? 
             await entity.CountAsync(x =>
                 x.ClientId.ToLower().Contains(search!.ToLower()) ||
-               (x.Application.HasData() ? x.Application!.ToLower()!.Contains(search!.ToLower()) : false) ||
+                x.Application!.ToLower()!.Contains(search!.ToLower())  ||
                 x.ClientName.ToLower().Contains(search!.ToLower())) :
             await entity.CountAsync();
 
@@ -41,13 +41,16 @@ namespace RocketShop.Warehouse.Admin.Repository
              search.HasMessage() ?
             await entity.Where(x =>
                 x.ClientId.ToLower().Contains(search!.ToLower()) ||
-               (x.Application.HasData() ? x.Application!.ToLower()!.Contains(search!.ToLower()) : false) ||
+                x.Application!.ToLower()!.Contains(search!.ToLower()) ||
                 x.ClientName.ToLower().Contains(search!.ToLower())).GetLastpageAsync(per) :
             await entity.GetLastpageAsync(per);
 
-        public async Task<bool> Create(Client client)=>
+        public async Task<Client> Create(Client client)
+        {
             await entity.Add(client)
-            .Context.SaveChangesAsync().GeAsync(0);
+            .Context.SaveChangesAsync();
+            return client;
+        }
 
         public async Task<bool> Update(Client client)=>
             await entity.Where(x=>x.Id== client.Id)

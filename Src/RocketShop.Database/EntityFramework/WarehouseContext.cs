@@ -34,7 +34,8 @@ namespace RocketShop.Database.EntityFramework
             builder.Entity<AllowedObject>().HasIndex(i => new { i.Client, i.ObjectName });
             builder.Entity<ClientSecret>().HasIndex(i => i.Client);
             builder.Entity<Token>().HasIndex(i => i.Client);
-
+            builder.Entity<Client>().HasIndex(i => i.ClientId).IsUnique();
+            builder.Entity<Client>().HasIndex(i => i.ClientName).IsUnique();
             builder.Entity<AddressView>()
                 .HasNoKey().ToView(TableConstraint.AddressView);
 
