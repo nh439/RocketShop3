@@ -37,8 +37,8 @@ namespace RocketShop.AuditService.Services
     {
         public async Task<Either<Exception, bool>> Create(string division,string service,string logDetail) =>
             await InvokeServiceAsync(async () =>{
-                var userId = accessor.HttpContext.User.FindFirst(x => x.Type == ClaimTypes.NameIdentifier)!.Value;
-                var email = accessor.HttpContext.User.FindFirst(x => x.Type == ClaimTypes.Email)!.Value;
+                var userId = accessor.GetCurrentUserId();
+                var email = accessor.GetCurrentEmail();
                 var user = await identityContext.Users.FirstOrDefaultAsync(x => x.Id == userId);
                 var item = new ActivityLog
                 {

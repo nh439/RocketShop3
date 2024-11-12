@@ -29,7 +29,7 @@ namespace RocketShop.Warehouse.Admin.Repository
         public async Task<Client?> GetClient(long clientId) =>
             await entity.FirstOrDefaultAsync(x => x.Id == clientId);
 
-        public async Task<int> CountClient(string? search) =>
+        public async Task<long> CountClient(string? search) =>
             search.HasMessage() ? 
             await entity.CountAsync(x =>
                 x.ClientId.ToLower().Contains(search!.ToLower()) ||
@@ -70,5 +70,29 @@ namespace RocketShop.Warehouse.Admin.Repository
             await entity.
             Where(x => x.Id == id)
             .ExecuteDeleteAsync().GeAsync(0);
+
+        public async Task<long> GetUnsafeClient() =>
+            await entity.CountAsync(x => !x.RequireSecret);
+
+        public async Task<long> GetIncompleteClient() =>
+            await entity.CountAsync(x =>
+            (x.RequireSecret && !context.ClientSecret.Any(y=>y.Client == x.Id)) ||
+            (string.IsNullOrEmpty( x.Application)) ||
+            !context.AllowedObject.Any(z=>z.Client==x.Id)
+            );
+
+        public async Task<long[]> ListUnSafeClientId() =>
+            await entity.Where(x => !x.RequireSecret)
+            .Select(s => s.Id)
+            .ToArrayAsync();
+
+        public async Task<long[]> ListIncompleteClientId() =>
+             await entity.Where(x =>
+            (x.RequireSecret && !context.ClientSecret.Any(y => y.Client == x.Id)) ||
+            (string.IsNullOrEmpty(x.Application)) ||
+            !context.AllowedObject.Any(z => z.Client == x.Id)
+            )
+            .Select(s => s.Id)
+            .ToArrayAsync();
     }
 }

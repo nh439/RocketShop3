@@ -17,6 +17,7 @@ using RocketShop.Warehouse.Admin.ServicePermission;
 using RocketShop.Warehouse.Admin.Middleware;
 using RocketShop.Warehouse.Admin.Repository;
 using RocketShop.Warehouse.Admin.Services;
+using RocketShop.SharedBlazor.SharedBlazorService.Scope;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.InstallSerilog()
@@ -75,7 +76,8 @@ builder.InstallServices(install =>
         .AddScoped<ISharedUserServices, SharedUserServices>()
         .AddScoped<ITableInformationService,TableInformationService>()
         .AddScoped<ICollectionServices,CollectionServices>()
-        .AddScoped<IClientServices,ClientServices>();
+        .AddScoped<IClientServices,ClientServices>()
+        .AddScoped<IDialogServices,DialogServices>();
     });
 // Add services to the container.
 

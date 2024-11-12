@@ -3,19 +3,24 @@
 @using RocketShop.Warehouse.Admin.ServicePermission
 @using RocketShop.Warehouse.Admin.Services
 @inject ITableInformationService tableInformationService
+@inject IClientServices clientServices
 @code {
-    int tableCount = 0;
+    long tableCount = 0,unsafeClient =0,incompleteClient =0;
     bool hasMinorException;
     protected override async Task OnInitializedAsync()
     {
         var countResult = await tableInformationService.CountCollections();
-        if (countResult.IsLeft)
+        var unsafeResult = await clientServices.GetUnSafeClient();
+        var incompleteResult = await clientServices.GetIncompletedClient();
+        if (countResult.IsLeft.Or(unsafeResult.IsLeft,incompleteResult.IsLeft))
         {
             hasMinorException = true;
         }
         else
         {
             tableCount = countResult.GetRight();
+            unsafeClient = unsafeResult.GetRight();
+            incompleteClient = incompleteResult.GetRight();
         }
         StateHasChanged();
     }
@@ -54,7 +59,7 @@
                                     <div class="card-body">
                                         <h2 style="text-align:left">UnSafe Client</h2>
                                         <br />
-                                        <h3 style="text-align:right">12</h3>
+                                        <h3 style="text-align:right">@unsafeClient.ToString("#,##0")</h3>
                                     </div>
                                 </div>
                             </div>
@@ -63,7 +68,7 @@
                                     <div class="card-body">
                                         <h2 style="text-align:left">Incomplete Client</h2>
                                         <br />
-                                        <h3 style="text-align:right">312</h3>
+                                        <h3 style="text-align:right">@incompleteClient.ToString("#,##0")</h3>
                                     </div>
                                 </div>
                             </div>
