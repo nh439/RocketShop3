@@ -50,10 +50,20 @@ builder.InstallServices(install =>
         }).AddCookie(c => c.ExpireTimeSpan = TimeSpan.FromHours(10));
         baseService.AddAuthorization(a =>
         {
-            a.AddPolicy(PolicyNames.AppAdminName, p =>
+            a.AddPolicy(PolicyNames.AppCredentialManagerName, p =>
             {
-                p.RequireClaim("Permission", PolicyPermissions.AppAdminPermissions);
+                p.RequireClaim("Permission", PolicyPermissions.AppCredentialManagerPermissions);
             });
+            a.AddPolicy(PolicyNames.DataMaintainerName, p =>
+            {
+                p.RequireClaim("Permission", PolicyPermissions.DataMaintainerPermissions);
+            });
+             a.AddPolicy(PolicyNames.AnyWHPolicyName, p =>
+            {
+                p.RequireClaim("Permission", PolicyPermissions.AnyWHPermissions);
+            });
+
+
         })
         .AddMudServices()
         .AddRadzenComponents();

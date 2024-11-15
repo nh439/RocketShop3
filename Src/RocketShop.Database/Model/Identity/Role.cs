@@ -13,7 +13,7 @@ namespace RocketShop.Database.Model.Identity
     {
         [Key]
         public int Id { get; set; }
-        public string RoleName {get; set; }
+        public string RoleName { get; set; }
         //FIXTURE SHOP
         public bool CreateFixtureRequest { get; set; } = true;
         public bool EndFixtureRequest { get; set; } = true;
@@ -38,5 +38,8 @@ namespace RocketShop.Database.Model.Identity
         public bool HRAuditLog { get; set; } = true;
         //ADMIN
         public bool ApplicationAdmin { get; set; } = true;
+        //Warehouse
+        public bool WHCollectionMaintainer { get; set; } = true;
+        public bool WHManageCredential { get; set; } = true;
     }
 }
