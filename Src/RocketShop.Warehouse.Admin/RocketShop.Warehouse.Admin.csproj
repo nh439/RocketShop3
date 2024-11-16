@@ -10,6 +10,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="wwwroot\Css\Loading.css" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\Css\Loading.css" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Blazored.TextEditor" Version="1.1.0" />
     <PackageReference Include="Blazored.Typeahead" Version="4.7.0" />
     <PackageReference Include="LanguageExt.Core" Version="4.4.9" />
