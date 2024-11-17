@@ -12,14 +12,15 @@ namespace RocketShop.Framework.Services
 {
     public class BaseServices<TService>(string serviceName,
             ILogger<TService> logger,
-            IDbConnection? connection = null) : IDisposable
+            IDbConnection? connection = null,
+            bool AutoDisposedConnection = true) : IDisposable
     {
 
-        protected Either<Exception,T> InvokeService<T>(Func<T> operation,
+        protected Either<Exception, T> InvokeService<T>(Func<T> operation,
             Action<Exception>? catchOperation = null,
             string? errorMessage = null,
             int retries = 0,
-            bool isExponential= false,
+            bool isExponential = false,
             int intervalSecond = 1
             )
         {
@@ -39,12 +40,12 @@ namespace RocketShop.Framework.Services
 #pragma warning restore CS8602 // Dereference of a possibly null reference.                
                     if (retriesCount.GeOrEq(retries))
                         return x;
-                    PolicyManager.AppliedDelayPolicy(retriesCount,intervalSecond, isExponential);
+                    PolicyManager.AppliedDelayPolicy(retriesCount, intervalSecond, isExponential);
                     retriesCount++;
                 }
             }
         }
-        protected async Task< Either<Exception,T>> InvokeServiceAsync<T>(Func<Task<T>> operation,
+        protected async Task<Either<Exception, T>> InvokeServiceAsync<T>(Func<Task<T>> operation,
             Action<Exception>? catchOperation = null,
             string? errorMessage = null,
             int retries = 0,
@@ -128,7 +129,7 @@ namespace RocketShop.Framework.Services
                 }
             }
         }
-        protected Either<Exception, T> InvokeDapperService<T>(Func<IDbConnection,T> operation,
+        protected Either<Exception, T> InvokeDapperService<T>(Func<IDbConnection, T> operation,
             Action<Exception>? catchOperation = null,
             string? errorMessage = null,
             int retries = 0,
@@ -157,7 +158,7 @@ namespace RocketShop.Framework.Services
                         PolicyManager.AppliedDelayPolicy(retriesCount, intervalSecond, isExponential);
                         retriesCount++;
                         continue;
-                    }             
+                    }
                     ex = x;
                 }
                 finally
@@ -168,7 +169,7 @@ namespace RocketShop.Framework.Services
                 return ex;
             }
         }
-        protected async Task<Either<Exception, T>> InvokeDapperServiceAsync<T>(Func<IDbConnection,Task<T>> operation,
+        protected async Task<Either<Exception, T>> InvokeDapperServiceAsync<T>(Func<IDbConnection, Task<T>> operation,
             Action<Exception>? catchOperation = null,
             string? errorMessage = null,
             int retries = 0,
@@ -212,10 +213,38 @@ namespace RocketShop.Framework.Services
 
         void IDisposable.Dispose()
         {
-            if(connection != null && connection?.State  != ConnectionState.Closed)
+            if (AutoDisposedConnection)
+            {
+                if (connection != null && connection?.State != ConnectionState.Closed)
+                    connection?.Close();
+                connection?.Dispose();
+            }
+        }
+
+        public void ClearConnection()
+        {
+            if (connection != null && connection?.State != ConnectionState.Closed)
                 connection?.Close();
             connection?.Dispose();
         }
+
+        public void OverrideConnection(IDbConnection newConnection) =>
+            connection = newConnection;
+
+        public void OpenConnection()
+        {
+            if(connection?.State != ConnectionState.Open)
+                connection?.Open();
+        }
+
+        public void CloseConnection()
+        {
+            if(connection?.State != ConnectionState.Closed)
+                connection?.Close();
+        }
+
+        public IDbConnection? GetConnection() => connection;
+
 
     }
 }
