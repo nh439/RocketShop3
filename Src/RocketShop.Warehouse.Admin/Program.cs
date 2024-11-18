@@ -73,7 +73,8 @@ builder.InstallServices(install =>
         repository.AddScoped<ActivityLogRepository>()
         .AddScoped<TableInformationRepository>()
         .AddScoped<CollectionRepository>()
-        .AddScoped<ClientRepository>();
+        .AddScoped<ClientRepository>()
+        .AddScoped<ClientAllowedObjectRepository>();
     })
     .InstallServices(service =>
     {

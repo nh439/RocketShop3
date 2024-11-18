@@ -2,6 +2,7 @@
 using Npgsql;
 using RocketShop.Database.Extension;
 using RocketShop.Database.Model.Warehouse.Authorization;
+using RocketShop.Framework.Extension;
 using RocketShop.Framework.Services;
 using RocketShop.Warehouse.Admin.Repository;
 
@@ -20,11 +21,16 @@ namespace RocketShop.Warehouse.Admin.Services
         Task<Either<Exception, long>> GetIncompletedClient();
         Task<Either<Exception, long[]>> ListUnSafeClientId();
         Task<Either<Exception, long[]>> ListIncompleteClientId();
+        Task<Either<Exception, bool>> SetAllowedApplication(long clientId,
+            List<string>? readAllowedObject,
+            List<string>? writeAllowedObject);
+        Task<Either<Exception, List<AllowedObject>>> ListAllowedObject(long clientId);
     }
     public class ClientServices(
         ILogger<ClientServices> logger,
         IConfiguration configuration,
-        ClientRepository clientRepository) : BaseServices<ClientServices>(
+        ClientRepository clientRepository,
+        ClientAllowedObjectRepository clientAllowedObjectRepository) : BaseServices<ClientServices>(
             "Client Service",
             logger,
             new NpgsqlConnection(configuration.GetWarehouseConnectionString()
@@ -63,5 +69,37 @@ namespace RocketShop.Warehouse.Admin.Services
         public async Task<Either<Exception, long[]>> ListIncompleteClientId() =>
             await InvokeServiceAsync(async () => await clientRepository.ListIncompleteClientId());
 
+        public async Task<Either<Exception, bool>> SetAllowedApplication(long clientId,
+            List<string>? readAllowedObject,
+            List<string>? writeAllowedObject) =>
+            await InvokeDapperServiceAsync(async warehouseConnection =>
+            {
+                List<AllowedObject> allowedObjects = new List<AllowedObject>();
+                var allowedList = readAllowedObject?.Union(writeAllowedObject?? new List<string>())
+                .Distinct();
+                await allowedList.HasDataAndParallelForEachAsync(allowed =>
+                {
+                    var obj = new AllowedObject
+                    {
+                        ObjectName = allowed,
+                        Read = readAllowedObject.HasData() ? readAllowedObject!.Where(x => x == allowed).HasData() : false,
+                        Write = writeAllowedObject.HasData() ? writeAllowedObject!.Where(x => x == allowed).HasData() :false
+                    };
+                    allowedObjects.Add(obj);
+                });
+                warehouseConnection.Open();
+                using var transaction = warehouseConnection.BeginTransaction();
+                var result = await clientAllowedObjectRepository.SetAllowedObject(
+                    clientId, 
+                    allowedObjects, 
+                    warehouseConnection, 
+                    transaction);
+                transaction.Commit();
+                warehouseConnection.Close();
+                return result;
+            });
+
+        public async Task<Either<Exception, List<AllowedObject>>> ListAllowedObject(long clientId) =>
+            await InvokeServiceAsync(async () => await clientAllowedObjectRepository.GetAllowedObject(clientId));
     }
 }
