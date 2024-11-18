@@ -74,7 +74,8 @@ builder.InstallServices(install =>
         .AddScoped<TableInformationRepository>()
         .AddScoped<CollectionRepository>()
         .AddScoped<ClientRepository>()
-        .AddScoped<ClientAllowedObjectRepository>();
+        .AddScoped<ClientAllowedObjectRepository>()
+        .AddScoped<ClientSecretRepository>();
     })
     .InstallServices(service =>
     {
