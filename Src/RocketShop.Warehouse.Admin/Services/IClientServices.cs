@@ -4,6 +4,7 @@ using RocketShop.Database.Extension;
 using RocketShop.Database.Model.Warehouse.Authorization;
 using RocketShop.Framework.Extension;
 using RocketShop.Framework.Services;
+using RocketShop.Shared.Helper;
 using RocketShop.Warehouse.Admin.Repository;
 
 namespace RocketShop.Warehouse.Admin.Services
@@ -25,12 +26,21 @@ namespace RocketShop.Warehouse.Admin.Services
             List<string>? readAllowedObject,
             List<string>? writeAllowedObject);
         Task<Either<Exception, List<AllowedObject>>> ListAllowedObject(long clientId);
+        Task<Either<Exception, bool>> CreateClientSecret(
+            long clientId,
+            string secretValue,
+            string? description = null,
+            DateTime? expired = null
+            );
+        Task<Either<Exception, bool>> DeleteSecret(string secretId);
+        Task<Either<Exception, List<ClientSecret>>> ListSecret(long clientId);
     }
     public class ClientServices(
         ILogger<ClientServices> logger,
         IConfiguration configuration,
         ClientRepository clientRepository,
-        ClientAllowedObjectRepository clientAllowedObjectRepository) : BaseServices<ClientServices>(
+        ClientAllowedObjectRepository clientAllowedObjectRepository,
+        ClientSecretRepository clientSecretRepository) : BaseServices<ClientServices>(
             "Client Service",
             logger,
             new NpgsqlConnection(configuration.GetWarehouseConnectionString()
@@ -101,5 +111,38 @@ namespace RocketShop.Warehouse.Admin.Services
 
         public async Task<Either<Exception, List<AllowedObject>>> ListAllowedObject(long clientId) =>
             await InvokeServiceAsync(async () => await clientAllowedObjectRepository.GetAllowedObject(clientId));
+
+        public async Task<Either<Exception, bool>> CreateClientSecret(
+            long clientId,
+            string secretValue,
+            string? description = null,
+            DateTime? expired = null
+            ) =>
+            await InvokeServiceAsync(async () =>
+            {
+                var hashed = secretValue.HashPasword(out var salt);
+                if(expired.HasValue)
+                    expired = DateTime.SpecifyKind(expired.Value, DateTimeKind.Utc);
+                var secret = new ClientSecret
+                {
+                    Client = clientId,
+                    Description = description,
+                    Expired = expired,
+                    Salt = Convert.ToBase64String(salt),
+                    SecretValue = hashed
+                };
+                return await clientSecretRepository.CreateSecret(secret);
+            });
+
+        public async Task<Either<Exception, bool>> DeleteSecret(string secretId) =>
+            await InvokeServiceAsync(async () => await clientSecretRepository.DeleteSecret(secretId));
+
+        public async Task<Either<Exception, List<ClientSecret>>> ListSecret(long clientId) =>
+            await InvokeServiceAsync(async () =>
+            {
+                var result = await clientSecretRepository.ListSecret(clientId);
+                await result.HasDataAndParallelForEachAsync(f => f.SecretValue = "Secret");
+                return result;
+            });
     }
 }

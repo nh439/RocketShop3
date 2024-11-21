@@ -24,5 +24,12 @@ namespace RocketShop.Framework.Extension
 
         public static string ToDateAndTimeFormat(this DateTime dateTime) =>
             dateTime.ToString("yyyy-MM-dd HH:mm:ss");
+
+        public static string ToLocalDateAndTimeFormat(this DateTime dateTime) =>
+          dateTime.Kind != DateTimeKind.Local ? 
+            dateTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") :
+            dateTime.ToString("yyyy-MM-dd HH:mm:ss");
+
+
     }
 }

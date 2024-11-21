@@ -17,5 +17,9 @@ namespace RocketShop.Warehouse.Admin.Repository
             await entity.Where(x=>x.Id == id)
             .ExecuteDeleteAsync().GeAsync(0);
 
+        public async Task<List<ClientSecret>> ListSecret(long clientId) =>
+            await entity.Where(x => x.Client == clientId)
+            .AsNoTracking()
+            .ToListAsync();
     }
 }
