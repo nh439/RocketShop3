@@ -7,9 +7,13 @@
 @using RocketShop.Warehouse.Admin.Model
 @using RocketShop.Warehouse.Admin.Services
 @inject ITableInformationService tableInformationService
-
 @code {
     List<TableDescription> collections = new();
+    List<BreadcrumbItem> items = new List<BreadcrumbItem>
+    {
+    new BreadcrumbItem("Home", href: "/"),
+    new BreadcrumbItem("Collections",  href: null, disabled: true)
+    };
     bool majorException, minorException, isLoading;
     string? query,_query;
     int currentPage = 1, count = 0, lastpage = 1;
@@ -21,6 +25,7 @@
         if (state.User.Identity.IsNotNull().And(state.User.Identity!.IsAuthenticated))
         {
             await FetchData();
+            await activityLogService.Create("Warehouse Admin", "Collection", "View Collections");
         }
         else
         {
@@ -88,7 +93,7 @@
 }
 
 <CascadingAuthenticationState>
-    <AuthorizeView Policy="@ServicePermission.PolicyNames.AppAdminName">
+    <AuthorizeView Policy="@ServicePermission.PolicyNames.DataMaintainerName">
         <Authorized>
             <NHIF Condition="majorException">
                 <NoOperation>
@@ -102,6 +107,8 @@
                             For a Better experience <button class="btn btn-link text-3xl font-bold" @onclick="FetchData">Please Try Again.</button>
                         </div>
                     </NHIF>
+                    <br />
+                    <MudBreadcrumbs Items="items" />
                     <br />
                     <div>
                         <div Class="row">
@@ -166,7 +173,7 @@
           
         </Authorized>
         <NotAuthorized>
-            <h1>Access Denied</h1>
+            <RocketShop.SharedBlazor.Page.AccessDenied/>
         </NotAuthorized>
     </AuthorizeView>
 </CascadingAuthenticationState>

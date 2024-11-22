@@ -274,6 +274,12 @@ namespace RocketShop.Migration.Migrations
                     b.Property<bool>("ViewSaleData")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("WHCollectionMaintainer")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("WHManageCredential")
+                        .HasColumnType("boolean");
+
                     b.HasKey("Id");
 
                     b.ToTable("Roles");
@@ -301,7 +307,9 @@ namespace RocketShop.Migration.Migrations
                             ViewAnotherSalesValues = true,
                             ViewAnotherUserFixtureData = true,
                             ViewEmployeeDeepData = true,
-                            ViewSaleData = true
+                            ViewSaleData = true,
+                            WHCollectionMaintainer = true,
+                            WHManageCredential = true
                         });
                 });
 

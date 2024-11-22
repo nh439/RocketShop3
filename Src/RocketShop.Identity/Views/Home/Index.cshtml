@@ -32,49 +32,44 @@
 
 }
 
-<center>
-    <h1>Rocket Shop</h1>
-    <h2>Authenication And Account Center</h2>
-</center>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 @if (accessor.HttpContext.IsNotNull() && accessor.HttpContext!.User.Identity!.IsAuthenticated)
 {
-    <h1>Hi @name</h1>
-    <br />
-    <div class="row">
-        <div class="col">
-            <a href="Profile" class="btn btn-primary btn-block">View My Profile</a>
+   
+    <link href="~/css/landing.css" rel="stylesheet"/>
+
+    <div class="container">
+        <div class="header">
+            <h1>Rocket Shop</h1>
+            <h2>Authentication And Account Center</h2>
         </div>
-        <div class="col">
-            <a href="Password" class="btn btn-warning btn-block">Change Password</a>
+        <div class="greeting">Hi @name</div>
+        <div class="action-buttons" style="font-weight:bolder">
+            <a href="Profile" class="btn btn-primary btn-lg btn-block mx-2">View My Profile</a>
+            <a href="Password" class="btn btn-warning btn-lg btn-block mx-2" style="color:white">Change Password</a>
+            <a href="home/logout" class="btn btn-secondary btn-lg btn-block mx-2">Logout</a>
         </div>
-        <div class="col">
-            <a href="home/logout" class="btn btn-secondary btn-block">Logout</a>
-        </div>
-    </div>
-    <h2 >Our Application</h2>
-    <div class="row">
-        <div class="col">
-            <a href="Application/HR" class="btn btn-info btn-block">HR</a>
-        </div>
-        <div class="col">
-            <a href="/" class="btn btn-success btn-block">Retail</a>
-        </div>
-        <div class="col">
-            <a href="/" class="btn btn-danger btn-block">Repair Shop</a>
+        <div class="section-title">Our Application</div>
+        <div class="app-buttons">
+            <a href="Application/HR" class="app-button hr-button">HR</a>
+            <a href="/" class="app-button retail-button">Retail</a>
+            <a href="/" class="app-button repair-button">Repair Shop</a>
+            <a href="Application/WHAdmin" class="app-button warehouse-button">Warehouse Admin</a>
         </div>
     </div>
-    <br />
-    <div class="row">
-        <div class="col">
-            <a href="Application/WHAdmin" class="btn btn-danger btn-block">Warehouse Admin</a>
-        </div>
-        <div class="col"></div>
-        <div class="col"></div>
-    </div>
+
+   
 }
 else
 {
-    <h1>You are Not Logged In</h1>
-    <h2>Please Login Below</h2>
-    <a href="home/login" class="btn btn-primary">Login</a>
+    <link href="~/css/UnloggedIn.css" rel="stylesheet" />
+    <div class="container">
+        <div class="header">
+            <h1>Rocket Shop</h1>
+            <h2>Authentication And Account Center</h2>
+        </div>
+        <div class="login-message">You are Not Logged In</div>
+        <div class="sub-message">Please Login Below</div>
+        <a href="home/login" class="login-button">Login</a>
+    </div>
 }

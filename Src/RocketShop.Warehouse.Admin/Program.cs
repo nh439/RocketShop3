@@ -17,6 +17,7 @@ using RocketShop.Warehouse.Admin.ServicePermission;
 using RocketShop.Warehouse.Admin.Middleware;
 using RocketShop.Warehouse.Admin.Repository;
 using RocketShop.Warehouse.Admin.Services;
+using RocketShop.SharedBlazor.SharedBlazorService.Scope;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.InstallSerilog()
@@ -49,10 +50,20 @@ builder.InstallServices(install =>
         }).AddCookie(c => c.ExpireTimeSpan = TimeSpan.FromHours(10));
         baseService.AddAuthorization(a =>
         {
-            a.AddPolicy(PolicyNames.AppAdminName, p =>
+            a.AddPolicy(PolicyNames.AppCredentialManagerName, p =>
             {
-                p.RequireClaim("Permission", PolicyPermissions.AppAdminPermissions);
+                p.RequireClaim("Permission", PolicyPermissions.AppCredentialManagerPermissions);
             });
+            a.AddPolicy(PolicyNames.DataMaintainerName, p =>
+            {
+                p.RequireClaim("Permission", PolicyPermissions.DataMaintainerPermissions);
+            });
+             a.AddPolicy(PolicyNames.AnyWHPolicyName, p =>
+            {
+                p.RequireClaim("Permission", PolicyPermissions.AnyWHPermissions);
+            });
+
+
         })
         .AddMudServices()
         .AddRadzenComponents();
@@ -61,7 +72,10 @@ builder.InstallServices(install =>
     {
         repository.AddScoped<ActivityLogRepository>()
         .AddScoped<TableInformationRepository>()
-        .AddScoped<CollectionRepository>();
+        .AddScoped<CollectionRepository>()
+        .AddScoped<ClientRepository>()
+        .AddScoped<ClientAllowedObjectRepository>()
+        .AddScoped<ClientSecretRepository>();
     })
     .InstallServices(service =>
     {
@@ -73,7 +87,9 @@ builder.InstallServices(install =>
         .AddSingleton<IHttpContextAccessor,HttpContextAccessor>()
         .AddScoped<ISharedUserServices, SharedUserServices>()
         .AddScoped<ITableInformationService,TableInformationService>()
-        .AddScoped<ICollectionServices,CollectionServices>();
+        .AddScoped<ICollectionServices,CollectionServices>()
+        .AddScoped<IClientServices,ClientServices>()
+        .AddScoped<IDialogServices,DialogServices>();
     });
 // Add services to the container.
 

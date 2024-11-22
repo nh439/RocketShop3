@@ -9,21 +9,32 @@
 @using RocketShop.Warehouse.Admin.Services
 @inject ICollectionServices collectionServices
 
-
 @code {
     [Parameter]
     public string name { get; set; }
     bool majorException, isLoading;
     string? condition, pagingSummaryFormat = "Displaying page {0} of {1} (total {2} records)";
     FlexibleDataReport? collection = new();
-    int currentPage = 1, lastPage = 1, per = 50,_per = 50;
+    int currentPage = 1, lastPage = 1, per = 50, _per = 50;
     long count = 0;
+    List<BreadcrumbItem> items = new();
+
     protected override async Task OnInitializedAsync()
     {
         var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
 
         if (state.User.Identity.IsNotNull().And(state.User.Identity!.IsAuthenticated))
+        {
+            await activityLogService.Create("Warehouse Admin", "Collection", $"View Collection {name}");
             await FetchData();
+            items = new List<BreadcrumbItem>
+    {
+    new BreadcrumbItem("Home", href: "/"),
+    new BreadcrumbItem("Collections",  href: "/collections"),
+    new BreadcrumbItem(name,href:null,  disabled:true)
+    };
+        }
+
         else
             navigationManager.NavigateTo("/login");
     }
@@ -69,9 +80,12 @@
     }
 }
 <CascadingAuthenticationState>
-    <AuthorizeView Policy="@ServicePermission.PolicyNames.AppAdminName">
+    <AuthorizeView Policy="@ServicePermission.PolicyNames.DataMaintainerName">
         <Authorized>
             <h1 style="text-align:center">Collection</h1>
+            <br />
+            <MudBreadcrumbs Items="items" />
+            <br />
             <br />
             <NHIF Condition="collection.IsNotNull()">
                 <h2>Collection Name : @name</h2>
@@ -88,9 +102,9 @@
             <div class="form-group col-5">
                 <label>Items Per Page</label>
                 <select class="form-select" aria-label="Default select example" @bind="_per">
-          <NHForeach Items="@(new[]{10,20,30,50,100,150,200,250,500})" Context="ctx">
-              <option value="@ctx" selected="@(ctx==_per)">@ctx Items</option>
-          </NHForeach>
+                    <NHForeach Items="@(new[]{10,20,30,50,100,150,200,250,500})" Context="ctx">
+                        <option value="@ctx" selected="@(ctx==_per)">@ctx Items</option>
+                    </NHForeach>
                 </select>
             </div>
             <br />
@@ -133,7 +147,7 @@
 
         </Authorized>
         <NotAuthorized>
-            <h1>Access Denied</h1>
+            <RocketShop.SharedBlazor.Page.AccessDenied />
         </NotAuthorized>
     </AuthorizeView>
 </CascadingAuthenticationState>

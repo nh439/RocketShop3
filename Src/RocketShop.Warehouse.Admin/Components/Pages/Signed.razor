@@ -12,6 +12,7 @@
 @inject IHttpContextAccessor accessor;
 @inject IGetRoleAndPermissionService _getRoleAndPermissionService;
 @inject ISharedUserServices _userServices
+@inject IActivityLogService _activityLogService;
 @code {
     protected override async Task OnInitializedAsync()
     {
@@ -43,6 +44,7 @@
             }
 
             await signInManager.SignInWithClaimsAsync(user.GetRight()!, true, claims);
+            await _activityLogService.Create("Warehouse Admin","Main","User Login");
             navigationManager.NavigateTo("/", true);
         }
     }

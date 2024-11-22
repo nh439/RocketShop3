@@ -8,7 +8,7 @@ using System.Data;
 
 namespace RocketShop.Warehouse.Admin.Services
 {
-    public interface ITableInformationService
+    public interface ITableInformationService : ManualConnectionInterface
     {
         Task<Either<Exception, IEnumerable<string>>> ListTableNames();
         Task<Either<Exception, IEnumerable<string>>> ListViewNames();
@@ -23,7 +23,8 @@ namespace RocketShop.Warehouse.Admin.Services
         ) : BaseServices<TableInformationService>(
             "Table Information Service",
             logger,
-            new NpgsqlConnection(configuration.GetWarehouseConnectionString())),ITableInformationService
+            new NpgsqlConnection(configuration.GetWarehouseConnectionString())
+            ),ITableInformationService
             {
         public async Task<Either<Exception, IEnumerable<string>>> ListTableNames() =>
             await InvokeDapperServiceAsync(async WarehouseConnection => await tableInformationRepository.ListTableNames(WarehouseConnection));

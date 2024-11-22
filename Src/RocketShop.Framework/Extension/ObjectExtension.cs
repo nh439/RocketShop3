@@ -1,4 +1,5 @@
 ﻿using LanguageExt;
+using RocketShop.Framework.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +17,27 @@ namespace RocketShop.Framework.Extension
             return Convert.ToBase64String(
                 Encoding.UTF32.GetBytes(JsonSerializer.Serialize(obj))
                 );
+        }
+        public static string[] GetTypeProperties(this object? obj)
+        {
+            if(obj.IsNull())
+                return Array.Empty<string>();
+            var properties = obj!.GetType().GetProperties();
+            return properties.Select(x=> x.Name ).ToArray();
+        }
+        public static IEnumerable<ObjectDescription> GetObjectInfo(this object? obj) {
+            if (obj.IsNull())
+                return new List<ObjectDescription>();
+            var properties = obj!.GetType().GetProperties();
+            return properties.Select(s => new ObjectDescription
+            {
+                Name = s.Name,
+                Attributes = s.Attributes,
+                CanRead = s.CanRead,
+                CanWrite = s.CanWrite,
+                IsSpecialName = s.IsSpecialName,
+                Type = s.PropertyType
+            });
         }
     }
 }

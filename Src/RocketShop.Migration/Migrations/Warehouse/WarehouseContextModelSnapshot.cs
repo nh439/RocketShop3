@@ -92,7 +92,40 @@ namespace RocketShop.Migration.Migrations.Warehouse
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ClientId")
+                        .IsUnique();
+
+                    b.HasIndex("ClientName")
+                        .IsUnique();
+
                     b.ToTable("Authorization_Client");
+                });
+
+            modelBuilder.Entity("RocketShop.Database.Model.Warehouse.Authorization.ClientHistory", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<long>("ClientId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("IpAddress")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClientId");
+
+                    b.HasIndex("Key");
+
+                    b.ToTable("Authorization_Client_History");
                 });
 
             modelBuilder.Entity("RocketShop.Database.Model.Warehouse.Authorization.ClientSecret", b =>
