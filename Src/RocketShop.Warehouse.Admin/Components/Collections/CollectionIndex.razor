@@ -9,6 +9,11 @@
 @inject ITableInformationService tableInformationService
 @code {
     List<TableDescription> collections = new();
+    List<BreadcrumbItem> items = new List<BreadcrumbItem>
+    {
+    new BreadcrumbItem("Home", href: "/"),
+    new BreadcrumbItem("Collections",  href: null, disabled: true)
+    };
     bool majorException, minorException, isLoading;
     string? query,_query;
     int currentPage = 1, count = 0, lastpage = 1;
@@ -102,6 +107,8 @@
                             For a Better experience <button class="btn btn-link text-3xl font-bold" @onclick="FetchData">Please Try Again.</button>
                         </div>
                     </NHIF>
+                    <br />
+                    <MudBreadcrumbs Items="items" />
                     <br />
                     <div>
                         <div Class="row">
