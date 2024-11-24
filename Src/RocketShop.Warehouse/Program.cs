@@ -8,10 +8,10 @@ using RocketShop.Shared.SharedService.Singletion;
 using RocketShop.Warehouse.GraphQL;
 using RocketShop.Warehouse.Repository;
 using RocketShop.Warehouse.Services;
+using RocketShop.Warehouse.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var configuration = builder.InstallConfiguration();
 builder.InstallSerilog()  
     .InstallServices(repository =>
     {
@@ -19,7 +19,11 @@ builder.InstallSerilog()
         .AddScoped<ProvinceRepository>()
         .AddScoped<DistrictRepository>()
         .AddScoped<SubDistrictRepository>()
-        .AddScoped<AddressViewRepository>();
+        .AddScoped<AddressViewRepository>()
+        .AddScoped<ClientRepository>()
+        .AddScoped<ClientSecretRepository>()
+        .AddScoped<ClientAllowedObjectRepository>()
+        .AddScoped<TokenRepository>();
     })
     .InstallServices(service =>
     {
@@ -30,7 +34,8 @@ builder.InstallSerilog()
       .AddSingleton<IUrlIndeiceServices, UrlIndeiceServices>()
       .AddSingleton<IHttpContextAccessor,HttpContextAccessor>()
       .AddSingleton<IMemoryStorageServices, MemoryStorageServices>()
-      .AddScoped<IAddressService,AddressServices>();
+      .AddScoped<IAddressService,AddressServices>()
+      .AddScoped<IAuthenicationService,AuthenicationService>();
     })
      .InstallServices(services =>
      {
@@ -44,6 +49,7 @@ builder.InstallSerilog()
 
 
 var app = builder.Build();
+app.UseMachineAuthorization();
 app.MapGraphQL(path:"/query");
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -58,4 +64,4 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+await app.RunAsync();
