@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using RocketShop.Database.EntityFramework;
 
 #nullable disable
 
-namespace RocketShop.Migration.Migrations.Warehouse
+namespace RocketShop.Migration.Migrations
 {
     [DbContext(typeof(WarehouseContext))]
-    partial class WarehouseContextModelSnapshot : ModelSnapshot
+    [Migration("20241125081400_Remove_Token_Table")]
+    partial class Remove_Token_Table
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -158,30 +161,6 @@ namespace RocketShop.Migration.Migrations.Warehouse
                     b.HasIndex("Client");
 
                     b.ToTable("Authorization_Client_Secret");
-                });
-
-            modelBuilder.Entity("RocketShop.Database.Model.Warehouse.Authorization.Token", b =>
-                {
-                    b.Property<string>("TokenKey")
-                        .HasColumnType("text");
-
-                    b.Property<long>("Client")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime>("IssueDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("RemainingAccess")
-                        .HasColumnType("integer");
-
-                    b.Property<TimeSpan?>("TokenAge")
-                        .HasColumnType("interval");
-
-                    b.HasKey("TokenKey");
-
-                    b.HasIndex("Client");
-
-                    b.ToTable("Authorization_Token");
                 });
 
             modelBuilder.Entity("RocketShop.Database.Model.Warehouse.District", b =>

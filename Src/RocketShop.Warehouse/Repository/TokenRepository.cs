@@ -35,7 +35,10 @@ namespace RocketShop.Warehouse.Repository
                 $@"select 1  from ""{tableName}"" 
     where ""{nameof(Token.TokenKey)}"" = @token and
     ""{nameof(Token.RemainingAccess)}"" > 0 and 
-    ""{nameof(Token.IssueDate)}""+ (""{nameof(Token.TokenAge)}""*interval '1 SECOND') > CURRENT_TIMESTAMP;",
+(
+    ""{nameof(Token.IssueDate)}""+ (""{nameof(Token.TokenAge)}""::INTERVAL) > CURRENT_TIMESTAMP or 
+    ""{nameof(Token.IssueDate)}"" is null
+);",
                new
                {
                    token = tokenKey

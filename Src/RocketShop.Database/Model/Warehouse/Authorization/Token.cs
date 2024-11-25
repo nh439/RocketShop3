@@ -16,7 +16,7 @@ namespace RocketShop.Database.Model.Warehouse.Authorization
         public long Client { get; set; }
         public int? RemainingAccess { get; set; }
         public DateTime IssueDate { get; set; } = DateTime.UtcNow;
-        public int? TokenAge { get; set; }
+        public TimeSpan? TokenAge { get; set; }
 
     }
 }
