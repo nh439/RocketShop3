@@ -23,7 +23,8 @@ builder.InstallSerilog()
         .AddScoped<ClientRepository>()
         .AddScoped<ClientSecretRepository>()
         .AddScoped<ClientAllowedObjectRepository>()
-        .AddScoped<TokenRepository>();
+        .AddScoped<TokenRepository>()
+        .AddScoped<ClientHistoryRepository>();
     })
     .InstallServices(service =>
     {

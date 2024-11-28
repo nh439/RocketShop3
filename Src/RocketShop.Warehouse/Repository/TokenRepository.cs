@@ -21,14 +21,14 @@ namespace RocketShop.Warehouse.Repository
             await warehouseConnection.CreateQueryStore(tableName, true)
                 .InsertAndReturnItemAsync<Token>(token, transaction);
 
-        public async Task<Option<Token>> GetInformation(string tokenKey,
+        public async Task<Option<Token>> Introspection(string tokenKey,
             IDbConnection warehouseConnection,
             IDbTransaction? transaction = null) =>
             await warehouseConnection.CreateQueryStore(tableName, true)
             .Where(nameof(Token.TokenKey), tokenKey)
             .FetchOneAsync<Token>(transaction);
 
-        public async Task<bool> Introspection(string tokenKey,
+        public async Task<bool> UsableCheck(string tokenKey,
             IDbConnection warehouseConnection,
             IDbTransaction? transaction = null) =>
             await warehouseConnection.QueryFirstOrDefaultAsync<int>(
@@ -51,11 +51,11 @@ namespace RocketShop.Warehouse.Repository
             ) =>
             await warehouseConnection.ExecuteAsync($@"update ""{tableName}""
 set ""{nameof(Token.RemainingAccess)}""=""{nameof(Token.RemainingAccess)}""-1 
-where ""{nameof(Token.TokenKey)}"" = @token",
+where ""{nameof(Token.TokenKey)}"" = @token where ""{nameof(Token.RemainingAccess)}"" is not null",
                  new
                  {
                      token = tokenKey
                  }, transaction)
-            .GeAsync(0);
+            .GeAsync(-1);
     }
 }

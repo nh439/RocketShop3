@@ -15,5 +15,13 @@ namespace RocketShop.Warehouse.Repository
             await warehouseConnection.CreateQueryStore(tableName, true)
             .Where(nameof(Client.ClientId), clientId)
             .FetchOneAsync<Client>(transaction);
+
+        public async Task<Option<string>> GetClientIdById(long id,
+            IDbConnection warehouseConnection,
+            IDbTransaction? transaction = null) =>
+            await warehouseConnection.CreateQueryStore(tableName)
+            .Where(nameof(Client.Id),id)
+            .Select(nameof(Client.ClientId))
+            .FetchOneAsync<string>(transaction);
     }
 }
