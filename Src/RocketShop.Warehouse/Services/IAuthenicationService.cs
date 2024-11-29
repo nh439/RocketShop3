@@ -16,6 +16,8 @@ namespace RocketShop.Warehouse.Services
         Task<Either<Exception, string>> IssueToken(string clientId, string? clientSecret, string application);
         Task<Either<Exception, WarehouseTokenIntrospectionResult>> Introspection(string tokenKey);
         Task<Either<Exception, bool>> UsableCheck(string token);
+        Task<Either<Exception, List<AllowedObject>>> UseToken(string token);
+        Task<Either<Exception, bool>> Revocation(string token);
     }
     public class AuthenicationService(
         ILogger<AuthenicationService> logger,
@@ -44,7 +46,11 @@ namespace RocketShop.Warehouse.Services
                     var secrets = await clientSecretRepository.ListSecret(client.Id, warehouseConnection);
                     await secrets.HasDataAndForEachAsync(s =>
                     {
-                        passSecret = passSecret || clientSecret!.VerifyPassword(s.SecretValue, Convert.FromBase64String(s.Salt));
+                        if (!s.Expired.HasValue || (s.Expired.GetValueOrDefault().ToUniversalTime() > DateTime.UtcNow))
+                        {
+                            passSecret = passSecret ||
+                                         clientSecret!.VerifyPassword(s.SecretValue, Convert.FromBase64String(s.Salt));
+                        }
                     });
                 }
                 else
@@ -67,7 +73,9 @@ namespace RocketShop.Warehouse.Services
                 transaction.Commit();
                 warehouseConnection.Close();
                 return result?.TokenKey;
-            });
+            },
+                 retries: 3,
+                intervalSecond: 3);
 
         public async Task<Either<Exception, WarehouseTokenIntrospectionResult>> Introspection(string tokenKey) =>
             await InvokeDapperServiceAsync(async warehouseConnection =>
@@ -80,7 +88,7 @@ namespace RocketShop.Warehouse.Services
                 var clientId = await clientRepository.GetClientIdById(token.Client, warehouseConnection);
                 bool usable = (token.RemainingAccess.HasValue ? token.RemainingAccess > 0 : true) &&
                     (token.TokenAge.HasValue ? DateTime.UtcNow <= token.IssueDate.Add(token.TokenAge.Value!) : true);
-
+                var allowedCollections = await clientAllowedObjectRepository.ListAllowedObject(token.Client, warehouseConnection);
                 return new WarehouseTokenIntrospectionResult
                 {
                     TokenKey = tokenKey,
@@ -91,9 +99,13 @@ namespace RocketShop.Warehouse.Services
                     TokenAge = token.TokenAge,
                     Usable = usable,
                     AccessLimitReached = (!(token.RemainingAccess.HasValue ? token.RemainingAccess > 0 : true)),
-                    TokenExpired = (!(token.TokenAge.HasValue ? DateTime.UtcNow <= token.IssueDate.Add(token.TokenAge.Value!) : true))
+                    TokenExpired = (!(token.TokenAge.HasValue ? DateTime.UtcNow <= token.IssueDate.Add(token.TokenAge.Value!) : true)),
+                    AllowedReadCollections=allowedCollections.Where(x=>x.Read).Select(s=>s.ObjectName).ToArray(),
+                    AllowedWriteCollections=allowedCollections.Where(x=>x.Write).Select(s=>s.ObjectName).ToArray(),
                 };
-            });
+            },
+                retries: 3,
+                isExponential: true);
 
         public async Task<Either<Exception, bool>> UsableCheck(string token) =>
             await InvokeDapperServiceAsync(async warehouseConnection => await tokenRepository.UsableCheck(token, warehouseConnection));
@@ -102,11 +114,11 @@ namespace RocketShop.Warehouse.Services
             await InvokeDapperServiceAsync(async warehouseConnection =>
             {
                 warehouseConnection.Open();
-                var usable = await tokenRepository.UsableCheck(token,warehouseConnection);
+                var usable = await tokenRepository.UsableCheck(token, warehouseConnection);
                 if (!usable)
                     throw new AccessViolationException("Token Useless.");
                 var tokenInfoResult = await tokenRepository.Introspection(token, warehouseConnection);
-                if(tokenInfoResult.IsNone)
+                if (tokenInfoResult.IsNone)
                     throw new AccessViolationException("Token Invalid.");
                 var tokenInfo = tokenInfoResult.Extract()!;
                 using (var transaction = warehouseConnection.BeginTransaction())
@@ -121,11 +133,13 @@ namespace RocketShop.Warehouse.Services
                     }, warehouseConnection, transaction);
                     transaction.Commit();
                 }
-                return await clientAllowedObjectRepository.ListAllowedObject(tokenInfo.Client,warehouseConnection);         
-            },
-                retries: 3,
-                intervalSecond: 3
+                return await clientAllowedObjectRepository.ListAllowedObject(tokenInfo.Client, warehouseConnection);
+            }
     );
+        public async Task<Either<Exception, bool>> Revocation(string token) =>
+            await InvokeDapperServiceAsync(async warehouseConnection => await tokenRepository.Revocation(token, warehouseConnection),
+                retries: 3,
+                isExponential: true);
 
     }
 }

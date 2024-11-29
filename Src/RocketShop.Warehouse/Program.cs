@@ -20,11 +20,11 @@ builder.InstallSerilog()
         .AddScoped<DistrictRepository>()
         .AddScoped<SubDistrictRepository>()
         .AddScoped<AddressViewRepository>()
-        .AddScoped<ClientRepository>()
-        .AddScoped<ClientSecretRepository>()
-        .AddScoped<ClientAllowedObjectRepository>()
-        .AddScoped<TokenRepository>()
-        .AddScoped<ClientHistoryRepository>();
+        .AddSingleton<ClientRepository>()
+        .AddSingleton<ClientSecretRepository>()
+        .AddSingleton<ClientAllowedObjectRepository>()
+        .AddSingleton<TokenRepository>()
+        .AddSingleton<ClientHistoryRepository>();
     })
     .InstallServices(service =>
     {
@@ -36,7 +36,7 @@ builder.InstallSerilog()
       .AddSingleton<IHttpContextAccessor,HttpContextAccessor>()
       .AddSingleton<IMemoryStorageServices, MemoryStorageServices>()
       .AddScoped<IAddressService,AddressServices>()
-      .AddScoped<IAuthenicationService,AuthenicationService>();
+      .AddSingleton<IAuthenicationService,AuthenicationService>();
     })
      .InstallServices(services =>
      {
@@ -46,10 +46,18 @@ builder.InstallSerilog()
          .InstallDatabase<AuditLogContext, IdentityContext>()
          .AddGraphQLServer()
          .AddQueryType<GraphQuery>();
+         services.AddDistributedMemoryCache()
+         .AddSession(options =>
+         {
+             options.IdleTimeout = TimeSpan.FromSeconds(10);
+             options.Cookie.HttpOnly = true;
+             options.Cookie.IsEssential = true;
+         });
      });
 
 
 var app = builder.Build();
+app.UseSession();
 app.UseMachineAuthorization();
 app.MapGraphQL(path:"/query");
 // Configure the HTTP request pipeline.

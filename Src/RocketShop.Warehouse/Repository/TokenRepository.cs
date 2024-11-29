@@ -34,7 +34,7 @@ namespace RocketShop.Warehouse.Repository
             await warehouseConnection.QueryFirstOrDefaultAsync<int>(
                 $@"select 1  from ""{tableName}"" 
     where ""{nameof(Token.TokenKey)}"" = @token and
-    ""{nameof(Token.RemainingAccess)}"" > 0 and 
+    (""{nameof(Token.RemainingAccess)}"" > 0 or ""{nameof(Token.RemainingAccess)}"" is null ) and 
 (
     ""{nameof(Token.IssueDate)}""+ (""{nameof(Token.TokenAge)}""::INTERVAL) > CURRENT_TIMESTAMP or 
     ""{nameof(Token.IssueDate)}"" is null
@@ -51,11 +51,22 @@ namespace RocketShop.Warehouse.Repository
             ) =>
             await warehouseConnection.ExecuteAsync($@"update ""{tableName}""
 set ""{nameof(Token.RemainingAccess)}""=""{nameof(Token.RemainingAccess)}""-1 
-where ""{nameof(Token.TokenKey)}"" = @token where ""{nameof(Token.RemainingAccess)}"" is not null",
+where ""{nameof(Token.TokenKey)}"" = @token and ""{nameof(Token.RemainingAccess)}"" is not null",
                  new
                  {
                      token = tokenKey
                  }, transaction)
             .GeAsync(-1);
+
+        public async Task<bool> Revocation(string token,
+             IDbConnection warehouseConnection,
+            IDbTransaction? transaction = null) =>
+            await warehouseConnection.CreateQueryStore(tableName)
+            .Where(nameof(Token.TokenKey), token)
+            .UpdateAsync(new
+            {
+                RemainingAccess = 0
+            },transaction)
+            .GeAsync(0);
     }
 }

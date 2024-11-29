@@ -17,6 +17,24 @@ namespace RocketShop.Warehouse.Controllers
         {
             var result = await authenicationService.IssueToken(client_id, client_secret, application);
             return result.IsRight ? Ok(result.GetRight()) : BadRequest("Invalid Request");
-        }      
+        }
+
+        [HttpPost("introspection")]
+        [Consumes("application/x-www-form-urlencoded")]
+        public async Task<IActionResult> introspection(
+            [FromForm] string token)
+        {
+            var result = await authenicationService.Introspection(token);
+            return result.IsRight ? Ok(result.GetRight()) : BadRequest("Invalid Request");
+        }
+
+        [HttpPost("revocation")]
+        [Consumes("application/x-www-form-urlencoded")]
+        public async Task<IActionResult> Revocation(
+            [FromForm] string token)
+        {
+            var result = await authenicationService.Revocation(token);
+            return result.IsRight ? Ok(result.GetRight()) : BadRequest("Invalid Request");
+        }
     }
 }

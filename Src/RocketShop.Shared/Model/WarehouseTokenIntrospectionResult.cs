@@ -17,6 +17,8 @@ namespace RocketShop.Shared.Model
         public bool Usable { get; set; }
         public bool TokenExpired { get; set; }
         public bool AccessLimitReached { get; set; }
+        public string[]? AllowedReadCollections { get; set; }
+        public string[]? AllowedWriteCollections { get; set; }
 
     }
 }
