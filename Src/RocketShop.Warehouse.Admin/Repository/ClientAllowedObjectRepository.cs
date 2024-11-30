@@ -15,21 +15,22 @@ namespace RocketShop.Warehouse.Admin.Repository
         readonly DbSet<AllowedObject> entity = context.AllowedObject;
         public async Task<bool> SetAllowedObject(
             long clientId,
-            List<AllowedObject> allowedObjects,
+            List<AllowedObject>? allowedObjects,
             IDbConnection warehouseConnection,
             IDbTransaction? transaction = null)
         {
             await allowedObjects.HasDataAndForEachAsync(a => a.Client = clientId);
-            await warehouseConnection.CreateQueryStore(tableName,true)
-                .Where(nameof(AllowedObject.Client),clientId)
+            await warehouseConnection.CreateQueryStore(tableName, true)
+                .Where(nameof(AllowedObject.Client), clientId)
                 .DeleteAsync(transaction);
-            await warehouseConnection.CreateQueryStore(tableName,true)
-                .BulkInsertAsync(allowedObjects,transaction);
+            if (allowedObjects.HasData())
+                await warehouseConnection.CreateQueryStore(tableName, true)
+                    .BulkInsertAsync(allowedObjects!, transaction);
             return true;
         }
 
         public async Task<List<AllowedObject>> GetAllowedObject(long clientId) =>
-            await entity.Where(x=>x.Client == clientId).ToListAsync();
+            await entity.Where(x => x.Client == clientId).ToListAsync();
 
     }
 }

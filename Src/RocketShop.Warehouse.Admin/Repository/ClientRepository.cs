@@ -1,9 +1,12 @@
 ﻿using DocumentFormat.OpenXml.Presentation;
 using Microsoft.EntityFrameworkCore;
+using RocketShop.Database;
 using RocketShop.Database.EntityFramework;
 using RocketShop.Database.Extension;
 using RocketShop.Database.Model.Warehouse.Authorization;
+using RocketShop.Database.NonEntityFramework.QueryGenerator;
 using RocketShop.Framework.Extension;
+using System.Data;
 using System.Linq.Dynamic.Core;
 
 namespace RocketShop.Warehouse.Admin.Repository
@@ -66,10 +69,13 @@ namespace RocketShop.Warehouse.Admin.Repository
             )
             .GeAsync(0);
 
-        public async Task<bool> Delete(long id) =>
-            await entity.
-            Where(x => x.Id == id)
-            .ExecuteDeleteAsync().GeAsync(0);
+        public async Task<bool> Delete(long id, IDbConnection warehouseConnection, IDbTransaction? transaction = null) =>
+            await warehouseConnection.CreateQueryStore(TableConstraint.Client)
+            .Where(nameof(Client.Id), id)
+            .DeleteAsync(transaction)
+            .GeAsync(0);
+
+
 
         public async Task<long> GetUnsafeClient() =>
             await entity.CountAsync(x => !x.RequireSecret);

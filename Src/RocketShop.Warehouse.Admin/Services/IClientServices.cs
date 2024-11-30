@@ -34,13 +34,15 @@ namespace RocketShop.Warehouse.Admin.Services
             );
         Task<Either<Exception, bool>> DeleteSecret(string secretId);
         Task<Either<Exception, List<ClientSecret>>> ListSecret(long clientId);
+        Task<Either<Exception, List<ClientHistory>>> CallHistory(long clientId, int? page, int per = 10);
     }
     public class ClientServices(
         ILogger<ClientServices> logger,
         IConfiguration configuration,
         ClientRepository clientRepository,
         ClientAllowedObjectRepository clientAllowedObjectRepository,
-        ClientSecretRepository clientSecretRepository) : BaseServices<ClientServices>(
+        ClientSecretRepository clientSecretRepository,
+        ClientHistoryRepository clientHistoryRepository) : BaseServices<ClientServices>(
             "Client Service",
             logger,
             new NpgsqlConnection(configuration.GetWarehouseConnectionString()
@@ -56,21 +58,32 @@ namespace RocketShop.Warehouse.Admin.Services
             await InvokeServiceAsync(async () => await clientRepository.CountClient(search));
 
         public async Task<Either<Exception, int>> GetLastpage(string? search = null, int per = 10) =>
-            await InvokeServiceAsync(async () =>await clientRepository.GetLastpage(search, per));
+            await InvokeServiceAsync(async () => await clientRepository.GetLastpage(search, per));
 
         public async Task<Either<Exception, Client>> Create(Client client) =>
             await InvokeServiceAsync(async () => await clientRepository.Create(client));
 
-        public async Task<Either<Exception, bool>> Update(Client client)=>
-            await InvokeServiceAsync(async() => await clientRepository.Update(client));
+        public async Task<Either<Exception, bool>> Update(Client client) =>
+            await InvokeServiceAsync(async () => await clientRepository.Update(client));
 
-        public async Task<Either<Exception, bool>> Delete(long id)=>
-            await InvokeServiceAsync(async () => await clientRepository.Delete(id));
+        public async Task<Either<Exception, bool>> Delete(long id) =>
+            await InvokeDapperServiceAsync(async warehouseConnection =>
+            {
+                warehouseConnection.Open();
+                using var transaction = warehouseConnection.BeginTransaction();
+                await clientAllowedObjectRepository.SetAllowedObject(id, null, warehouseConnection, transaction);
+                await clientSecretRepository.ClearSecret(id,warehouseConnection,transaction);
+                await clientHistoryRepository.ClearHistory(id,warehouseConnection,transaction);
+                await clientRepository.Delete(id, warehouseConnection, transaction);
+                transaction.Commit();
+                warehouseConnection.Close();
+                return true;
+            });
 
         public async Task<Either<Exception, long>> GetUnSafeClient() =>
             await InvokeServiceAsync(async () => await clientRepository.GetUnsafeClient());
 
-        public async Task<Either<Exception,long>> GetIncompletedClient() =>
+        public async Task<Either<Exception, long>> GetIncompletedClient() =>
             await InvokeServiceAsync(async () => await clientRepository.GetIncompleteClient());
 
         public async Task<Either<Exception, long[]>> ListUnSafeClientId() =>
@@ -85,7 +98,7 @@ namespace RocketShop.Warehouse.Admin.Services
             await InvokeDapperServiceAsync(async warehouseConnection =>
             {
                 List<AllowedObject> allowedObjects = new List<AllowedObject>();
-                var allowedList = readAllowedObject?.Union(writeAllowedObject?? new List<string>())
+                var allowedList = readAllowedObject?.Union(writeAllowedObject ?? new List<string>())
                 .Distinct();
                 await allowedList.HasDataAndParallelForEachAsync(allowed =>
                 {
@@ -93,16 +106,16 @@ namespace RocketShop.Warehouse.Admin.Services
                     {
                         ObjectName = allowed,
                         Read = readAllowedObject.HasData() ? readAllowedObject!.Where(x => x == allowed).HasData() : false,
-                        Write = writeAllowedObject.HasData() ? writeAllowedObject!.Where(x => x == allowed).HasData() :false
+                        Write = writeAllowedObject.HasData() ? writeAllowedObject!.Where(x => x == allowed).HasData() : false
                     };
                     allowedObjects.Add(obj);
                 });
                 warehouseConnection.Open();
                 using var transaction = warehouseConnection.BeginTransaction();
                 var result = await clientAllowedObjectRepository.SetAllowedObject(
-                    clientId, 
-                    allowedObjects, 
-                    warehouseConnection, 
+                    clientId,
+                    allowedObjects,
+                    warehouseConnection,
                     transaction);
                 transaction.Commit();
                 warehouseConnection.Close();
@@ -121,7 +134,7 @@ namespace RocketShop.Warehouse.Admin.Services
             await InvokeServiceAsync(async () =>
             {
                 var hashed = secretValue.HashPasword(out var salt);
-                if(expired.HasValue)
+                if (expired.HasValue)
                     expired = DateTime.SpecifyKind(expired.Value, DateTimeKind.Utc);
                 var secret = new ClientSecret
                 {
@@ -144,5 +157,8 @@ namespace RocketShop.Warehouse.Admin.Services
                 await result.HasDataAndParallelForEachAsync(f => f.SecretValue = "Secret");
                 return result;
             });
+
+        public async Task<Either<Exception,List<ClientHistory>>> CallHistory(long clientId,int? page,int per =10)=>
+            await InvokeServiceAsync(async () =>await clientHistoryRepository.CallHistory(clientId,page,per));
     }
 }
