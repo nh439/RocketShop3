@@ -22,5 +22,11 @@ namespace RocketShop.Warehouse.Admin.Repository
             await warehouseConnection.CreateQueryStore(TableConstraint.ClientHistory)
             .Where(nameof(ClientHistory.ClientId), clientId)
             .DeleteAsync();
+
+        public async Task<int> GetCount(long clientId)=>
+            await entity.CountAsync(x=>x.ClientId == clientId);
+
+        public async Task<int> GetLastpage(long clientId,int per)=>
+            await entity.GetLastpageAsync(x=>x.ClientId==clientId,per);
     }
 }

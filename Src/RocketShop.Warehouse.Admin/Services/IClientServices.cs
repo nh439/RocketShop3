@@ -35,6 +35,8 @@ namespace RocketShop.Warehouse.Admin.Services
         Task<Either<Exception, bool>> DeleteSecret(string secretId);
         Task<Either<Exception, List<ClientSecret>>> ListSecret(long clientId);
         Task<Either<Exception, List<ClientHistory>>> CallHistory(long clientId, int? page, int per = 10);
+        Task<Either<Exception, int>> CountHistory(long clientId);
+        Task<Either<Exception, int>> GetHistoryLastpage(long clientId, int per = 10);
     }
     public class ClientServices(
         ILogger<ClientServices> logger,
@@ -160,5 +162,11 @@ namespace RocketShop.Warehouse.Admin.Services
 
         public async Task<Either<Exception,List<ClientHistory>>> CallHistory(long clientId,int? page,int per =10)=>
             await InvokeServiceAsync(async () =>await clientHistoryRepository.CallHistory(clientId,page,per));
+
+        public async Task<Either<Exception, int>> CountHistory(long clientId) =>
+            await InvokeServiceAsync(async () => await clientHistoryRepository.GetCount(clientId));
+
+        public async Task<Either<Exception, int>> GetHistoryLastpage(long clientId, int per = 10) =>
+            await InvokeServiceAsync(async () => await clientHistoryRepository.GetLastpage(clientId, per));
     }
 }
