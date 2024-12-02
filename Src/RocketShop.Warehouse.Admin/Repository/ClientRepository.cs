@@ -11,9 +11,11 @@ using System.Linq.Dynamic.Core;
 
 namespace RocketShop.Warehouse.Admin.Repository
 {
-    public class ClientRepository(WarehouseContext context)
+    public class ClientRepository(WarehouseContext context,IConfiguration configuration)
     {
         readonly DbSet<Client> entity = context.Client;
+        readonly bool enabledSqlLogging = configuration.GetSection("EnabledSqlLogging").Get<bool>();
+
         public async Task<List<Client>> ListClient(string? search, int? page, int per)
         {
             var result = entity.AsQueryable();
@@ -70,7 +72,7 @@ namespace RocketShop.Warehouse.Admin.Repository
             .GeAsync(0);
 
         public async Task<bool> Delete(long id, IDbConnection warehouseConnection, IDbTransaction? transaction = null) =>
-            await warehouseConnection.CreateQueryStore(TableConstraint.Client)
+            await warehouseConnection.CreateQueryStore(TableConstraint.Client,enabledSqlLogging)
             .Where(nameof(Client.Id), id)
             .DeleteAsync(transaction)
             .GeAsync(0);

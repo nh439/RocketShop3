@@ -9,8 +9,9 @@ using System.Linq.Dynamic.Core;
 
 namespace RocketShop.Warehouse.Admin.Repository
 {
-    public class ClientAllowedObjectRepository(WarehouseContext context)
+    public class ClientAllowedObjectRepository(WarehouseContext context,IConfiguration configuration)
     {
+        readonly bool enabledSqlLogging = configuration.GetSection("EnabledSqlLogging").Get<bool>();
         readonly string tableName = TableConstraint.AllowedObject;
         readonly DbSet<AllowedObject> entity = context.AllowedObject;
         public async Task<bool> SetAllowedObject(
@@ -20,11 +21,11 @@ namespace RocketShop.Warehouse.Admin.Repository
             IDbTransaction? transaction = null)
         {
             await allowedObjects.HasDataAndForEachAsync(a => a.Client = clientId);
-            await warehouseConnection.CreateQueryStore(tableName, true)
+            await warehouseConnection.CreateQueryStore(tableName, enabledSqlLogging)
                 .Where(nameof(AllowedObject.Client), clientId)
                 .DeleteAsync(transaction);
             if (allowedObjects.HasData())
-                await warehouseConnection.CreateQueryStore(tableName, true)
+                await warehouseConnection.CreateQueryStore(tableName, enabledSqlLogging)
                     .BulkInsertAsync(allowedObjects!, transaction);
             return true;
         }

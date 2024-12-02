@@ -5,16 +5,17 @@ using System.Data;
 
 namespace RocketShop.Warehouse.Repository
 {
-    public class ClientSecretRepository
+    public class ClientSecretRepository(IConfiguration configuration)
     {
         const string tableName = TableConstraint.ClientSecret;
+        readonly bool enabledSqlLogging = configuration.GetSection("EnabledSqlLogging").Get<bool>();
 
         public async Task<List<ClientSecret>> ListSecret(
             long clientId,
             IDbConnection warehouseConnection,
             IDbTransaction? transaction = null
             ) =>
-            await warehouseConnection.CreateQueryStore(tableName, true)
+            await warehouseConnection.CreateQueryStore(tableName, enabledSqlLogging)
             .Where(nameof(ClientSecret.Client), clientId)
             .ToListAsync<ClientSecret>();
     }
