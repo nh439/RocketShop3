@@ -1,9 +1,90 @@
 ﻿@page "/"
+@using RocketShop.HR.ServicePermissions
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Rocket Shop HR</PageTitle>
 
-<center>
-    <h1 class="mb-4 text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-black">Rocket Shop</h1>
-    <h2 class="text-4xl font-extrabold dark:text-black">Human Resource Center</h2>
-</center>
-Welcome to your new app.
+<CascadingAuthenticationState>
+    <AuthorizeView Policy="@ServicePermission.AllHRServiceName">
+        <Authorized>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+            <link rel="stylesheet" href="/CSS/Landing.css" />
+            <section class="hero">
+                <div class="hero-content">
+                    <h1>Rocket Shop HR</h1>
+                    <p>The all-in-one solution to manage your workforce, finances, and compliance with ease.</p>
+                </div>
+            </section>
+
+            <!-- Features Section -->
+            <section id="features" class="features-section">
+                <h2>Features</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <i class="fas fa-user icon"></i>
+                        <br />
+                        <a href="/employee" class="text-2xl font-bold">View Employee Data</a>
+                        <p>Access detailed employee profiles anytime.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div>
+                        <i class="fa-solid fa-wallet fa-2xl" style="color: #00a30b;"></i>
+                            <br />
+                        </div>
+                        <br />
+                        <a href="/EmployeeFinace" class="text-2xl font-bold">Financial Management</a>
+                        <p>Track and manage company budgets with ease.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-dollar-sign icon"></i>
+                        <br />
+                        <a href="/Payroll" class="text-2xl font-bold">Payroll Management</a>
+                        <p>Automate salary processing to save time.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-key icon"></i>
+                        <br />
+                        <a href="/Role" class="text-2xl font-bold">Role Settings</a>
+                        <p>Define and manage permissions for your team.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-chart-line icon"></i>
+                        <br />
+                        <a href="/EmployeeReport" class="text-2xl font-bold">Employee Reports</a>
+                        <p>Generate actionable insights to improve performance.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div>
+                            <i class="fa-solid fa-cube fa-2xl" style="color: #00a30b;"></i>
+                            <br />
+                        </div>
+                        <br />
+                        <a href="/EmployeeMatrixReport" class="text-2xl font-bold">Employee Matrix</a>
+                        <p>Visualize relationships and team structure.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Signup Section -->
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <!-- Footer -->
+            <footer class="footer">
+                <p>&copy; 2024 Rocket Shop HR. All rights reserved.</p>
+            </footer>
+        </Authorized>
+        <NotAuthorized>
+            <center>
+                <h1 class="mb-4 text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-black">Rocket Shop</h1>
+                <h2 class="text-4xl font-extrabold dark:text-black">Human Resource Center</h2>
+            </center>
+            The all-in-one solution to manage your workforce, finances, and compliance with ease.
+        </NotAuthorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>
+

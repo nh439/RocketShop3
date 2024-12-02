@@ -11,7 +11,7 @@ using RocketShop.HR.Repository;
 using RocketShop.HR.Services;
 using RocketShop.HR.ServicePermissions;
 using RocketShop.Shared.SharedService.Singletion;
-using RocketShop.HR.Middleware;
+using RocketShop.Warehouse.Admin.Middleware;
 using RocketShop.SharedBlazor.SharedBlazorService.Scope;
 using RocketShop.Shared.SharedService.Scoped;
 using RocketShop.SharedBlazor.SharedBlazorServices.Scope;
@@ -124,5 +124,5 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
-app.UsePermissionsMiddleware();
+app.UsePermissionMiddleware();
 app.Run();
