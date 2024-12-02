@@ -75,7 +75,8 @@ builder.InstallServices(install =>
         .AddScoped<CollectionRepository>()
         .AddScoped<ClientRepository>()
         .AddScoped<ClientAllowedObjectRepository>()
-        .AddScoped<ClientSecretRepository>();
+        .AddScoped<ClientSecretRepository>()
+        .AddScoped<ClientHistoryRepository>();
     })
     .InstallServices(service =>
     {

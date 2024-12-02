@@ -7,8 +7,10 @@ using System.Text.RegularExpressions;
 
 namespace RocketShop.Warehouse.Admin.Repository
 {
-    public class CollectionRepository
+    public class CollectionRepository(IConfiguration configuration)
     {
+        readonly bool enabledSqlLogging = configuration.GetSection("EnabledSqlLogging").Get<bool>();
+
         public async Task<FlexibleDataReport> CallData(string collectionName, int? page, int? per, NpgsqlConnection warehouseConnection)
         {
             FlexibleDataReport returnValue = new FlexibleDataReport();
@@ -32,12 +34,22 @@ namespace RocketShop.Warehouse.Admin.Repository
 
             }
             cmd.CommandText = query;
+            if (enabledSqlLogging)
+            {
+                Console.WriteLine($"Executing Command : {query}");
+                Console.WriteLine("--------------------------------");
+            }
             await using var reader = await cmd.ExecuteReaderAsync();
             var columns = Enumerable.Range(0, reader.FieldCount).Select(reader.GetName).ToArray();
             returnValue.Columns = columns;
             returnValue.Data = await ReadStreamingAsync(reader);
             cmd.Parameters.Clear();
             cmd.CommandText = $"select count(*) from \"{collectionName}\"";
+            if (enabledSqlLogging)
+            {
+                Console.WriteLine($"Executing Command : {cmd.CommandText}");
+                Console.WriteLine("--------------------------------");
+            }
             returnValue.TotalCount = (long)(await cmd.ExecuteScalarAsync())!;
 
             returnValue.CurrentPage = page ?? 1;
@@ -73,6 +85,11 @@ namespace RocketShop.Warehouse.Admin.Repository
 
             }
             cmd.CommandText = query;
+            if (enabledSqlLogging)
+            {
+                Console.WriteLine($"Executing Command : {query}");
+                Console.WriteLine("--------------------------------");
+            }
             await using var reader = await cmd.ExecuteReaderAsync();
             var columns = Enumerable.Range(0, reader.FieldCount).Select(reader.GetName).ToArray();
             returnValue.Columns = columns;
@@ -81,6 +98,11 @@ namespace RocketShop.Warehouse.Admin.Repository
             await reader.CloseAsync();
             cmd.Parameters.Clear();
             cmd.CommandText = where.IsNullOrEmpty().Or(where.ToLower().StartsWith("order by")) ? $"select count(*) from \"{collectionName}\"" : $"select count(*) from \"{collectionName}\" where {where}";
+            if (enabledSqlLogging)
+            {
+                Console.WriteLine($"Executing Command : {cmd.CommandText}");
+                Console.WriteLine("--------------------------------");
+            }
             returnValue.TotalCount = (long)(await cmd.ExecuteScalarAsync())!;
 
             returnValue.CurrentPage = page ?? 1;

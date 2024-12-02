@@ -8,9 +8,10 @@ using RocketShop.Shared.SharedService.Singletion;
 using RocketShop.Warehouse.GraphQL;
 using RocketShop.Warehouse.Repository;
 using RocketShop.Warehouse.Services;
+using RocketShop.Warehouse.Middleware;
+using RocketShop.Shared.Extension;
 
 var builder = WebApplication.CreateBuilder(args);
-
 var configuration = builder.InstallConfiguration();
 builder.InstallSerilog()  
     .InstallServices(repository =>
@@ -19,7 +20,12 @@ builder.InstallSerilog()
         .AddScoped<ProvinceRepository>()
         .AddScoped<DistrictRepository>()
         .AddScoped<SubDistrictRepository>()
-        .AddScoped<AddressViewRepository>();
+        .AddScoped<AddressViewRepository>()
+        .AddSingleton<ClientRepository>()
+        .AddSingleton<ClientSecretRepository>()
+        .AddSingleton<ClientAllowedObjectRepository>()
+        .AddSingleton<TokenRepository>()
+        .AddSingleton<ClientHistoryRepository>();
     })
     .InstallServices(service =>
     {
@@ -30,7 +36,8 @@ builder.InstallSerilog()
       .AddSingleton<IUrlIndeiceServices, UrlIndeiceServices>()
       .AddSingleton<IHttpContextAccessor,HttpContextAccessor>()
       .AddSingleton<IMemoryStorageServices, MemoryStorageServices>()
-      .AddScoped<IAddressService,AddressServices>();
+      .AddScoped<IAddressService,AddressServices>()
+      .AddSingleton<IAuthenicationService,AuthenicationService>();
     })
      .InstallServices(services =>
      {
@@ -40,13 +47,23 @@ builder.InstallSerilog()
          .InstallDatabase<AuditLogContext, IdentityContext>()
          .AddGraphQLServer()
          .AddQueryType<GraphQuery>();
+         services.AddDistributedMemoryCache()
+         .AddSession(options =>
+         {
+             options.IdleTimeout = TimeSpan.FromSeconds(10);
+             options.Cookie.HttpOnly = true;
+             options.Cookie.IsEssential = true;
+         });
      });
 
 
 var app = builder.Build();
+var enabledSwagger = configuration.EnabledSwagger();
+app.UseSession();
+app.UseMachineAuthorization();
 app.MapGraphQL(path:"/query");
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (enabledSwagger)
 {
     app.UseSwagger();
     app.UseSwaggerUI();
@@ -58,4 +75,4 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+await app.RunAsync();

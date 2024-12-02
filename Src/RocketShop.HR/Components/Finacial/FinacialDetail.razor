@@ -1,6 +1,7 @@
 ﻿@page "/EmployeeFinace/Data/{userId}"
 @using RocketShop.HR.ServicePermissions
 @using RocketShop.SharedBlazor.Condition
+@using RocketShop.SharedBlazor.Page
 @inject NavigationManager navigationManager
 @rendermode InteractiveServer
 
@@ -73,7 +74,7 @@
             </div>
         </Authorized>
         <NotAuthorized>
-            <div class="text-3xl">Access Deined</div>
+            <AccessDenied />
         </NotAuthorized>
     </AuthorizeView>
 </CascadingAuthenticationState>

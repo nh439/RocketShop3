@@ -30,6 +30,10 @@ namespace RocketShop.Framework.Extension
             dateTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") :
             dateTime.ToString("yyyy-MM-dd HH:mm:ss");
 
+        public static string ToLocalDateAndTimeLongFormat(this DateTime dateTime) =>
+          dateTime.Kind != DateTimeKind.Local ? 
+            dateTime.ToLocalTime().ToString("dd MMMM yyyy HH:mm:ss") :
+            dateTime.ToString("dd MMMM yyyy HH:mm:ss");
 
     }
 }

@@ -7,6 +7,7 @@
 @using RocketShop.HR.ServicePermissions
 @using RocketShop.HR.Services
 @using RocketShop.SharedBlazor.Condition
+@using RocketShop.SharedBlazor.Page
 @using RocketShop.SharedBlazor.Tools
 @inject IRoleServices roleServices
 @inject IUserServices userServices
@@ -168,7 +169,7 @@
             </NHIF>
         </Authorized>
         <NotAuthorized>
-            <h1 class="text-5xl font-bold">Access Denied</h1>
+            <AccessDenied />
         </NotAuthorized>
     </AuthorizeView>
 </CascadingAuthenticationState>
