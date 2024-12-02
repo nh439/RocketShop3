@@ -9,6 +9,7 @@
 @using RocketShop.HR.ServicePermissions
 @using RocketShop.HR.Services
 @using RocketShop.SharedBlazor.Loop
+@using RocketShop.SharedBlazor.Page
 @using RocketShop.SharedBlazor.SharedFunction
 @using RocketShop.SharedBlazor.Table
 @using System.Text.Json
@@ -90,7 +91,8 @@
         try
         {
             newData.UserId = selectedUser.UserId;
-            addiontialExpenses.HasDataAndForEach(f => {
+            addiontialExpenses.HasDataAndForEach(f =>
+            {
                 f.UserId = newData.UserId;
                 if (f.OneTimePay)
                     f.PreiodType = AddiontialExpenseEnum.OneTime;
@@ -116,167 +118,172 @@
 }
 <CascadingAuthenticationState>
     <AuthorizeView Policy="@ServicePermission.HRFinancialName">
-        <div class="row">
-            <div class="col-1"></div>
-            <div class="col-10">
-                <div class='row'>
-                    <div class='col'>
-                        <div class="form-group">
-                            <label for="UserId">User</label>
-                            <BlazoredTypeahead SearchMethod="SearchUser"
-                                               Context="user"
-                                               @bind-Value="selectedUser"
-                                               EnableDropDown="true">
-                                <SelectedTemplate>@user.EmployeeCode @user.Firstname @user.Surname</SelectedTemplate>
-                                <ResultTemplate>@user.EmployeeCode @user.Firstname @user.Surname</ResultTemplate>
-                            </BlazoredTypeahead>
-                            @if (userInvalid)
-                            {
-                                <small style="color:red">User Required</small>
-                            }
-                        </div>
-                    </div>
-                    <div class='col'>
-                        <div class="form-group">
-                            <label for="Salary">Salary</label>
-                            <input id="Salary" @bind-value="newData.Salary" name="Salary" type="number" class="form-control">
-                        </div>
-                    </div>
-                </div>
-                <div class='row'>
-                    <div class='col'>
-                        <div class="form-group">
-                            <label for="SocialSecurites">Social Securites</label>
-                            <input id="SocialSecurites" @bind-value="newData.SocialSecurites" name="SocialSecurites" type="number" class="form-control">
-                        </div>
-                    </div>
-                    <div class='col'>
-                        <div class="form-group">
-                            <label for="TravelExpenses">Travel Expenses</label>
-                            <input id="TravelExpenses" @bind-value="newData.TravelExpenses" name="TravelExpenses" type="number" class="form-control">
-                        </div>
-                    </div>
-                </div>
-                <div class='row'>
-                    <div class='col'>
-                        <div class="form-group">
-                            <label for="BankName">Bank Name</label>
-                            <input id="BankName" @bind-value="newData.BankName" name="BankName" type="text" class="form-control @TextValidator.InvalidDisplay(bankNameInvalid)">
-                        </div>
-                    </div>
-                    <div class='col'>
-                        <div class="form-group">
-                            <label for="AccountNo">Account No</label>
-                            <input id="AccountNo" @bind-value=newData.AccountNo name="AccountNo" type="text" class="form-control @TextValidator.InvalidDisplay(accountNoInvalid)">
-                        </div>
-                    </div>
-                </div>
-                <div class='row'>
-                    <div class='col'>
-                        <div class="form-group">
-                            <label for="Currency">Currency</label>
-                            <input id="Currency" @bind-value="newData.Currency" name="Currency" type="text" class="form-control">
-                        </div>
-                    </div>
-                    <div class="col"></div>
-                </div>
-                <h2 class="text-2xl font-bold">Additional Expense</h2>
-                <br />
-                <button class="btn btn-info rounded-full text-white font-bold" @onclick="AddExpenseClicked"><i class="plus icon"></i>Add Expenses</button>
-                <br />
-                <br />
-                <small class="font-bold text-red" style="color:darkred">
-                   * If subtracting, enter -, for example, subtracting 500, enter -500 in the Balance field.
-                </small>
-                <br />
-                <NHTypeTable Items="addiontialExpenses"
-                             TItem="UserAddiontialExpense"
-                             TableClass="table table-hover"
-                             NoDataDisplayText="No Additional Expense"
-                             TableBodyClass="table-success"
-                             TableHeaderClass="table-dark"
-                             Context="expense"
-                             Columns="@AdditionalHeaders">
-                    <tr>
-                        <td>
+        <Authorized>
+            <div class="row">
+                <div class="col-1"></div>
+                <div class="col-10">
+                    <div class='row'>
+                        <div class='col'>
                             <div class="form-group">
-                                <input id="text" @bind-value="expense.ExpenseName" name="text" type="text" class="form-control">
+                                <label for="UserId">User</label>
+                                <BlazoredTypeahead SearchMethod="SearchUser"
+                                                   Context="user"
+                                                   @bind-Value="selectedUser"
+                                                   EnableDropDown="true">
+                                    <SelectedTemplate>@user.EmployeeCode @user.Firstname @user.Surname</SelectedTemplate>
+                                    <ResultTemplate>@user.EmployeeCode @user.Firstname @user.Surname</ResultTemplate>
+                                </BlazoredTypeahead>
+                                @if (userInvalid)
+                                {
+                                    <small style="color:red">User Required</small>
+                                }
                             </div>
-                        </td>
-                        <td>
-                            <div>
-                                <label class="inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" @bind-value="expense.OneTimePay" checked="@expense.OneTimePay" class="sr-only peer">
-                                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-1 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-400 rounded-full peer dark:bg-gray-400 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                                    <span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300"></span>
-                                </label>
-                            </div>
-                        </td>
-                        <td>
-                            <select class="form-select" aria-label="Default select example" @bind="expense.Month">
-                                <option selected>No Month Selected</option>
-                                <NHFor From="1"
-                                       To="13"
-                                       Context="i">
-                                    <option value="@i">@i</option>
-                                </NHFor>
-                            </select>
-                        </td>
-                        <td>
-                            <select class="form-select" aria-label="Default select example" @bind="expense.Year">
-                                <option selected>No Month Selected</option>
-                                <NHFor From="2000"
-                                       To="3000"
-                                       Context="i">
-                                    <option value="@i">@i</option>
-                                </NHFor>
-                            </select>
-                        </td>
-                        <td>
-                            <select class="form-select" aria-label="Default select example" @bind="expense.PreiodType" disabled="@expense.OneTimePay">
-                                <NHForeach TItem="string" Items="@(new[] {"Monthly","Yearly"})"
-                                           Context="mode">
-                                    <option value="@mode" selected="@(mode == expense.PreiodType)">@mode</option>
-                                </NHForeach>
-                            </select>
-                        </td>
-                        <td>
+                        </div>
+                        <div class='col'>
                             <div class="form-group">
-                                <input id="text" @bind-value="expense.Balance" step="0.01" name="text" type="number" class="form-control">
+                                <label for="Salary">Salary</label>
+                                <input id="Salary" @bind-value="newData.Salary" name="Salary" type="number" class="form-control">
                             </div>
-                        </td>
-                        <td>
-                            <button class="btn btn-danger text-white font-bold" @onclick="()=>DeleteAdditionExpense(expense.Id)"><i class="trash icon" /></button>
-                        </td>
-                    </tr>
-                </NHTypeTable>
-                <br />
-                <div class="form-group">
-                    <label for="text">Total Additional Expenses (Monthly Only)</label>
-                    <input id="text" value="@newData.TotalAddiontialExpense.ToMoneyFormat()" type="text" readonly class="form-control">
-                </div>
-                <div class="form-group">
-                    <label for="text1">Total Payment</label>
-                    <input id="text1" value="@newData.TotalPayment.ToMoneyFormat()" name="text1" type="text" readonly class="form-control">
-                </div>
-                <br />
-                <br />
-                <div class="form-group">
-                    <button name="submit" class="btn btn-primary rounded-full text-white font-bold" @onclick="Calculate"><i class="calculator icon" /> Calculate Total</button>
-                </div>
-                <br />
-                <br />
-                @if (totalCalculate)
-                {
+                        </div>
+                    </div>
+                    <div class='row'>
+                        <div class='col'>
+                            <div class="form-group">
+                                <label for="SocialSecurites">Social Securites</label>
+                                <input id="SocialSecurites" @bind-value="newData.SocialSecurites" name="SocialSecurites" type="number" class="form-control">
+                            </div>
+                        </div>
+                        <div class='col'>
+                            <div class="form-group">
+                                <label for="TravelExpenses">Travel Expenses</label>
+                                <input id="TravelExpenses" @bind-value="newData.TravelExpenses" name="TravelExpenses" type="number" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <div class='row'>
+                        <div class='col'>
+                            <div class="form-group">
+                                <label for="BankName">Bank Name</label>
+                                <input id="BankName" @bind-value="newData.BankName" name="BankName" type="text" class="form-control @TextValidator.InvalidDisplay(bankNameInvalid)">
+                            </div>
+                        </div>
+                        <div class='col'>
+                            <div class="form-group">
+                                <label for="AccountNo">Account No</label>
+                                <input id="AccountNo" @bind-value=newData.AccountNo name="AccountNo" type="text" class="form-control @TextValidator.InvalidDisplay(accountNoInvalid)">
+                            </div>
+                        </div>
+                    </div>
+                    <div class='row'>
+                        <div class='col'>
+                            <div class="form-group">
+                                <label for="Currency">Currency</label>
+                                <input id="Currency" @bind-value="newData.Currency" name="Currency" type="text" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col"></div>
+                    </div>
+                    <h2 class="text-2xl font-bold">Additional Expense</h2>
+                    <br />
+                    <button class="btn btn-info rounded-full text-white font-bold" @onclick="AddExpenseClicked"><i class="plus icon"></i>Add Expenses</button>
+                    <br />
+                    <br />
+                    <small class="font-bold text-red" style="color:darkred">
+                        * If subtracting, enter -, for example, subtracting 500, enter -500 in the Balance field.
+                    </small>
+                    <br />
+                    <NHTypeTable Items="addiontialExpenses"
+                                 TItem="UserAddiontialExpense"
+                                 TableClass="table table-hover"
+                                 NoDataDisplayText="No Additional Expense"
+                                 TableBodyClass="table-success"
+                                 TableHeaderClass="table-dark"
+                                 Context="expense"
+                                 Columns="@AdditionalHeaders">
+                        <tr>
+                            <td>
+                                <div class="form-group">
+                                    <input id="text" @bind-value="expense.ExpenseName" name="text" type="text" class="form-control">
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <label class="inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" @bind-value="expense.OneTimePay" checked="@expense.OneTimePay" class="sr-only peer">
+                                        <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-1 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-400 rounded-full peer dark:bg-gray-400 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                                        <span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300"></span>
+                                    </label>
+                                </div>
+                            </td>
+                            <td>
+                                <select class="form-select" aria-label="Default select example" @bind="expense.Month">
+                                    <option selected>No Month Selected</option>
+                                    <NHFor From="1"
+                                           To="13"
+                                           Context="i">
+                                        <option value="@i">@i</option>
+                                    </NHFor>
+                                </select>
+                            </td>
+                            <td>
+                                <select class="form-select" aria-label="Default select example" @bind="expense.Year">
+                                    <option selected>No Month Selected</option>
+                                    <NHFor From="2000"
+                                           To="3000"
+                                           Context="i">
+                                        <option value="@i">@i</option>
+                                    </NHFor>
+                                </select>
+                            </td>
+                            <td>
+                                <select class="form-select" aria-label="Default select example" @bind="expense.PreiodType" disabled="@expense.OneTimePay">
+                                    <NHForeach TItem="string" Items="@(new[] {"Monthly","Yearly"})"
+                                               Context="mode">
+                                        <option value="@mode" selected="@(mode == expense.PreiodType)">@mode</option>
+                                    </NHForeach>
+                                </select>
+                            </td>
+                            <td>
+                                <div class="form-group">
+                                    <input id="text" @bind-value="expense.Balance" step="0.01" name="text" type="number" class="form-control">
+                                </div>
+                            </td>
+                            <td>
+                                <button class="btn btn-danger text-white font-bold" @onclick="()=>DeleteAdditionExpense(expense.Id)"><i class="trash icon" /></button>
+                            </td>
+                        </tr>
+                    </NHTypeTable>
+                    <br />
                     <div class="form-group">
-                        <button name="submit" @onclick="Submit" class="btn btn-primary rounded-full text-white font-bold"><i class="save icon" /> Save</button>
+                        <label for="text">Total Additional Expenses (Monthly Only)</label>
+                        <input id="text" value="@newData.TotalAddiontialExpense.ToMoneyFormat()" type="text" readonly class="form-control">
                     </div>
-                }
-                <br />
-                <br />
+                    <div class="form-group">
+                        <label for="text1">Total Payment</label>
+                        <input id="text1" value="@newData.TotalPayment.ToMoneyFormat()" name="text1" type="text" readonly class="form-control">
+                    </div>
+                    <br />
+                    <br />
+                    <div class="form-group">
+                        <button name="submit" class="btn btn-primary rounded-full text-white font-bold" @onclick="Calculate"><i class="calculator icon" /> Calculate Total</button>
+                    </div>
+                    <br />
+                    <br />
+                    @if (totalCalculate)
+                    {
+                        <div class="form-group">
+                            <button name="submit" @onclick="Submit" class="btn btn-primary rounded-full text-white font-bold"><i class="save icon" /> Save</button>
+                        </div>
+                    }
+                    <br />
+                    <br />
+                </div>
+                <div class="col-1"></div>
             </div>
-            <div class="col-1"></div>
-        </div>
+        </Authorized>
+        <NotAuthorized>
+            <AccessDenied />
+        </NotAuthorized>
     </AuthorizeView>
 </CascadingAuthenticationState>
 <LoadingModal @ref="loading" />

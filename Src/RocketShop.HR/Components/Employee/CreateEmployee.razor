@@ -6,6 +6,7 @@
 @using RocketShop.Database.Model.Identity
 @using RocketShop.Framework.Extension
 @using RocketShop.SharedBlazor.Modal
+@using RocketShop.SharedBlazor.Page
 @using RocketShop.SharedBlazor.SharedBlazorService.Scope
 @using RocketShop.SharedBlazor.SharedFunction
 @using RocketShop.SharedBlazor.Tools
@@ -230,7 +231,7 @@
 
         </Authorized>
         <NotAuthorized>
-            <h2 class="text-4xl font-extrabold dark:text-black">Access Deined</h2>
+            <AccessDenied />
         </NotAuthorized>
     </AuthorizeView>
 </CascadingAuthenticationState>

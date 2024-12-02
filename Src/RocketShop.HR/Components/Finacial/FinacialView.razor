@@ -5,6 +5,7 @@
 @using RocketShop.HR.Services
 @using RocketShop.Shared.SharedService.Scoped
 @using RocketShop.SharedBlazor.Condition
+@using RocketShop.SharedBlazor.Page
 @using RocketShop.SharedBlazor.SharedBlazorService.Scope
 @using RocketShop.SharedBlazor.SharedBlazorServices.Scope
 @using RocketShop.SharedBlazor.Table
@@ -218,7 +219,7 @@
             </nav>
         </Authorized>
         <NotAuthorized>
-            <div class="text-xl">Access Deined</div>
+            <AccessDenied />
         </NotAuthorized>
     </AuthorizeView>
 </CascadingAuthenticationState>

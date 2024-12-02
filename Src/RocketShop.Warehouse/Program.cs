@@ -63,7 +63,7 @@ app.UseSession();
 app.UseMachineAuthorization();
 app.MapGraphQL(path:"/query");
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (enabledSwagger)
 {
     app.UseSwagger();
     app.UseSwaggerUI();

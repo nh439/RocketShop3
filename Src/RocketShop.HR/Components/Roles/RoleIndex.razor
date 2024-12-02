@@ -9,6 +9,7 @@
 @using RocketShop.HR.Services
 @using RocketShop.SharedBlazor.Condition
 @using RocketShop.SharedBlazor.Loop
+@using RocketShop.SharedBlazor.Page
 @using RocketShop.SharedBlazor.Responsive
 @inject NavigationManager navigationManager
 @inject IRoleServices roleService
@@ -194,7 +195,7 @@
             </NHIF>
         </Authorized>
         <NotAuthorized>
-            <h1 class="text-3xl font-bold">Access Denied</h1>
+            <AccessDenied />
         </NotAuthorized>
     </AuthorizeView>
 </CascadingAuthenticationState>

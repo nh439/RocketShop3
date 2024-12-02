@@ -8,6 +8,7 @@
 @using RocketShop.Shared.SharedService.Scoped
 @using RocketShop.SharedBlazor.Condition
 @using RocketShop.SharedBlazor.Domain
+@using RocketShop.SharedBlazor.Page
 @using RocketShop.SharedBlazor.Table
 @using RocketShop.SharedBlazor.Tools
 @using RocketShop.HR.LocalExtension
@@ -124,71 +125,76 @@
 <PageTitle>Import Fianacial Data</PageTitle>
 <CascadingAuthenticationState>
     <AuthorizeView Policy="@ServicePermission.HRFinancialName" Context="authContext">
-        <div class="row">
-            <div class="col-1"></div>
-            <div class="col-10">
-                <center>
-                    <h1 class="text-3xl font-bold">Import Employee Financial Data</h1>
-                </center>
-                <br />
-                <br />
-                <h2 class="text-xl font-semibold">Excel Data</h2>
-                <br />
-                <br />
-                <NHIF Condition="isUploaded">
-                    <NoOperation>
-                        <NHModelDescriptionTable Descriptions="descriptions" />
-                    </NoOperation>
-                </NHIF>
-                <br />
-                <div class="input-group mb-3">
-                    <InputFile OnChange="FileChanged" class="form-control" id="inputGroupFile02" />
-                    <label class="input-group-text" for="inputGroupFile02">Upload Excel Data</label>
-                </div>
-                <NHIF Condition="isUploaded">
-                    <YesOperation>
-                        <NHIF Condition="@hasCorrupt">
-                            <YesOperation>
-                                <div class="alert alert-danger text-xl text-center" role="alert">
-                                    @corruped Data Corrupted <button class="btn btn-link" @onclick="RemoveCorruptData" >Remove Corrupted Data</button>
-                                </div>
-                            </YesOperation>
-                        </NHIF>
-                        <NHTypeTable Items="preUpload"
-                                     Columns="@columns"
-                                     TableClass="table table-hover"
-                                     TableHeaderClass="table-dark">
-                            <tr class="@(context.IsCorrupt ? "table-danger":"table-success")">
-                                <td>@context.EmployeeCode</td>
-                                <td>@GetEmployeeName(context.UserId).IfNull("Unknown Employee")</td>
-                                <td>@context.BankName</td>
-                                <td>@context.AccountNo</td>
-                                <td>@context.Salary.ToMoneyFormat()</td>
-                                <td>@context.SocialSecurites.ToMoneyFormat()</td>
-                                <td>@context.TravelExpense.ToMoneyFormat()</td>
-                                <td>@context.ProvidentFundPerMonth.ToMoneyFormat()</td>
-                                <td>
-                                    <NHIF Condition="context.IsCorrupt">
-                                        <YesOperation>
-                                            <i class="x icon" />
-                                        </YesOperation>
-                                        <NoOperation>
-                                            <i class="check icon" />
-                                        </NoOperation>
-                                    </NHIF>
+        <Authorized>
+            <div class="row">
+                <div class="col-1"></div>
+                <div class="col-10">
+                    <center>
+                        <h1 class="text-3xl font-bold">Import Employee Financial Data</h1>
+                    </center>
+                    <br />
+                    <br />
+                    <h2 class="text-xl font-semibold">Excel Data</h2>
+                    <br />
+                    <br />
+                    <NHIF Condition="isUploaded">
+                        <NoOperation>
+                            <NHModelDescriptionTable Descriptions="descriptions" />
+                        </NoOperation>
+                    </NHIF>
+                    <br />
+                    <div class="input-group mb-3">
+                        <InputFile OnChange="FileChanged" class="form-control" id="inputGroupFile02" />
+                        <label class="input-group-text" for="inputGroupFile02">Upload Excel Data</label>
+                    </div>
+                    <NHIF Condition="isUploaded">
+                        <YesOperation>
+                            <NHIF Condition="@hasCorrupt">
+                                <YesOperation>
+                                    <div class="alert alert-danger text-xl text-center" role="alert">
+                                        @corruped Data Corrupted <button class="btn btn-link" @onclick="RemoveCorruptData">Remove Corrupted Data</button>
+                                    </div>
+                                </YesOperation>
+                            </NHIF>
+                            <NHTypeTable Items="preUpload"
+                                         Columns="@columns"
+                                         TableClass="table table-hover"
+                                         TableHeaderClass="table-dark">
+                                <tr class="@(context.IsCorrupt ? "table-danger":"table-success")">
+                                    <td>@context.EmployeeCode</td>
+                                    <td>@GetEmployeeName(context.UserId).IfNull("Unknown Employee")</td>
+                                    <td>@context.BankName</td>
+                                    <td>@context.AccountNo</td>
+                                    <td>@context.Salary.ToMoneyFormat()</td>
+                                    <td>@context.SocialSecurites.ToMoneyFormat()</td>
+                                    <td>@context.TravelExpense.ToMoneyFormat()</td>
+                                    <td>@context.ProvidentFundPerMonth.ToMoneyFormat()</td>
+                                    <td>
+                                        <NHIF Condition="context.IsCorrupt">
+                                            <YesOperation>
+                                                <i class="x icon" />
+                                            </YesOperation>
+                                            <NoOperation>
+                                                <i class="check icon" />
+                                            </NoOperation>
+                                        </NHIF>
 
-                                </td>
-                                <td></td>
-                            </tr>
-                        </NHTypeTable>
-                        <br />
-                        <br />
-                        <button type="button" class="text-white font-bold text-2xl bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 rounded-full px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" disabled="@(hasCorrupt || !preUpload.HasData())" @onclick="Submit">Import</button>
-                    </YesOperation>
-                </NHIF>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </NHTypeTable>
+                            <br />
+                            <br />
+                            <button type="button" class="text-white font-bold text-2xl bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 rounded-full px-5 py-2.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" disabled="@(hasCorrupt || !preUpload.HasData())" @onclick="Submit">Import</button>
+                        </YesOperation>
+                    </NHIF>
+                </div>
+                <div class="col-1"></div>
             </div>
-            <div class="col-1"></div>
-        </div>
+        </Authorized>
+        <NotAuthorized>
+            <AccessDenied />
+        </NotAuthorized>
     </AuthorizeView>
 </CascadingAuthenticationState>
 <LoadingModal @ref="loading" />

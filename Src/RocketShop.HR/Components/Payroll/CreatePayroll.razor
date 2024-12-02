@@ -7,6 +7,7 @@
 @using RocketShop.HR.ServicePermissions
 @using RocketShop.HR.Services
 @using RocketShop.SharedBlazor.Condition
+@using RocketShop.SharedBlazor.Page
 @using RocketShop.SharedBlazor.SharedFunction
 @using RocketShop.SharedBlazor.Table
 @using Newtonsoft.Json
@@ -306,6 +307,9 @@
                 </div>
             </div>
         </Authorized>
+        <NotAuthorized>
+            <AccessDenied />
+        </NotAuthorized>
     </AuthorizeView>
 </CascadingAuthenticationState>
 <LoadingModal @ref="loading" />

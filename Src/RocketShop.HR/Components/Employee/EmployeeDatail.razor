@@ -7,6 +7,7 @@
 @using RocketShop.HR.Services
 @using System.Security.Claims
 @using Blazored.Typeahead
+@using RocketShop.SharedBlazor.Page
 @using RocketShop.SharedBlazor.SharedFunction
 @using RocketShop.SharedBlazor.Tools
 @inject NavigationManager navigationManager;
@@ -282,7 +283,9 @@
             <br />
             <button type="button" class="text-white text-lg bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-3 py-1.5 text-center me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 mx-1" @onclick="Submit"><i class="save icon" /> Save Changes</button>
         </Authorized>
-        <NotAuthorized>Access Deined</NotAuthorized>
+        <NotAuthorized>
+            <AccessDenied />
+        </NotAuthorized>
     </AuthorizeView>
 </CascadingAuthenticationState>
 <LoadingModal @ref="loading" />

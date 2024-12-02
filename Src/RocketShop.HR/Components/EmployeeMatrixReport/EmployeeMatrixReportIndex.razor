@@ -8,6 +8,7 @@
 @using RocketShop.Shared.SharedService.Scoped
 @using RocketShop.SharedBlazor.Condition
 @using RocketShop.SharedBlazor.Domain
+@using RocketShop.SharedBlazor.Page
 @using RocketShop.SharedBlazor.SharedBlazorServices.Scope
 @using RocketShop.SharedBlazor.Table
 @using RocketShop.SharedBlazor.Tools
@@ -182,7 +183,7 @@
             </NHIF>
         </Authorized>
         <NotAuthorized>
-            <h1 class="text-2xl">Access Denied</h1>
+           <AccessDenied />
         </NotAuthorized>
     </AuthorizeView>
 </CascadingAuthenticationState>

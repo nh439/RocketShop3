@@ -11,6 +11,7 @@
 @using RocketShop.HR.ServicePermissions
 @using RocketShop.HR.Services
 @using RocketShop.SharedBlazor.Condition
+@using RocketShop.SharedBlazor.Page
 @using RocketShop.SharedBlazor.Table
 @using RocketShop.SharedBlazor.Extension
 @inject IPayrollServices payrollServices
@@ -224,7 +225,7 @@
             </NHIF>
         </Authorized>
         <NotAuthorized>
-            <div class="text-2xl font-extrabold">Access Denied</div>
+            <AccessDenied />
         </NotAuthorized>
     </AuthorizeView>
 </CascadingAuthenticationState>
