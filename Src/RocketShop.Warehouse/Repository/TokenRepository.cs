@@ -37,7 +37,7 @@ namespace RocketShop.Warehouse.Repository
     (""{nameof(Token.RemainingAccess)}"" > 0 or ""{nameof(Token.RemainingAccess)}"" is null ) and 
 (
     ""{nameof(Token.IssueDate)}""+ (""{nameof(Token.TokenAge)}""::INTERVAL) > CURRENT_TIMESTAMP or 
-    ""{nameof(Token.IssueDate)}"" is null
+    ""{nameof(Token.TokenAge)}"" is null
 );",
                new
                {
