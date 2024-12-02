@@ -9,9 +9,10 @@ using RocketShop.Warehouse.GraphQL;
 using RocketShop.Warehouse.Repository;
 using RocketShop.Warehouse.Services;
 using RocketShop.Warehouse.Middleware;
+using RocketShop.Shared.Extension;
 
 var builder = WebApplication.CreateBuilder(args);
-
+var configuration = builder.InstallConfiguration();
 builder.InstallSerilog()  
     .InstallServices(repository =>
     {
@@ -57,6 +58,7 @@ builder.InstallSerilog()
 
 
 var app = builder.Build();
+var enabledSwagger = configuration.EnabledSwagger();
 app.UseSession();
 app.UseMachineAuthorization();
 app.MapGraphQL(path:"/query");
