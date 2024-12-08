@@ -21,7 +21,8 @@ builder.InstallSerilog()
        services
        .AddSingleton<IUrlIndeiceServices,UrlIndeiceServices>()
        .AddSingleton<IWarehouseAuthenicationServices, WarehouseAuthenicationServices>()
-       .AddSingleton<IGetRoleAndPermissionService,GetRoleAndPermissionService>();
+       .AddSingleton<IGetRoleAndPermissionService,GetRoleAndPermissionService>()
+       .AddSingleton<IWarehouseQueryServices,WarehouseQueryServices>();
    });
 var app = builder.Build();
 
