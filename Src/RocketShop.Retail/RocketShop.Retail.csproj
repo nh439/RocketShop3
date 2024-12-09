@@ -10,8 +10,20 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="wwwroot\Css\Loading.css" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\Css\Loading.css" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Blazored.TextEditor" Version="1.1.0" />
+    <PackageReference Include="Blazored.Typeahead" Version="4.7.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.8" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
+    <PackageReference Include="MudBlazor" Version="7.15.0" />
     <PackageReference Include="System.IO.Packaging" Version="8.0.1" />
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
   </ItemGroup>
@@ -22,6 +34,18 @@
     <ProjectReference Include="..\RocketShop.Framework\RocketShop.Framework.csproj" />
     <ProjectReference Include="..\RocketShop.SharedBlazor\RocketShop.SharedBlazor.csproj" />
     <ProjectReference Include="..\RocketShop.Shared\RocketShop.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="Components\Pages\Logins.razor">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </Content>
+    <Content Update="Components\Pages\Logout.razor">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </Content>
+    <Content Update="Components\Pages\Signed.razor">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </Content>
   </ItemGroup>
 
 </Project>
