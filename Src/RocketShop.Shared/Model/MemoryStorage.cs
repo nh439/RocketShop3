@@ -10,6 +10,7 @@ namespace RocketShop.Shared.Model
     {
         public string Key { get; set; }
         public object Value { get; set; }
+        public string? Tag { get; set; }
         public DateTime CreateDate { get; internal set; } = DateTime.Now;
         public TimeSpan ExpiredIn { get; set; } = TimeSpan.FromMinutes(5);
         public DateTime Expired

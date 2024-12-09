@@ -23,7 +23,7 @@ namespace RocketShop.Shared.SharedService.Singletion
         /// <param name="key">The unique key for the data entry.</param>
         /// <param name="value">The value to be stored.</param>
         /// <param name="expiredIn">The time span after which the data expires.</param>
-        void AddData(string key, object value, TimeSpan expiredIn);
+        void AddData(string key, object value, TimeSpan expiredIn, string? tag = null);
         /// <summary>
         /// Removes data from the memory storage by key.
         /// </summary>
@@ -48,6 +48,11 @@ namespace RocketShop.Shared.SharedService.Singletion
         /// <param name="key">The unique key for the data entry to check.</param>
         /// <returns>True if the entry exists; otherwise, false.</returns>
         bool Exists(string key);
+        /// <summary>
+        /// Clear Data By Tag
+        /// </summary>
+        /// <param name="tag">Tag To Clear</param>
+        void Clear(string tag);
     }
     public class MemoryStorageServices : IMemoryStorageServices,IDisposable
     {
@@ -64,7 +69,7 @@ namespace RocketShop.Shared.SharedService.Singletion
 
 
 
-        public void AddData(string key, object value, TimeSpan expiredIn)
+        public void AddData(string key, object value, TimeSpan expiredIn,string? tag= null)
         {
             storages.Add(new MemoryStorage
             {
@@ -72,6 +77,7 @@ namespace RocketShop.Shared.SharedService.Singletion
                 Key = key,
                 Value = value,
                 ExpiredIn = expiredIn,
+                Tag=tag
             });
             logger.LogInformation("Storage Added");
         }
@@ -113,6 +119,13 @@ namespace RocketShop.Shared.SharedService.Singletion
             if (expiredCnt.Ge(0))
                 logger.LogInformation("Clear {cnt} Expired Data", expiredCnt);
         }
+
+        public void Clear(string tag)
+        {
+            storages = storages.Where(x=>x.Tag !=  tag).ToList();
+            logger.LogInformation("Force Clear Tag '{tag}' ", tag);
+        }
+            
 
         void IDisposable.Dispose() { 
         timer?.Dispose();
