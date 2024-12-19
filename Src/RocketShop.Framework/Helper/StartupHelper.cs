@@ -9,6 +9,7 @@ using RocketShop.Framework.Extension;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
+using LanguageExt.Common;
 
 namespace RocketShop.Framework.Helper
 {
@@ -51,23 +52,85 @@ namespace RocketShop.Framework.Helper
             return builder;
         }
 
-        public static IServiceProvider InvokeEntryFlow(this IServiceProvider provider,Action<IServiceScope> action)
+        public static IServiceProvider InvokeEntryFlow(this IServiceProvider provider,Action<IServiceScope> action, int? retries = null, int intervalSecond = 3)
         {
-            using var scope = provider.CreateScope();
-            action(scope);
-            return provider;
+            while (true)
+            {
+                try
+                {
+                    using var scope = provider.CreateScope();
+                    action(scope);
+                    return provider;
+                }
+                catch
+                {
+                    if (retries.HasValue)
+                    {
+                        retries -= 1;
+                        Console.WriteLine("Something went wrong, retrying...");
+                        if (retries == 0)
+                        {
+                            Console.WriteLine("Retry limit reached");
+                            throw;
+                        }
+                    }
+                    Thread.Sleep(intervalSecond * 1000);
+                }
+            }
         }
-         public static (IServiceProvider,int) InvokeEntryFlowAndReturn(this IServiceProvider provider,Func<IServiceScope,int> action)
+         public static (IServiceProvider,int) InvokeEntryFlowAndReturn(this IServiceProvider provider,Func<IServiceScope,int> action, int? retries = null, int intervalSecond = 3)
         {
-            using var scope = provider.CreateScope();
-            var result = action.Invoke(scope);
-            return (provider,result);
+            while (true)
+            {
+                try
+                {
+                    using var scope = provider.CreateScope();
+                    var result = action.Invoke(scope);
+                    return (provider, result);
+                }
+                catch
+                {
+                    if (retries.HasValue)
+                    {
+                        retries -= 1;
+                        Console.WriteLine("Something went wrong, retrying...");
+                        if (retries == 0)
+                        {
+                            Console.WriteLine("Retry limit reached");
+                            throw;
+                        }
+                    }
+                    Thread.Sleep(intervalSecond * 1000);
+                }
+
+            }
         }
-         public static async Task< (IServiceProvider,int)> InvokeEntryFlowAndReturn(this IServiceProvider provider, Func<IServiceScope,Task< int>> action)
+         public static async Task< (IServiceProvider,int)> InvokeEntryFlowAndReturn(this IServiceProvider provider, Func<IServiceScope,Task< int>> action,int? retries = null,int intervalSecond = 3)
         {
-            using var scope = provider.CreateScope();
-            var result = await action.Invoke( scope);
-            return (provider,result);
+            while (true)
+            {
+                try
+                {
+                    using var scope = provider.CreateScope();
+                    var result = await action.Invoke(scope);
+                    return (provider, result);
+                }
+                catch
+                {
+                    if (retries.HasValue)
+                    {
+                        retries -= 1;
+                        Console.WriteLine("Something went wrong, retrying...");
+                        if (retries == 0)
+                        {
+                            Console.WriteLine("Retry limit reached");
+                            throw;
+                        }
+                    }
+                    await Task.Delay(intervalSecond * 1000);
+                }
+                
+            }
         }
 
     }

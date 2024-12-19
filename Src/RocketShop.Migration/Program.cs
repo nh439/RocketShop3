@@ -39,7 +39,7 @@ namespace RocketShop.Migration
     .AddClaimsPrincipalFactory<UserClaimsPrincipalFactory<User, IdentityRole>>()
     .AddEntityFrameworkStores<IdentityContext>()
     .AddDefaultTokenProviders();
-                service.InstallDatabase<IdentityContext, AuditLogContext, WarehouseContext>()
+                service.InstallDatabase<IdentityContext, AuditLogContext, WarehouseContext,RetailContext>()
                 .AddAuthorization()
                 .AddEndpointsApiExplorer()
                 .AddSwaggerGen();
@@ -63,28 +63,36 @@ namespace RocketShop.Migration
                 {
 
                     Console.WriteLine("Start Migrate");
+                    // Inject Database Context
                     var context = scope.ServiceProvider.GetRequiredService<IdentityContext>();
                     var auditContext = scope.ServiceProvider.GetRequiredService<AuditLogContext>();
                     var warehouseContext = scope.ServiceProvider.GetRequiredService<WarehouseContext>();
+                    var retailContext = scope.ServiceProvider.GetRequiredService<RetailContext>();
+                    // Get Connection String
                     var whConnStr = warehouseContext.Database.GetConnectionString();
                     var clients = configuration.GetSection("Clients").Get<StartClient[]>();
                     var otherConnStr = new[]
                     {
                         auditContext.Database.GetConnectionString(),
-                      context.Database.GetConnectionString()
+                      context.Database.GetConnectionString(),
+                        retailContext.Database.GetConnectionString()
                     };
-                    if (otherConnStr.Where(x => x == whConnStr).HasData())
+                    if (otherConnStr.Where(x => x == whConnStr).HasData()) /// Check if the warehouse database is shared with other databases
                     {
                         Console.WriteLine("Do not share the warehouse database with other databases.");
                         return -2;
                     }
+                    // Migrate
                     context!.Database.Migrate();
                     Console.WriteLine("Identity Migrate Success");
                     auditContext!.Database.Migrate();
                     Console.WriteLine("Audit Log Migrate Success");
                     warehouseContext!.Database.Migrate();
                     Console.WriteLine("Warehouse Migrate Success");
+                    retailContext!.Database.Migrate();
+                    Console.WriteLine("Retail Migrate Success");
                     Console.WriteLine("End Migrate");
+                    // Apply Seed Data
                     Console.WriteLine("Create First User");
                     using var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
                     var exists = await userManager.FindByEmailAsync(startUser!.Email);
@@ -209,10 +217,9 @@ namespace RocketShop.Migration
                     Console.WriteLine(x.Message);
                     Console.WriteLine(x.Source);
                     Console.WriteLine(x.StackTrace);
-                    Thread.Sleep(7000);
-                    return -1;
+                    throw;
                 }
-            });
+            },retries: 3);
             return flowResult.Item2;
         }
     }

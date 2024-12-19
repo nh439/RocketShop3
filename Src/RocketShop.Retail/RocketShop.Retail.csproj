@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -46,6 +46,11 @@
     <Content Update="Components\Pages\Signed.razor">
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\Asset\Product\Product\" />
+    <Folder Include="wwwroot\Asset\Product\Thumbnails\" />
   </ItemGroup>
 
 </Project>

@@ -1,30 +1,36 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">RocketShop.Retail</a>
-    </div>
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using RocketShop.Retail.ServicePermission
+<link rel="stylesheet" href="/Css//Navbar.css" />
+<div class="sidebar">
+    <br />
+    <h3 style="color: #edeeef; text-align:center">Rocket Shop Retail</h3>
+    <CascadingAuthenticationState>
+        <AuthorizeView Policy="@PolicyNames.AllSeller">
+            <Authorized>
+                <nav class="nav-menu">
+                    <ul>
+                        <li><a href="/home"><i class="icon-home"></i> Home</a></li>
+                        <li><a href="/categories"><i class="icon-categories"></i> Categories</a></li>
+                        <li><a href="/cart"><i class="icon-cart"></i> Cart</a></li>
+                        <li><a href="/orders"><i class="icon-orders"></i> Orders</a></li>
+                        <li><a href="/wishlist"><i class="icon-heart"></i> Wishlist</a></li>
+                        <li><a href="/profile"><i class="icon-user"></i> Profile</a></li>
+                        <li><a href="/offers"><i class="icon-tag"></i> Offers</a></li>
+                        <li><a href="/settings"><i class="icon-settings"></i> Settings</a></li>
+                    </ul>
+                </nav>
+                <div class="logout">
+                    <a href="/logout"><i class="icon-logout"></i> Logout</a>
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                <nav class="nav-menu">
+                    <ul>
+                        <li><a href="/login"><i class="icon-home"></i> Login</a></li>
+                    </ul>
+                </nav>
+            </NotAuthorized>
+        </AuthorizeView>
+    </CascadingAuthenticationState>
+
 </div>
-
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
-
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
-    </nav>
-</div>
-

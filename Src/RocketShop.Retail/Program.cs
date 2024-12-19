@@ -11,6 +11,7 @@ using RocketShop.Database.Model.Identity;
 using RocketShop.Framework.Helper;
 using RocketShop.Framework.Services;
 using RocketShop.Retail.Components;
+using RocketShop.Retail.ServicePermission;
 using RocketShop.Shared.SharedService.Singletion;
 using RocketShop.SharedBlazor.SharedBlazorService.Scope;
 using RocketShop.SharedBlazor.SharedBlazorServices.Scope;
@@ -41,7 +42,7 @@ builder.InstallSerilog()
 .AddClaimsPrincipalFactory<UserClaimsPrincipalFactory<User, IdentityRole>>()
 .AddEntityFrameworkStores<IdentityContext>()
 .AddDefaultTokenProviders();
-       install.InstallDatabase<AuditLogContext, IdentityContext>()
+       install.InstallDatabase<AuditLogContext, IdentityContext,RetailContext>()
        .AddHttpContextAccessor()
        .AddAuthentication(options =>
        {
@@ -50,7 +51,10 @@ builder.InstallSerilog()
        }).AddCookie(c => c.ExpireTimeSpan = TimeSpan.FromHours(10));
        install.AddAuthorization(a =>
        {
-
+           a.AddPolicy(PolicyNames.AllSeller, x => x.RequireClaim("permission", PolicyPermissions.AllSellerPolicy));
+           a.AddPolicy(PolicyNames.GeneralSeller, x => x.RequireClaim("permission", PolicyPermissions.GeneralSeller));
+           a.AddPolicy(PolicyNames.SellerManager, x => x.RequireClaim("permission", PolicyPermissions.SellerManager));
+           a.AddPolicy(PolicyNames.SpeicalSeller, x => x.RequireClaim("permission", PolicyPermissions.SellerSpeical));
        })
         .AddMudServices()
         .AddRadzenComponents();

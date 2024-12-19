@@ -1,0 +1,76 @@
+﻿.sidebar {
+    width: 250px;
+    background-color: #0792f4; /* สีฟ้าอ่อน */
+    border-right: 1px solid #bbdefb;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+
+.logo {
+    padding: 20px;
+    text-align: center;
+    border-bottom: 1px solid #bbdefb;
+}
+
+    .logo img {
+        width: 100px;
+    }
+
+.nav-menu {
+    flex-grow: 1;
+    padding: 20px 0;
+}
+
+    .nav-menu ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+        .nav-menu ul li {
+            margin: 10px 0;
+        }
+
+            .nav-menu ul li a {
+                text-decoration: none;
+                font-size: 16px;
+                color: #edeeef; /* สีฟ้าเข้ม */
+                display: flex;
+                align-items: center;
+                padding: 10px 20px;
+                border-radius: 5px;
+                transition: background-color 0.3s ease, color 0.3s ease;
+            }
+
+                .nav-menu ul li a:hover {
+                    background-color: #bbdefb; /* สีฟ้ากลาง */
+                    color: #ffffff; /* สีขาว */
+                }
+
+                .nav-menu ul li a i {
+                    margin-right: 10px;
+                }
+
+.logout {
+    padding: 20px;
+    border-top: 1px solid #bbdefb;
+}
+
+    .logout a {
+        text-decoration: none;
+        font-size: 16px;
+        color: #070feb; 
+        display: flex;
+        align-items: center;
+        border-radius: 5px;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+        .logout a:hover {
+            background-color: #ef9a9a; /* สีแดงอ่อน */
+            color: #ffffff; /* สีขาว */
+        }
