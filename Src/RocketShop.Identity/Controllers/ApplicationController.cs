@@ -36,6 +36,19 @@ namespace RocketShop.Identity.Controllers
                 return Redirect(WHAdminUrl);
             });
 
-        
+        [Authorize]
+        [Route("Retail")]
+        public async Task<IActionResult> Retail() =>
+           await InvokeControllerServiceAsync(async () =>
+           {
+               var token = TokenHelper.BuildToken(HttpContext);
+               var urlResult = await urlIndeiceServices.GetUrls();
+               var url = urlResult.GetRight()!;
+               var WHAdminUrl = $"{url.RetailUrl}/Signed?id_token={token}";
+               return Redirect(WHAdminUrl);
+           });
+
+
+
     }
 }

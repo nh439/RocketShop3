@@ -11,6 +11,7 @@ using RocketShop.Database.Model.Identity;
 using RocketShop.Framework.Helper;
 using RocketShop.Framework.Services;
 using RocketShop.Retail.Components;
+using RocketShop.Retail.Repository;
 using RocketShop.Retail.ServicePermission;
 using RocketShop.Shared.SharedService.Singletion;
 using RocketShop.SharedBlazor.SharedBlazorService.Scope;
@@ -50,18 +51,21 @@ builder.InstallSerilog()
            options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
        }).AddCookie(c => c.ExpireTimeSpan = TimeSpan.FromHours(10));
        install.AddAuthorization(a =>
-       {
-           a.AddPolicy(PolicyNames.AllSeller, x => x.RequireClaim("permission", PolicyPermissions.AllSellerPolicy));
-           a.AddPolicy(PolicyNames.GeneralSeller, x => x.RequireClaim("permission", PolicyPermissions.GeneralSeller));
-           a.AddPolicy(PolicyNames.SellerManager, x => x.RequireClaim("permission", PolicyPermissions.SellerManager));
-           a.AddPolicy(PolicyNames.SpeicalSeller, x => x.RequireClaim("permission", PolicyPermissions.SellerSpeical));
+           {
+               const string permission = "permission";
+           a.AddPolicy(PolicyNames.AllSeller, x => x.RequireClaim(permission, PolicyPermissions.AllSellerPolicy));
+           a.AddPolicy(PolicyNames.GeneralSeller, x => x.RequireClaim(permission, PolicyPermissions.GeneralSeller));
+           a.AddPolicy(PolicyNames.SellerManager, x => x.RequireClaim(permission, PolicyPermissions.SellerManager));
+           a.AddPolicy(PolicyNames.SpeicalSeller, x => x.RequireClaim(permission, PolicyPermissions.SellerSpeical));
        })
         .AddMudServices()
         .AddRadzenComponents();
    })
    .InstallServices(repositories =>
    {
-       repositories.AddScoped<ActivityLogRepository>();
+       repositories.AddScoped<ActivityLogRepository>()
+       .AddScoped<MainCategoryRepository>()
+       .AddScoped<SubCategoryRepository>();
    })
    .InstallServices(services =>
    {
@@ -92,4 +96,4 @@ app.UseAntiforgery();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-app.Run();
+await app.RunAsync();
