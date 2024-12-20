@@ -22,5 +22,17 @@ namespace RocketShop.Shared.Extension
                 return false;
             }
         }
+        public static bool EnabledSqlLogging(this IConfiguration configuration,string? configName = null)
+        {
+            try
+            {
+                configName = configName.HasMessage() ? configName : "EnabledSqlLogging";
+                return configuration.GetSection(configName!).Get<bool>();
+            }
+            catch
+            {
+                return false;
+            }
+        }
     }
 }

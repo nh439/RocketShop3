@@ -44,7 +44,7 @@ namespace RocketShop.Warehouse.Services
                 }
                 using var connection = new NpgsqlConnection(configuration.GetWarehouseConnectionString());
                 var returnObj = await provinceRepository.ListProvince(search, connection);
-                memoryStorageServices.AddData(key, returnObj, TimeSpan.FromMinutes(5));
+                memoryStorageServices.AddData(key, returnObj, TimeSpan.FromMinutes(5),"Province");
                 return returnObj;
             });
 
@@ -60,7 +60,7 @@ namespace RocketShop.Warehouse.Services
                 using var connection = new NpgsqlConnection(configuration.GetWarehouseConnectionString());
                 var returnObj = (await provinceRepository.GetByCode(id, connection)).Extract();
                 if (returnObj.IsNull()) return null;
-                memoryStorageServices.AddData(key, returnObj!, TimeSpan.FromMinutes(5));
+                memoryStorageServices.AddData(key, returnObj!, TimeSpan.FromMinutes(5), "Province");
                 return returnObj;
             });
 
@@ -75,7 +75,7 @@ namespace RocketShop.Warehouse.Services
            }
            using var connection = new NpgsqlConnection(configuration.GetWarehouseConnectionString());
            var returnObj = await districtRepository.ListDistrict(search, provinceId, connection);
-           memoryStorageServices.AddData(key, returnObj!, TimeSpan.FromMinutes(5));
+           memoryStorageServices.AddData(key, returnObj!, TimeSpan.FromMinutes(5), "District");
            return returnObj;
        });
 
@@ -90,7 +90,7 @@ namespace RocketShop.Warehouse.Services
                 }
                 using var connection = new NpgsqlConnection(configuration.GetWarehouseConnectionString());
                 var returnObj = (await districtRepository.GetDistrict(id, connection)).Extract();
-                memoryStorageServices.AddData(key, returnObj!, TimeSpan.FromMinutes(5));
+                memoryStorageServices.AddData(key, returnObj!, TimeSpan.FromMinutes(5), "District");
                 return returnObj;
             });
 
@@ -105,7 +105,7 @@ namespace RocketShop.Warehouse.Services
                }
                using var connection = new NpgsqlConnection(configuration.GetWarehouseConnectionString());
                var returnObj = await subDistrictRepository.ListSubDistricts(search, districtId, postalCode, connection);
-               memoryStorageServices.AddData(key, returnObj!, TimeSpan.FromMinutes(5));
+               memoryStorageServices.AddData(key, returnObj!, TimeSpan.FromMinutes(5), "SubDistrict");
                return returnObj;
            });
 
@@ -120,7 +120,7 @@ namespace RocketShop.Warehouse.Services
                 }
                 using var connection = new NpgsqlConnection(configuration.GetWarehouseConnectionString());
                 var returnObj = (await subDistrictRepository.GetSubDistrict(id, connection)).Extract();
-                memoryStorageServices.AddData(key, returnObj!, TimeSpan.FromMinutes(5));
+                memoryStorageServices.AddData(key, returnObj!, TimeSpan.FromMinutes(5), "SubDistrict");
                 return returnObj;
             });
 
@@ -135,7 +135,7 @@ namespace RocketShop.Warehouse.Services
                 }
                 using var connection = new NpgsqlConnection(configuration.GetWarehouseConnectionString());
                 var returnObj = await addressViewRepository.ListAddresses(search, page, pageSize, connection);
-                memoryStorageServices.AddData(key, returnObj!, TimeSpan.FromMinutes(5));
+                memoryStorageServices.AddData(key, returnObj!, TimeSpan.FromMinutes(5), "Address");
                 return returnObj;
             });
 
@@ -150,7 +150,7 @@ namespace RocketShop.Warehouse.Services
                 }
                 using var connection = new NpgsqlConnection(configuration.GetWarehouseConnectionString());
                 var returnObj = (await addressViewRepository.GetAddress(id, connection)).Extract();
-                memoryStorageServices.AddData(key, returnObj!, TimeSpan.FromMinutes(5));
+                memoryStorageServices.AddData(key, returnObj!, TimeSpan.FromMinutes(5), "Address");
                 return returnObj;
             });
     }

@@ -34,4 +34,8 @@
     <ProjectReference Include="..\RocketShop.Shared\RocketShop.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Migrations\Retail\" />
+  </ItemGroup>
+
 </Project>

@@ -1,0 +1,52 @@
+﻿@page "/Signed"
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.WebUtilities
+@using System.IdentityModel.Tokens.Jwt
+@using RocketShop.AuditService.Services
+@using RocketShop.Database.Model.Identity
+@using RocketShop.Framework.Extension
+@using RocketShop.Shared.SharedService.Scoped
+@using RocketShop.Shared.SharedService.Singletion
+@using RocketShop.SharedBlazor.SharedBlazorServices.Scope
+@inject NavigationManager navigationManager;
+@inject SignInManager<User> signInManager;
+@inject IHttpContextAccessor accessor;
+@inject IGetRoleAndPermissionService _getRoleAndPermissionService;
+@inject ISharedUserServices _userServices
+@inject IActivityLogService _activityLogService;
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = navigationManager.ToAbsoluteUri(navigationManager.Uri);
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("id_token", out var idToken))
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var jwtSecurityToken = handler.ReadJwtToken(idToken);
+            var subject = jwtSecurityToken.Subject;
+            if (!subject.HasMessage())
+                subject = jwtSecurityToken.Claims.FirstOrDefault(x => x.Type == "nameid")!.Value;
+            var user = await _userServices.GetUser(subject);
+            var hasRole = jwtSecurityToken.Claims.Where(x => x.Type == "Role").HasData();
+            var hasPermission = jwtSecurityToken.Claims.Where(x => x.Type == "Permission").HasData();
+            var claims = jwtSecurityToken.Claims.ToList();
+            if (!hasRole)
+            {
+                var roles = await _getRoleAndPermissionService.GetMyRoles(idToken!);
+                if (roles.IsRight && roles.GetRight().HasData())
+                    foreach (var role in roles.GetRight()!)
+                        claims.Add(new System.Security.Claims.Claim("Role", role));
+            }
+            if (!hasPermission)
+            {
+                var permissions = await _getRoleAndPermissionService.GetMyPermissions(idToken!);
+                if (permissions.IsRight && permissions.GetRight().HasData())
+                    foreach (var permission in permissions.GetRight()!)
+                        claims.Add(new System.Security.Claims.Claim("Permission", permission));
+            }
+
+            await signInManager.SignInWithClaimsAsync(user.GetRight()!, true, claims);
+            await _activityLogService.Create("Retail", "Main", "User Login");
+            navigationManager.NavigateTo("/", true);
+        }
+    }
+}

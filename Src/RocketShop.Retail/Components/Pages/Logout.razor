@@ -1,0 +1,22 @@
+﻿@page "/logout"
+@using Microsoft.AspNetCore.Identity
+@using RocketShop.Database.Model.Identity
+@using RocketShop.Framework.Extension
+@using RocketShop.Shared.SharedService;
+@using RocketShop.Shared.SharedService.Singletion
+@inject NavigationManager navigationManager
+@inject IUrlIndeiceServices urlIndeiceServices
+@inject SignInManager<User> signInManager;
+@inject IHttpContextAccessor accessor;
+<h3>Logout</h3>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+
+        await signInManager.SignOutAsync();
+        var uris = (await urlIndeiceServices.GetUrls()).GetRight();
+        string redirectUrl = navigationManager.BaseUri;
+        navigationManager.NavigateTo($"{uris!.IdentityUrl}/home/Logout?redirectUrl={redirectUrl}", true);
+    }
+}

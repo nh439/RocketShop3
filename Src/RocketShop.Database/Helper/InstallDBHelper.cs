@@ -30,6 +30,11 @@ namespace RocketShop.Database.Helper
             services.AddDbContext<WarehouseContext>();
             return services;
         }
+          public static IServiceCollection InstallRetailContext(this IServiceCollection services)
+        {
+            services.AddDbContext<RetailContext>();
+            return services;
+        }
 
 
         public static IServiceCollection InstallDatabase<TContext> (this IServiceCollection services)

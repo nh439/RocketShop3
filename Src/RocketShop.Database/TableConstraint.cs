@@ -37,5 +37,12 @@ namespace RocketShop.Database
         public const string AllowedObject = "Authorization_Allowed_Object";
         public const string ClientHistory = "Authorization_Client_History";
         #endregion
+        #region Retail
+        public const string MainCategory = "M_Category";
+        public const string SubCategory = "S_Category";
+        public const string Product = "Products";
+        public const string ProductAttribute = "ProductAttribute";
+        public const string ProductImage = "ProductImage";
+        #endregion
     }
 }

@@ -6,10 +6,13 @@ using RocketShop.Database;
 using RocketShop.Database.EntityFramework;
 using RocketShop.Database.Helper;
 using RocketShop.Database.Model.Identity;
+using RocketShop.Database.Model.Warehouse.Authorization;
 using RocketShop.Database.NonEntityFramework;
 using RocketShop.Framework.Extension;
 using RocketShop.Framework.Helper;
 using RocketShop.Migration.Configuration;
+using RocketShop.Migration.Model;
+using RocketShop.Shared.Helper;
 
 namespace RocketShop.Migration
 {
@@ -36,7 +39,7 @@ namespace RocketShop.Migration
     .AddClaimsPrincipalFactory<UserClaimsPrincipalFactory<User, IdentityRole>>()
     .AddEntityFrameworkStores<IdentityContext>()
     .AddDefaultTokenProviders();
-                service.InstallDatabase<IdentityContext,AuditLogContext,WarehouseContext>()
+                service.InstallDatabase<IdentityContext, AuditLogContext, WarehouseContext,RetailContext>()
                 .AddAuthorization()
                 .AddEndpointsApiExplorer()
                 .AddSwaggerGen();
@@ -58,29 +61,38 @@ namespace RocketShop.Migration
             {
                 try
                 {
-                    
+
                     Console.WriteLine("Start Migrate");
+                    // Inject Database Context
                     var context = scope.ServiceProvider.GetRequiredService<IdentityContext>();
                     var auditContext = scope.ServiceProvider.GetRequiredService<AuditLogContext>();
                     var warehouseContext = scope.ServiceProvider.GetRequiredService<WarehouseContext>();
+                    var retailContext = scope.ServiceProvider.GetRequiredService<RetailContext>();
+                    // Get Connection String
                     var whConnStr = warehouseContext.Database.GetConnectionString();
+                    var clients = configuration.GetSection("Clients").Get<StartClient[]>();
                     var otherConnStr = new[]
                     {
                         auditContext.Database.GetConnectionString(),
-                      context.Database.GetConnectionString()
+                      context.Database.GetConnectionString(),
+                        retailContext.Database.GetConnectionString()
                     };
-                    if(otherConnStr.Where(x=>x == whConnStr).HasData())
+                    if (otherConnStr.Where(x => x == whConnStr).HasData()) /// Check if the warehouse database is shared with other databases
                     {
                         Console.WriteLine("Do not share the warehouse database with other databases.");
                         return -2;
                     }
+                    // Migrate
                     context!.Database.Migrate();
                     Console.WriteLine("Identity Migrate Success");
                     auditContext!.Database.Migrate();
                     Console.WriteLine("Audit Log Migrate Success");
-                     warehouseContext!.Database.Migrate();
+                    warehouseContext!.Database.Migrate();
                     Console.WriteLine("Warehouse Migrate Success");
+                    retailContext!.Database.Migrate();
+                    Console.WriteLine("Retail Migrate Success");
                     Console.WriteLine("End Migrate");
+                    // Apply Seed Data
                     Console.WriteLine("Create First User");
                     using var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
                     var exists = await userManager.FindByEmailAsync(startUser!.Email);
@@ -107,7 +119,7 @@ namespace RocketShop.Migration
                             BrithDay = DateTime.UtcNow,
                             StartWorkDate = DateTime.UtcNow,
                             UserId = user.Id,
-                            CreateBy="SYSTEM"
+                            CreateBy = "SYSTEM"
                         });
 
                         await context.SaveChangesAsync();
@@ -130,7 +142,68 @@ namespace RocketShop.Migration
                         context.UserRole.Add(newRole);
                         await context.SaveChangesAsync();
                     }
+                    #region Client
+                    if (clients.HasData())
+                    {
+                        Console.WriteLine("Creating Clients...");
+                        using var transaction = warehouseContext.Database.BeginTransaction();
+                        foreach (var client in clients!)
+                        {
+                            var clientExists = await warehouseContext.Client.AnyAsync(x => x.ClientId == client.ClientId);
+                            if (clientExists)
+                                continue;
+                            var newClient = new Client
+                            {
+                                Application = client.Application,
+                                ClientId = client.ClientId,
+                                ClientName = client.ClientName,
+                                CreateBy = "SYSTEM",
+                                Created = DateTime.UtcNow,
+                                RequireSecret = client.ClientSecret.HasMessage(),
+                                MaxinumnAccess = 5,
+                                TokenExpiration = 3600,
+                                Updated = DateTime.UtcNow,
+                            };
 
+                            warehouseContext.Client.Add(newClient);
+                            await warehouseContext.SaveChangesAsync();
+                            List<AllowedObject> allowedObjects = new();
+                            if (client.AllowedReadCollections.HasData())
+                                allowedObjects.AddRange(client.AllowedReadCollections!.Select(s => new AllowedObject
+                                {
+                                    Client = newClient.Id,
+                                    ObjectName = s
+                                }));
+                            if (client.AllowedWriteCollections.HasData())
+                                allowedObjects.AddRange(client.AllowedWriteCollections!.Select(s => new AllowedObject
+                                {
+                                    Client = newClient.Id,
+                                    ObjectName = s
+                                }));
+                            allowedObjects = allowedObjects.Distinct().ToList();
+                            foreach(AllowedObject allowedObject in allowedObjects)
+                            {
+                                allowedObject.Read = client.AllowedReadCollections.HasData() && client.AllowedReadCollections!.Where(x => x == allowedObject.ObjectName).HasData();
+                                allowedObject.Write = client.AllowedWriteCollections.HasData() && client.AllowedWriteCollections!.Where(x => x == allowedObject.ObjectName).HasData();
+                                warehouseContext.AllowedObject.Add(allowedObject);
+                            }
+                            if(client.ClientSecret.HasMessage())
+                            {
+                                var secret = client.ClientSecret!.HashPasword(out var salt);
+                                warehouseContext.ClientSecret.Add(new ClientSecret
+                                {
+                                    Client = newClient.Id,
+                                    Created = DateTime.UtcNow,
+                                    Salt = Convert.ToBase64String(salt),
+                                    SecretValue = secret
+                                });
+                            }
+                            await warehouseContext.SaveChangesAsync();
+                        }
+                       await  transaction.CommitAsync();
+                        Console.WriteLine("Create Clients Success");
+                    }
+                    #endregion
                     for (int i = 10; i > 0; i--)
                     {
                         Thread.Sleep(1000);
@@ -144,10 +217,9 @@ namespace RocketShop.Migration
                     Console.WriteLine(x.Message);
                     Console.WriteLine(x.Source);
                     Console.WriteLine(x.StackTrace);
-                    Thread.Sleep(7000);
-                    return -1;
+                    throw;
                 }
-            });
+            },retries: 3);
             return flowResult.Item2;
         }
     }
