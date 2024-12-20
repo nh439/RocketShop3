@@ -49,7 +49,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Service\" />
     <Folder Include="wwwroot\Asset\Product\Product\" />
     <Folder Include="wwwroot\Asset\Product\Thumbnails\" />
   </ItemGroup>

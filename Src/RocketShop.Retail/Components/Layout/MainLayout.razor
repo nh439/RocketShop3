@@ -1,5 +1,40 @@
-﻿@using MudBlazor
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using MudBlazor
 @inherits LayoutComponentBase
+@using RocketShop.Framework.Extension
+@using RocketShop.SharedBlazor.SharedBlazorServices.Scope
+@inject IHttpContextAccessor accessor
+@inject ISharedUserServices sharedUserServices
+@inject ILogger<MainLayout> logger
+
+@code{
+    string username = string.Empty;
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            if ((state != null).And(state!.User.Identity!.IsAuthenticated))
+            {
+                var userId = accessor.GetCurrentUserId();
+                var userResult = await sharedUserServices.GetUser(userId!);
+                if(userResult.IsLeft)
+                    throw userResult.GetLeft()!;
+                var user = userResult.GetRight()!;
+                username = $"{user.Firstname} {user.Surname}";
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error on MainLayout");
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+}
+
 @* Required *@
 <MudThemeProvider />
 <MudPopoverProvider />
@@ -18,7 +53,17 @@
 
             <main>
                 <div class="top-row px-4">
-                    <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+                   <CascadingAuthenticationState>
+                       <AuthorizeView>
+                            <Authorized>
+                             @username
+                            </Authorized>
+                            <NotAuthorized>
+                                <a href="/login">Login</a>
+                                </NotAuthorized>
+                            </AuthorizeView>
+ 
+                    </CascadingAuthenticationState>
                 </div>
 
                 <article class="content px-4">
