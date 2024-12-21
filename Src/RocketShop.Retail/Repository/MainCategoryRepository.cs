@@ -16,14 +16,24 @@ namespace RocketShop.Retail.Repository
         readonly string tableName = TableConstraint.MainCategory;
         readonly bool EnabledSqlLogging = configuration.EnabledSqlLogging();
 
-        public async Task<bool> Create(MainCategory mainCategory) =>
-            await entity.Add(mainCategory)
-            .Context.SaveChangesAsync().EqAsync(1);
+        public async Task<MainCategory?> Create(MainCategory mainCategory,
+            IDbConnection retailConnection,
+            IDbTransaction? transaction = null
+            ) =>
+            await retailConnection.CreateQueryStore(tableName, EnabledSqlLogging)
+            .InsertAndReturnItemAsync(mainCategory, transaction);
 
-        public async Task<int> Creates(IEnumerable<MainCategory> mainCategories)
+        public async Task<List<MainCategory>> Creates(IEnumerable<MainCategory> mainCategories, IDbConnection retailConnection,IDbTransaction? transaction = null)
         {
-            await entity.AddRangeAsync(mainCategories);
-            return await context.SaveChangesAsync();
+            List<MainCategory> returnValue = new List<MainCategory>();
+            foreach (var mainCategory in mainCategories)
+            {
+                var result = await retailConnection.CreateQueryStore(tableName, EnabledSqlLogging)
+                .InsertAndReturnItemAsync(mainCategory, transaction);
+                if (result.IsNotNull())
+                    returnValue.Add(result!);
+            }
+            return returnValue;
         }
 
         public async Task<bool> Update(MainCategory mainCategory,IDbConnection retailConnection,IDbTransaction? transaction = null) =>

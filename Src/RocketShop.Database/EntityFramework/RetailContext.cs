@@ -24,7 +24,8 @@ namespace RocketShop.Database.EntityFramework
         }
         protected override void OnModelCreating(ModelBuilder builder)
         {
-            builder.Entity<MainCategory>().HasIndex(x => new { x.NameEn, x.NameTh });
+            builder.Entity<MainCategory>().HasIndex(x =>  x.NameEn).IsUnique();
+            builder.Entity<MainCategory>().HasIndex(x =>  x.NameTh).IsUnique();
             builder.Entity<SubCategory>().HasIndex(x => new { x.NameEn, x.NameTh,x.MainCategoryId });
             builder.Entity<Product>().HasIndex(x => new { x.SubCategoryId, x.Name });
         }

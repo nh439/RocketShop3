@@ -16,9 +16,9 @@ namespace RocketShop.Retail.Repository
         readonly string tableName = TableConstraint.SubCategory;
         readonly bool EnabledSqlLogging = configuration.EnabledSqlLogging();
 
-        public async Task<bool> Create(SubCategory subCategory) =>
-            await entity.Add(subCategory)
-            .Context.SaveChangesAsync().EqAsync(1);
+        public async Task<bool> Create(SubCategory subCategory, IDbConnection retailConnection, IDbTransaction? transaction = null) =>
+           await retailConnection.CreateQueryStore(tableName, EnabledSqlLogging)
+            .InsertAsync(subCategory, transaction);
 
         public async Task<int> Creates(IEnumerable<SubCategory> subCategories,IDbConnection retailConnection,IDbTransaction? transaction = null)=>
             await retailConnection.CreateQueryStore(tableName, EnabledSqlLogging)
@@ -63,5 +63,10 @@ namespace RocketShop.Retail.Repository
             await entity.Where(x => x.MainCategoryId == mainCategoryId && (search.IsNullOrEmpty() || ( x.NameEn.Contains(search!) || (x.NameTh ?? string.Empty).Contains(search!))))
             .GetLastpageAsync(per);
 
+        public async Task<SubCategory?> GetPrimarySubCategory(long mainCategoryId) =>
+            await entity.FirstOrDefaultAsync(x => x.MainCategoryId == mainCategoryId && x.Primary);
+
+        public async Task<int> DeleteByMainCategory(long mainCategoryId) =>
+            await entity.Where(x => x.MainCategoryId == mainCategoryId).ExecuteDeleteAsync();
     }
 }
