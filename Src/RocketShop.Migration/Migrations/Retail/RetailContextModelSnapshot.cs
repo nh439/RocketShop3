@@ -62,7 +62,7 @@ namespace RocketShop.Migration.Migrations.Retail
                     b.HasIndex("NameTh")
                         .IsUnique();
 
-                    b.ToTable("M_Category");
+                    b.ToTable("M_Category", (string)null);
                 });
 
             modelBuilder.Entity("RocketShop.Database.Model.Retail.Product", b =>
@@ -88,7 +88,7 @@ namespace RocketShop.Migration.Migrations.Retail
 
                     b.HasIndex("SubCategoryId", "Name");
 
-                    b.ToTable("Products");
+                    b.ToTable("Products", (string)null);
                 });
 
             modelBuilder.Entity("RocketShop.Database.Model.Retail.SubCategory", b =>
@@ -133,7 +133,7 @@ namespace RocketShop.Migration.Migrations.Retail
 
                     b.HasIndex("NameEn", "NameTh", "MainCategoryId");
 
-                    b.ToTable("S_Category");
+                    b.ToTable("S_Category", (string)null);
                 });
 
             modelBuilder.Entity("RocketShop.Database.Model.Retail.SubModel.ProductAttribute", b =>
@@ -159,7 +159,7 @@ namespace RocketShop.Migration.Migrations.Retail
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ProductAttribute");
+                    b.ToTable("ProductAttribute", (string)null);
                 });
 
             modelBuilder.Entity("RocketShop.Database.Model.Retail.SubModel.ProductImages", b =>
@@ -178,7 +178,7 @@ namespace RocketShop.Migration.Migrations.Retail
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ProductImage");
+                    b.ToTable("ProductImage", (string)null);
                 });
 
             modelBuilder.Entity("RocketShop.Database.Model.Retail.SubModel.ProductAttribute", b =>

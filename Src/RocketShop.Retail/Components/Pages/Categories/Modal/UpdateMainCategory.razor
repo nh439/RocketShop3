@@ -1,0 +1,82 @@
+﻿@using MudBlazor
+@using RocketShop.Database.Model.Retail
+@using RocketShop.Framework.Extension
+@using RocketShop.Retail.Service
+@using RocketShop.SharedBlazor.Modal
+@using RocketShop.SharedBlazor.Modal.ModalCompenment
+@using RocketShop.SharedBlazor.SharedFunction
+@using RocketShop.SharedBlazor.Tools
+@using System.Text.RegularExpressions
+@using LanguageExt
+
+@inject ICategoryServices categoryServices
+@inject IHttpContextAccessor accessor
+@inject IDialogService dialogService
+@code {
+    Modal? e;
+    MainCategory mainCategory = new();
+    LoadingModal? loadingModal;
+    public Action? AfterSubmitAction;
+    bool nameValidate = false;
+    public async Task Open(long categoryId)
+    {
+        try
+        {
+            var categoryResult = await categoryServices.GetMainCategory(categoryId);
+            if (categoryResult.IsLeft)
+                throw categoryResult.GetLeft()!;
+            mainCategory = categoryResult.GetRight()!;
+            e!.Show();
+        }
+        catch
+        {
+            await dialogService.ShowMessageBox("Error While Fetching Main Category", "Failed");
+        }
+    }
+    async Task Submit()
+    {
+        nameValidate = mainCategory.NameEn.IsNullOrEmpty().Or(!Regex.IsMatch(mainCategory.NameEn, "^[a-zA-Z0-9]*$"));
+        if (nameValidate)
+            return;
+        loadingModal!.Open("Updating...");
+        try
+        {
+            var createUserId = accessor.GetCurrentUserId();
+            mainCategory.LastUpdatedBy = createUserId!;
+            var result = await categoryServices.UpdateMainCategory(mainCategory);
+            if (result.IsLeft)
+                throw result.GetLeft()!;
+            await activityLogService.Create("Retail", "Category", $"Update Main Category '{mainCategory.Id}'");
+            if (AfterSubmitAction.IsNotNull())
+                AfterSubmitAction!();
+            loadingModal.Close();
+            mainCategory = new();
+            e!.Close();
+        }
+        catch
+        {
+            await loadingModal!.Then(false, "Error While Creating Main Category", "Failed");
+        }
+    }
+}
+<Modal @ref="e" Title="Update Main Category">
+    <ModalBody>
+        <div class="form-group">
+            <label for="nameTH">Name</label>
+            <input type="text" class="form-control" id="nameTH" placeholder="Name TH" @bind-value="mainCategory.NameTh" />
+        </div>
+        <div class="form-group">
+            <label for="nameEN">Name(English)*</label>
+            <input type="text" class="form-control @TextValidator.InvalidDisplay(nameValidate)" id="nameEN" placeholder="Name EN" @bind-value="mainCategory.NameEn" />
+        </div>
+        <div class="form-group">
+            <label for="textarea">Description</label>
+            <textarea id="textarea" name="textarea" cols="40" rows="5" class="form-control" @bind="mainCategory.Description">@mainCategory.Description</textarea>
+        </div>
+    </ModalBody>
+    <ModalFooter>
+        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" Color="Color.Primary" @onclick="Submit">Save Changes</MudButton>
+    </ModalFooter>
+
+</Modal>
+<LoadingModal @ref="loadingModal" />

@@ -21,7 +21,7 @@ namespace RocketShop.Retail.Repository
             IDbTransaction? transaction = null
             ) =>
             await retailConnection.CreateQueryStore(tableName, EnabledSqlLogging)
-            .InsertAndReturnItemAsync(mainCategory, transaction);
+            .InsertAndReturnItemAsync(mainCategory, transaction,autoGenerateColumn: nameof(MainCategory.Id));
 
         public async Task<List<MainCategory>> Creates(IEnumerable<MainCategory> mainCategories, IDbConnection retailConnection,IDbTransaction? transaction = null)
         {
@@ -29,7 +29,7 @@ namespace RocketShop.Retail.Repository
             foreach (var mainCategory in mainCategories)
             {
                 var result = await retailConnection.CreateQueryStore(tableName, EnabledSqlLogging)
-                .InsertAndReturnItemAsync(mainCategory, transaction);
+                .InsertAndReturnItemAsync(mainCategory, transaction, autoGenerateColumn: nameof(MainCategory.Id));
                 if (result.IsNotNull())
                     returnValue.Add(result!);
             }
@@ -51,18 +51,25 @@ namespace RocketShop.Retail.Repository
             int per = 20) =>
             search.HasMessage() ?
             await entity.Where(x => x.NameEn.Contains(search!) || (x.NameTh ?? string.Empty).Contains(search!))
+            .OrderByDescending(x => x.Id)
             .UsePaging(page, per)
             .ToListAsync() :
-            await entity.UsePaging(page, per).ToListAsync();
+            await entity
+            .OrderByDescending(x => x.Id)
+            .UsePaging(page, per).ToListAsync();
 
         public async Task<MainCategory?> GetMainCategory(long id) =>
             await entity.FirstOrDefaultAsync(x => x.Id == id);
 
         public async Task<int> GetCount(string? search = null) =>
-            await entity.CountAsync(x => x.NameEn.Contains(search!) || (x.NameTh ?? string.Empty).Contains(search!));
+            search.HasMessage() ?
+            await entity.CountAsync(x => x.NameEn.Contains(search!) || (x.NameTh ?? string.Empty).Contains(search!)) :
+            await entity.CountAsync();
 
         public async Task<int> GetLastPage(string? search = null, int per = 20) =>
+            search.HasMessage() ?
             await entity.Where(x => x.NameEn.Contains(search!) || (x.NameTh ?? string.Empty).Contains(search!))
-            .GetLastpageAsync(per);
+            .GetLastpageAsync(per) :
+            await entity.GetLastpageAsync(per);
     }
 }

@@ -276,11 +276,14 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         public static async Task<bool> InsertAsync<T>(this QueryStore store,
             T insertItem,
             IDbTransaction? transaction = null,
-            int commandTimeout = 100)
+            int commandTimeout = 100
+            , string? autoGenerateColumn = null)
         {
             var type = typeof(T);
             var properties = type.GetProperties();
             var columns = properties.Select(s => s.Name);
+            if (autoGenerateColumn.HasMessage())
+                columns = columns.Where(s => s != autoGenerateColumn);
             string sql = $"insert into \"{store.TableName}\" ({string.Join(",", columns.Select(s => $"\"{s}\""))}) values ({string.Join(",", columns.Select(s => $"@{s}"))})";
             if (store.DebugMode)
                 Console.WriteLine($"Executing : {sql}");
@@ -322,11 +325,14 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         public static async Task<T?> InsertAndReturnItemAsync<T>(this QueryStore store,
            T insertItem,
            IDbTransaction? transaction = null,
-           int commandTimeout = 100)
+           int commandTimeout = 100,
+           string? autoGenerateColumn = null)
         {
             var type = typeof(T);
             var properties = type.GetProperties();
             var columns = properties.Select(s => s.Name);
+            if(autoGenerateColumn.HasMessage())
+                columns = columns.Where(s => s != autoGenerateColumn);
             string sql = $"insert into \"{store.TableName}\" ({string.Join(",", columns.Select(s => $"\"{s}\""))}) values ({string.Join(",", columns.Select(s => $"@{s}"))}) RETURNING *";
             if (store.DebugMode)
                 Console.WriteLine($"Executing : {sql}");
@@ -345,11 +351,14 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         public static int BulkInsert<T>(this QueryStore store,
             IEnumerable<T> insertItem,
             IDbTransaction? transaction = null,
-            int commandTimeout = 100, bool debugMode = false)
+            int commandTimeout = 100, bool debugMode = false,
+            string? autoGenerateColumn = null)
         {
             var type = typeof(T);
             var properties = type.GetProperties();
             var columns = properties.Select(s => s.Name);
+            if (autoGenerateColumn.HasMessage())
+                columns = columns.Where(s => s != autoGenerateColumn);
             string sql = $"insert into \"{store.TableName}\" ({string.Join(",", columns.Select(s => $"\"{s}\""))}) values ({string.Join(",", columns.Select(s => $"@{s}"))})";
             if (store.DebugMode)
                 Console.WriteLine($"Executing : {sql}");
@@ -368,11 +377,13 @@ namespace RocketShop.Database.NonEntityFramework.QueryGenerator
         public static async Task<int> BulkInsertAsync<T>(this QueryStore store,
             IEnumerable<T> insertItem,
             IDbTransaction? transaction = null,
-            int commandTimeout = 100, bool debugMode = false)
+            int commandTimeout = 100, bool debugMode = false, string? autoGenerateColumn = null)
         {
             var type = typeof(T);
             var properties = type.GetProperties();
             var columns = properties.Select(s => s.Name);
+            if (autoGenerateColumn.HasMessage())
+                columns = columns.Where(s => s != autoGenerateColumn);
             string sql = $"insert into \"{store.TableName}\" ({string.Join(",", columns.Select(s => $"\"{s}\""))}) values ({string.Join(",", columns.Select(s => $"@{s}"))})";
             if (store.DebugMode)
                 Console.WriteLine($"Executing : {sql}");
