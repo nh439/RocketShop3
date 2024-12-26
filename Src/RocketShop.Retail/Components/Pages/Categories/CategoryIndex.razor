@@ -165,8 +165,9 @@
                             <td>@mainCategory.NameTh</td>
                             <td>@mainCategory.NameEn</td>
                             <td>
-                                <button class="btn btn-warning mx-1" @onclick="async () => await UpdateMainCategoryBtnClicked(mainCategory)"><i class="fa-regular fa-pen-to-square"></i></button>
-                                <button class="btn btn-danger mx-1" @onclick="()=>DeleteMainCategoryBtnClicked(mainCategory)"><i class="fa-solid fa-trash"></i></button>
+                                <button class="btn btn-warning mx-1" @onclick="async () => await UpdateMainCategoryBtnClicked(mainCategory)" data-toggle="tooltip" data-placement="bottom" title="Edit"><i class="fa-regular fa-pen-to-square"></i></button>
+                                <a href="/category/@mainCategory.Id" class="btn btn-info mx-1" data-toggle="tooltip" data-placement="bottom" title="View Subcategory" ><i class="fa-solid fa-list"></i></a>
+                                <button class="btn btn-danger mx-1" @onclick="()=>DeleteMainCategoryBtnClicked(mainCategory)" data-toggle="tooltip" data-placement="bottom" title="Delete" ><i class="fa-solid fa-trash"></i></button>
                             </td>
                         </tr>
                     </NHTypeTable>
