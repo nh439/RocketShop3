@@ -1,29 +1,29 @@
-﻿@page "/categories"
+﻿@page "/subcategories"
+@using Microsoft.AspNetCore.Components.Authorization
 @using MudBlazor
 @using Radzen
 @using Radzen.Blazor
-@using RocketShop.Database.Model.Retail
 @using RocketShop.Framework.Extension
-@using RocketShop.Retail.Components.Pages.Categories.Modal
 @using RocketShop.Retail.Service
 @using RocketShop.SharedBlazor.Condition
 @using RocketShop.SharedBlazor.Page
+@using RocketShop.Database.Model.Retail
 @using RocketShop.SharedBlazor.Table
 @inject ICategoryServices categoryServices
+
 @code {
-    int count, currentPage = 1, lastpage = 1;
-    bool isLoading, majorException, minorException;
-    const string Headers = "Id;Name TH;Name EN;";
-    string? search,_search, pagingSummaryFormat = "Displaying page {0} of {1} (total {2} records)";
-    List<MainCategory> mainCategories = new List<MainCategory>();
     List<BreadcrumbItem> items = new List<BreadcrumbItem>
     {
     new BreadcrumbItem("Home", href: "/"),
-    new BreadcrumbItem("Category",  href: null, disabled: true)
+    new BreadcrumbItem("Category",  href: "/categories"),
+    new BreadcrumbItem("Sub Category",  href: null ,disabled:true)
     };
-    CreateMainCategory? createMainCategory;
-    UpdateMainCategory? updateMainCategory;
-    DeleteMainCategory? deleteMainCategory;
+    int count, currentPage = 1, lastpage = 1;
+    bool isLoading, majorException, minorException;
+    List<SubCategory> subCategories = new List<SubCategory>();
+    List<MainCategory> mainCategories = new List<MainCategory>();
+    const string Headers = "Id;Main Category;Name TH;Name EN;Inherit From Main Category;";
+    string? search, _search, pagingSummaryFormat = "Displaying page {0} of {1} (total {2} records)";
     protected override async Task OnInitializedAsync()
     {
 
@@ -40,12 +40,13 @@
         minorException = false;
         try
         {
-            var result = await categoryServices.ListMainCategories(search, currentPage);
+            var result = await categoryServices.ListSubCategories(search, currentPage);
             if (result.IsLeft)
                 throw result.GetLeft()!;
-            mainCategories = result.GetRight()!;
-            var countResult = await categoryServices.GetCountMainCategory(search);
-            var lastPageResult = await categoryServices.GetLastPageMainCategory(search, 20);
+            subCategories = result.GetRight()!;
+            var countResult = await categoryServices.GetCountSubCategory(search);
+            var lastPageResult = await categoryServices.GetLastPageSubCategory(search, 20);
+            var maincategoryResult = await categoryServices.ListMainCategories();
             await Task.WhenAll(
                 Task.Run(() =>
                 {
@@ -66,6 +67,16 @@
                         return;
                     }
                     lastpage = lastPageResult.GetRight()!;
+                }),
+                Task.Run(() =>
+                {
+                    if (maincategoryResult.IsLeft)
+                    {
+                        minorException = true;
+                        mainCategories = new List<MainCategory>();
+                        return;
+                    }
+                    mainCategories = maincategoryResult.GetRight()!;
                 })
             );
         }
@@ -75,9 +86,7 @@
         }
         finally
         {
-            isLoading = false;
             StateHasChanged();
-
         }
     }
     async void PageChanged(PagerEventArgs args)
@@ -92,24 +101,11 @@
         search = _search;
         await FetchData();
     }
-    void CreateMainCategoryBtnClicked()
-    {
-        createMainCategory!.AfterSubmitAction = async ()=> await FetchData();
-        createMainCategory!.Open();
-    }
-    async Task UpdateMainCategoryBtnClicked(MainCategory mainCategory)
-    {
-        updateMainCategory!.AfterSubmitAction = async () => await FetchData();
-        await updateMainCategory!.Open(mainCategory.Id);
-    }
-    void DeleteMainCategoryBtnClicked(MainCategory mainCategory)
-    {
-        deleteMainCategory!.AfterSubmitAction = async () => await FetchData();
-        deleteMainCategory!.Open(mainCategory);
-    }
 }
+<h1 style="text-align:center">Sub Category</h1>
+
 <CascadingAuthenticationState>
-    <AuthorizeView Policy="@ServicePermission.PolicyNames.SellerManager">
+    <AuthorizeView Policy="@ServicePermission.PolicyNames.SellerManager" Context="authContext">
         <Authorized>
             <NHIF Condition="majorException">
                 <YesOperation>
@@ -125,7 +121,6 @@
                             For a Better experience <button class="btn btn-link text-3xl font-bold" @onclick="FetchData">Please Try Again.</button>
                         </div>
                     </NHIF>
-                    <h1 style="text-align:center">Category</h1>
                     <br />
                     <br />
                     <MudBreadcrumbs Items="items" />
@@ -142,38 +137,42 @@
                                 </div>
                             </div>
                             <div class="col-5">
-                                <MudButton Color="Color.Info" Variant="MudBlazor.Variant.Filled" StartIcon="@Icons.Material.Filled.List" Href="/subcategories">View Sub Categories</MudButton>
                             </div>
                             <div class="col-2">
                                 <h3 class="text-2xl font-semibold">Count : @count</h3>
                             </div>
                         </div>
                     </div>
-                    <br />
-                    <br />
-                    <MudButton Variant="@MudBlazor.Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" @onclick="CreateMainCategoryBtnClicked">Create New Category</MudButton>
-                    <br />
-                    <br />
-                    <NHTypeTable Items="mainCategories"
-                                 Columns="@Headers"
-                                 TableClass="table table-hover"
-                                 TableHeaderClass="table-dark"
+                    <NHTypeTable Items="subCategories"
                                  TableBodyClass="table-success"
-                                 Context="mainCategory"
-                                 LoadingFlagment="isLoading"
-                                 LoadingDisplayText="Loading...">
+                                 TableHeaderClass="table-dark"
+                                 TableClass="table table-hover"
+                                 Columns="@Headers">
                         <tr>
-                            <td>@mainCategory.Id</td>
-                            <td>@mainCategory.NameTh</td>
-                            <td>@mainCategory.NameEn</td>
+                            <td>@context.Id</td>
                             <td>
-                                <button class="btn btn-warning mx-1" @onclick="async () => await UpdateMainCategoryBtnClicked(mainCategory)" data-toggle="tooltip" data-placement="bottom" title="Edit"><i class="fa-regular fa-pen-to-square"></i></button>
-                                <a href="/category/@mainCategory.Id" class="btn btn-info mx-1" data-toggle="tooltip" data-placement="bottom" title="View Subcategory" ><i class="fa-solid fa-list"></i></a>
-                                <button class="btn btn-danger mx-1" @onclick="()=>DeleteMainCategoryBtnClicked(mainCategory)" data-toggle="tooltip" data-placement="bottom" title="Delete" ><i class="fa-solid fa-trash"></i></button>
+                                <NHIF Condition="@mainCategories.HasData()">
+                                    @mainCategories.FirstOrDefault(x => x.Id == context.MainCategoryId)?.ToString()
+                                </NHIF>
+                            </td>
+                            <td>@context.NameTh</td>
+                            <td>@context.NameEn</td>
+                            <td>
+                                <NHIF Condition="@context.Primary">
+                                    <i class="check icon" />
+                                </NHIF>
+                            </td>
+                            <td>
+                                <NHIF Condition="context.Primary">
+                                    <NoOperation>
+                                        <button class="btn btn-info mx-1"><i class="edit icon" /></button>
+                                        <button class="btn btn-danger mx-1"><i class="trash icon" /></button>
+                                    </NoOperation>
+                                </NHIF>
                             </td>
                         </tr>
                     </NHTypeTable>
-                     <RadzenPager ShowPagingSummary="true"
+                    <RadzenPager ShowPagingSummary="true"
                                  PagingSummaryFormat="@pagingSummaryFormat"
                                  HorizontalAlign="HorizontalAlign.Right"
                                  Count="@((int)count)"
@@ -187,9 +186,4 @@
             <AccessDenied />
         </NotAuthorized>
     </AuthorizeView>
-
 </CascadingAuthenticationState>
-
-<CreateMainCategory @ref="createMainCategory" />
-<UpdateMainCategory @ref="updateMainCategory" />
-<DeleteMainCategory @ref="deleteMainCategory" />
