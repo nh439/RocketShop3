@@ -39,5 +39,31 @@ namespace RocketShop.Framework.Extension
                 Type = s.PropertyType
             });
         }
+
+        public static bool JsonEquals(this object? obj, object? comparer)
+        {
+            if (obj.IsNull() && comparer.IsNull())
+                return true;
+            if (obj.IsNull() || comparer.IsNull())
+                return false;
+            return JsonSerializer.Serialize(obj).ToLower() == JsonSerializer.Serialize(comparer).ToLower();
+        }
+
+        public static bool BinaryEquals(this object? obj, object? comparer)
+        {
+            if (obj.IsNull() && comparer.IsNull())
+                return true;
+            if (obj.IsNull() || comparer.IsNull())
+                return false;
+            return Convert.ToBase64String(Encoding.UTF32.GetBytes(JsonSerializer.Serialize(obj)))
+                == Convert.ToBase64String(Encoding.UTF32.GetBytes(JsonSerializer.Serialize(comparer)));
+        }
+
+        public static bool HasProperty(this object? obj, string propertyName)
+        {
+            if (obj.IsNull())
+                return false;
+            return obj!.GetType().GetProperty(propertyName) != null;
+        }
     }
 }

@@ -4,6 +4,7 @@
 @using Radzen
 @using Radzen.Blazor
 @using RocketShop.Framework.Extension
+@using RocketShop.Retail.Components.Pages.SubCategory.Modal
 @using RocketShop.Retail.Service
 @using RocketShop.SharedBlazor.Condition
 @using RocketShop.SharedBlazor.Page
@@ -22,6 +23,7 @@
     bool isLoading, majorException, minorException;
     List<SubCategory> subCategories = new List<SubCategory>();
     List<MainCategory> mainCategories = new List<MainCategory>();
+    CreateSubcategory create;
     const string Headers = "Id;Main Category;Name TH;Name EN;Inherit From Main Category;";
     string? search, _search, pagingSummaryFormat = "Displaying page {0} of {1} (total {2} records)";
     protected override async Task OnInitializedAsync()
@@ -101,6 +103,11 @@
         search = _search;
         await FetchData();
     }
+    void CreateSubCategoryBtnClicked()
+    {
+        create.AfterSubmitAction = async () => await FetchData();
+        create.Open(mainCategories);
+    }
 }
 <h1 style="text-align:center">Sub Category</h1>
 
@@ -143,6 +150,11 @@
                             </div>
                         </div>
                     </div>
+                    <br />
+                    <br />
+                    <MudButton OnClick="CreateSubCategoryBtnClicked" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Create" Variant="MudBlazor.Variant.Filled">Create New Sub Category</MudButton>
+                    <br />
+                    <br />
                     <NHTypeTable Items="subCategories"
                                  TableBodyClass="table-success"
                                  TableHeaderClass="table-dark"
@@ -187,3 +199,4 @@
         </NotAuthorized>
     </AuthorizeView>
 </CascadingAuthenticationState>
+<CreateSubcategory @ref="create" />

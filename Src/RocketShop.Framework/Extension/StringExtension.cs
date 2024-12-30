@@ -36,6 +36,14 @@ namespace RocketShop.Framework.Extension
             string sealedPart = new string('X', middleLength);
             return input.Substring(0, 2) + sealedPart + input.Substring(input.Length - 2);
         }
+        public static bool InCaseSensitiveEquals(this string? input,string? comparer)
+        {
+            if(input == null && comparer == null)
+            {
+                return true;
+            }
+            return input?.ToLower() == comparer?.ToLower();
+        } 
     }
 
 
