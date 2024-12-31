@@ -14,6 +14,7 @@ using RocketShop.Retail.Components;
 using RocketShop.Retail.Repository;
 using RocketShop.Retail.Service;
 using RocketShop.Retail.ServicePermission;
+using RocketShop.Shared.SharedService.Scoped;
 using RocketShop.Shared.SharedService.Singletion;
 using RocketShop.SharedBlazor.SharedBlazorService.Scope;
 using RocketShop.SharedBlazor.SharedBlazorServices.Scope;
@@ -78,7 +79,9 @@ builder.InstallSerilog()
        .AddScoped<IActivityLogService, ActivityLogService>()
        .AddScoped<ISharedUserServices, SharedUserServices>()
        .AddScoped<IDialogServices, DialogServices>()
-       .AddScoped<ICategoryServices,CategoryServices>();
+       .AddScoped<ICategoryServices,CategoryServices>()
+       .AddScoped<IExportExcelServices,ExportExcelServices>()
+       .AddScoped<IImportExcelServices,ImportExcelServices>();
    });
 var app = builder.Build();
 

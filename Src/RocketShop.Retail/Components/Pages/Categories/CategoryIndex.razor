@@ -9,10 +9,11 @@
 @using RocketShop.SharedBlazor.Condition
 @using RocketShop.SharedBlazor.Page
 @using RocketShop.SharedBlazor.Table
+@using RocketShop.SharedBlazor.Tools
 @inject ICategoryServices categoryServices
 @code {
     int count, currentPage = 1, lastpage = 1;
-    bool isLoading, majorException, minorException;
+    bool isLoading, majorException, minorException, isExoprting;
     const string Headers = "Id;Name TH;Name EN;";
     string? search,_search, pagingSummaryFormat = "Displaying page {0} of {1} (total {2} records)";
     List<MainCategory> mainCategories = new List<MainCategory>();
@@ -24,6 +25,7 @@
     CreateMainCategory? createMainCategory;
     UpdateMainCategory? updateMainCategory;
     DeleteMainCategory? deleteMainCategory;
+    LoadingModal? loading;
     protected override async Task OnInitializedAsync()
     {
 
@@ -107,6 +109,10 @@
         deleteMainCategory!.AfterSubmitAction = async () => await FetchData();
         deleteMainCategory!.Open(mainCategory);
     }
+    async Task Export(){
+        loading!.Open("Exporting...");
+        await Task.Delay(100);
+    }
 }
 <CascadingAuthenticationState>
     <AuthorizeView Policy="@ServicePermission.PolicyNames.SellerManager">
@@ -152,6 +158,8 @@
                     <br />
                     <br />
                     <MudButton Variant="@MudBlazor.Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" @onclick="CreateMainCategoryBtnClicked">Create New Category</MudButton>
+                    <MudButton Variant="@MudBlazor.Variant.Filled" StartIcon="@Icons.Material.Filled.Upload" Color="Color.Success" >Create From Excel</MudButton>
+                    <MudButton Variant="@MudBlazor.Variant.Filled" StartIcon="@Icons.Material.Filled.Download" Color="Color.Info">Export Data</MudButton>
                     <br />
                     <br />
                     <NHTypeTable Items="mainCategories"
@@ -193,3 +201,4 @@
 <CreateMainCategory @ref="createMainCategory" />
 <UpdateMainCategory @ref="updateMainCategory" />
 <DeleteMainCategory @ref="deleteMainCategory" />
+<LoadingModal @ref="loading" />

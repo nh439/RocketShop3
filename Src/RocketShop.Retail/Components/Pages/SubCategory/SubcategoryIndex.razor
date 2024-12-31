@@ -25,6 +25,7 @@
     List<MainCategory> mainCategories = new List<MainCategory>();
     CreateSubcategory create;
     UpdateSubcategory update;
+    DeleteSubCategory delete;
     const string Headers = "Id;Main Category;Name TH;Name EN;Inherit From Main Category;";
     string? search, _search, pagingSummaryFormat = "Displaying page {0} of {1} (total {2} records)";
     protected override async Task OnInitializedAsync()
@@ -114,6 +115,11 @@
         update.AfterSubmitAction = async () => await FetchData();
         update.Open(id);
     }
+     void DeleteSubCategoryBtnClicked(SubCategory subCategory)
+    {
+        delete.AfterSubmitAction = async () => await FetchData();
+        delete.Open(subCategory);
+    }
 
 }
 <h1 style="text-align:center">Sub Category</h1>
@@ -160,6 +166,8 @@
                     <br />
                     <br />
                     <MudButton OnClick="CreateSubCategoryBtnClicked" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Create" Variant="MudBlazor.Variant.Filled">Create New Sub Category</MudButton>
+                    <MudButton Variant="@MudBlazor.Variant.Filled" StartIcon="@Icons.Material.Filled.Upload" Color="Color.Success">Create From Excel</MudButton>
+                    <MudButton Variant="@MudBlazor.Variant.Filled" StartIcon="@Icons.Material.Filled.Download" Color="Color.Info">Export Data</MudButton>
                     <br />
                     <br />
                     <NHTypeTable Items="subCategories"
@@ -185,7 +193,7 @@
                                 <NHIF Condition="context.Primary">
                                     <NoOperation>
                                         <button class="btn btn-info mx-1" @onclick="() => UpdateSubCategoryBtnClicked(context.Id)"><i class="edit icon" /></button>
-                                        <button class="btn btn-danger mx-1"><i class="trash icon" /></button>
+                                        <button class="btn btn-danger mx-1" @onclick="()=> DeleteSubCategoryBtnClicked(context)"><i class="trash icon" /></button>
                                     </NoOperation>
                                 </NHIF>
                             </td>
@@ -208,3 +216,4 @@
 </CascadingAuthenticationState>
 <CreateSubcategory @ref="create" />
 <UpdateSubcategory @ref="update" />
+<DeleteSubCategory @ref="delete" />
