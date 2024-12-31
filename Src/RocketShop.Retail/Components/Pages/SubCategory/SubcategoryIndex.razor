@@ -24,6 +24,7 @@
     List<SubCategory> subCategories = new List<SubCategory>();
     List<MainCategory> mainCategories = new List<MainCategory>();
     CreateSubcategory create;
+    UpdateSubcategory update;
     const string Headers = "Id;Main Category;Name TH;Name EN;Inherit From Main Category;";
     string? search, _search, pagingSummaryFormat = "Displaying page {0} of {1} (total {2} records)";
     protected override async Task OnInitializedAsync()
@@ -108,6 +109,12 @@
         create.AfterSubmitAction = async () => await FetchData();
         create.Open(mainCategories);
     }
+     void UpdateSubCategoryBtnClicked(long id)
+    {
+        update.AfterSubmitAction = async () => await FetchData();
+        update.Open(id);
+    }
+
 }
 <h1 style="text-align:center">Sub Category</h1>
 
@@ -177,7 +184,7 @@
                             <td>
                                 <NHIF Condition="context.Primary">
                                     <NoOperation>
-                                        <button class="btn btn-info mx-1"><i class="edit icon" /></button>
+                                        <button class="btn btn-info mx-1" @onclick="() => UpdateSubCategoryBtnClicked(context.Id)"><i class="edit icon" /></button>
                                         <button class="btn btn-danger mx-1"><i class="trash icon" /></button>
                                     </NoOperation>
                                 </NHIF>
@@ -200,3 +207,4 @@
     </AuthorizeView>
 </CascadingAuthenticationState>
 <CreateSubcategory @ref="create" />
+<UpdateSubcategory @ref="update" />
