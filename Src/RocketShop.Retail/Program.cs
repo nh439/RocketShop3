@@ -81,7 +81,8 @@ builder.InstallSerilog()
        .AddScoped<IDialogServices, DialogServices>()
        .AddScoped<ICategoryServices,CategoryServices>()
        .AddScoped<IExportExcelServices,ExportExcelServices>()
-       .AddScoped<IImportExcelServices,ImportExcelServices>();
+       .AddScoped<IImportExcelServices,ImportExcelServices>()
+       .AddScoped<IDownloadServices,DownloadServices>();
    });
 var app = builder.Build();
 

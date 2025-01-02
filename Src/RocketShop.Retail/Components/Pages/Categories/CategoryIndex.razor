@@ -5,12 +5,18 @@
 @using RocketShop.Database.Model.Retail
 @using RocketShop.Framework.Extension
 @using RocketShop.Retail.Components.Pages.Categories.Modal
+@using RocketShop.Retail.Model
 @using RocketShop.Retail.Service
+@using RocketShop.Shared.SharedService.Scoped
 @using RocketShop.SharedBlazor.Condition
 @using RocketShop.SharedBlazor.Page
+@using RocketShop.SharedBlazor.SharedBlazorServices.Scope
 @using RocketShop.SharedBlazor.Table
 @using RocketShop.SharedBlazor.Tools
 @inject ICategoryServices categoryServices
+@inject ILogger<CategoryIndex> logger
+@inject IDownloadServices downloadServices
+@inject IExportExcelServices exportServices
 @code {
     int count, currentPage = 1, lastpage = 1;
     bool isLoading, majorException, minorException, isExoprting;
@@ -112,6 +118,29 @@
     async Task Export(){
         loading!.Open("Exporting...");
         await Task.Delay(100);
+        try{
+            var dataResult = await categoryServices.ListMainCategories();
+            if (dataResult.IsLeft)
+                throw dataResult.GetLeft()!;
+            var data = dataResult.GetRight()!;
+            var excelContent =exportServices.ExportExcel( await data.ToExcelModels().ToDataTableAsync());
+            if (excelContent.IsLeft)
+                throw excelContent.GetLeft()!;
+            await activityLogService.Create("Retail", "Category", "Export Category Data");
+            await downloadServices.DownloadAsync($"Main Category Data {DateTime.Now.ToString("ddMMyyyy_HHmmss")}.xlsx", excelContent.GetRight()!);
+            logger.LogInformation("MainCategory Data Downloaded");
+            loading.Close();
+
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex,ex.Message);
+            await loading.Then(false, "Error While Exporting Data", "Failed");
+        }
+        finally
+        {
+            StateHasChanged();
+        }
     }
 }
 <CascadingAuthenticationState>
@@ -159,7 +188,7 @@
                     <br />
                     <MudButton Variant="@MudBlazor.Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" @onclick="CreateMainCategoryBtnClicked">Create New Category</MudButton>
                     <MudButton Variant="@MudBlazor.Variant.Filled" StartIcon="@Icons.Material.Filled.Upload" Color="Color.Success" >Create From Excel</MudButton>
-                    <MudButton Variant="@MudBlazor.Variant.Filled" StartIcon="@Icons.Material.Filled.Download" Color="Color.Info">Export Data</MudButton>
+                    <MudButton Variant="@MudBlazor.Variant.Filled" StartIcon="@Icons.Material.Filled.Download" Color="Color.Info" @onclick="Export">Export Data</MudButton>
                     <br />
                     <br />
                     <NHTypeTable Items="mainCategories"
