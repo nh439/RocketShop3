@@ -10,7 +10,7 @@ namespace RocketShop.Retail.Model
         );
     public static class SubCategoryExcelModelExtensions
     {
-        public static SubCategoryExcelModel ToExcelModel(this SubCategory subCategory,string mainCategoryName) =>
+        public static SubCategoryExcelModel ToExcelModel(this SubCategory subCategory, string mainCategoryName) =>
             new SubCategoryExcelModel(
                 subCategory.NameTh ?? string.Empty,
                 subCategory.NameEn,
@@ -18,8 +18,8 @@ namespace RocketShop.Retail.Model
                 subCategory.Description
                 );
 
-        public static IEnumerable<SubCategoryExcelModel> ToExcelModels(this IEnumerable<SubCategory> subCategories,IEnumerable<MainCategory> mainCategories) =>
-            subCategories.Select(x => x.ToExcelModel(mainCategories.FirstOrDefault(y=>x.Id==y.Id)!.ToString()));
+        public static IEnumerable<SubCategoryExcelModel> ToExcelModels(this IEnumerable<SubCategory> subCategories, IEnumerable<MainCategory> mainCategories) =>
+            subCategories.Select(x => x.ToExcelModel(mainCategories.FirstOrDefault(y => x.MainCategoryId == y.Id)!.ToString()));
 
         public static List<SubCategory> ToEntityModel(this IEnumerable<SubCategoryExcelModel> subCategories,
             IEnumerable<MainCategory> mainCategories,
@@ -39,3 +39,4 @@ namespace RocketShop.Retail.Model
 
 
     }
+}

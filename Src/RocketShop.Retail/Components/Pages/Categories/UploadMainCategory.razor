@@ -1,0 +1,67 @@
+﻿@page "/upload-main-category"
+@using MudBlazor
+@using RocketShop.SharedBlazor.Condition
+@using RocketShop.SharedBlazor.Domain
+@using RocketShop.SharedBlazor.Table
+<h3>UploadMainCategory</h3>
+
+@code {
+    bool isUploaded = false,
+       hasCorrupt = false;
+    int corruped = 0;
+    List<BreadcrumbItem> items = new List<BreadcrumbItem>
+    {
+    new BreadcrumbItem("Home", href: "/"),
+    new BreadcrumbItem("Category",  href: "/categories"),
+    new BreadcrumbItem("Upload",  href: null,disabled:true)
+    };
+    List<ModelDescription> descriptions = new List<ModelDescription>()
+    {
+        new ModelDescription("Name_TH","Text","Category Name",true),
+        new ModelDescription("Name_EN","Text","Category Name (English Only)",true),
+        new ModelDescription("Description","Text","Category Description",false)
+    };
+}
+<CascadingAuthenticationState>
+    <AuthorizeView Policy="@ServicePermission.PolicyNames.SellerManager">
+        <Authorized>
+            <br />
+            <br />
+            <MudBreadcrumbs Items="items" />
+            <br />
+            <br />
+            <div class="row">
+                <div class="col-1"></div>
+                <div class="col-10">
+                    <center>
+                        <h1 class="text-3xl font-bold">Import Employee Financial Data</h1>
+                    </center>
+                    <br />
+                    <br />
+                    <h2 class="text-xl font-semibold">Excel Data</h2>
+                    <br />
+                    <br />
+                     <NHIF Condition="isUploaded">
+                        <NoOperation>
+                            <NHModelDescriptionTable Descriptions="descriptions" />
+                        </NoOperation>
+                    </NHIF>
+                    <MudFileUpload T="IBrowserFile" >
+                        <ActivatorContent>
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.TableRows">
+                                Upload Excel Files
+                            </MudButton>
+                        </ActivatorContent>
+                    </MudFileUpload>
+
+                </div>
+                <div class="col-1"></div>
+            </div>
+        </Authorized>
+        <NotAuthorized>
+            <RocketShop.SharedBlazor.Page.AccessDenied />
+        </NotAuthorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>

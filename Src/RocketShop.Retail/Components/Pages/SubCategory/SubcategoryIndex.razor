@@ -5,12 +5,19 @@
 @using Radzen.Blazor
 @using RocketShop.Framework.Extension
 @using RocketShop.Retail.Components.Pages.SubCategory.Modal
+@using RocketShop.Retail.Model
 @using RocketShop.Retail.Service
+@using RocketShop.Shared.SharedService.Scoped
 @using RocketShop.SharedBlazor.Condition
 @using RocketShop.SharedBlazor.Page
 @using RocketShop.Database.Model.Retail
+@using RocketShop.SharedBlazor.SharedBlazorServices.Scope
 @using RocketShop.SharedBlazor.Table
+@using RocketShop.SharedBlazor.Tools
 @inject ICategoryServices categoryServices
+@inject ILogger<SubcategoryIndex> logger
+@inject IDownloadServices downloadServices
+@inject IExportExcelServices exportServices
 
 @code {
     List<BreadcrumbItem> items = new List<BreadcrumbItem>
@@ -26,6 +33,7 @@
     CreateSubcategory create;
     UpdateSubcategory update;
     DeleteSubCategory delete;
+    LoadingModal loading;
     const string Headers = "Id;Main Category;Name TH;Name EN;Inherit From Main Category;";
     string? search, _search, pagingSummaryFormat = "Displaying page {0} of {1} (total {2} records)";
     protected override async Task OnInitializedAsync()
@@ -120,7 +128,61 @@
         delete.AfterSubmitAction = async () => await FetchData();
         delete.Open(subCategory);
     }
+    async Task GetTemplate()
+    {
+        loading!.Open("Exporting...");
+        await Task.Delay(100);
+        try
+        {
+            var data = new List<SubCategory>();
+            var excelContent = exportServices.ExportExcel(await data.ToExcelModels(mainCategories).ToDataTableAsync());
+            if (excelContent.IsLeft)
+                throw excelContent.GetLeft()!;
+            await activityLogService.Create("Retail", "Category", "Get Sub Category Template");
+            await downloadServices.DownloadAsync($"Sub Category Template {DateTime.Now.ToString("ddMMyyyy_HHmmss")}.xlsx", excelContent.GetRight()!);
+            logger.LogInformation("SubCategory Template Downloaded");
+            loading.Close();
 
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, ex.Message);
+            await loading.Then(false, "Error While Exporting Data", "Failed");
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+    async Task Export()
+    {
+        loading!.Open("Exporting...");
+        await Task.Delay(100);
+        try
+        {
+            var dataResult = await categoryServices.ListSubCategories();
+            if (dataResult.IsLeft)
+                throw dataResult.GetLeft()!;
+            var data = dataResult.GetRight()!;
+            var excelContent = exportServices.ExportExcel(await data.ToExcelModels(mainCategories).ToDataTableAsync());
+            if (excelContent.IsLeft)
+                throw excelContent.GetLeft()!;
+            await activityLogService.Create("Retail", "Category", "Export Sub Category Data");
+            await downloadServices.DownloadAsync($"Sub Category Data {DateTime.Now.ToString("ddMMyyyy_HHmmss")}.xlsx", excelContent.GetRight()!);
+            logger.LogInformation("SubCategory Data Downloaded");
+            loading.Close();
+
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, ex.Message);
+            await loading.Then(false, "Error While Exporting Data", "Failed");
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
 }
 <h1 style="text-align:center">Sub Category</h1>
 
@@ -167,7 +229,8 @@
                     <br />
                     <MudButton OnClick="CreateSubCategoryBtnClicked" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Create" Variant="MudBlazor.Variant.Filled">Create New Sub Category</MudButton>
                     <MudButton Variant="@MudBlazor.Variant.Filled" StartIcon="@Icons.Material.Filled.Upload" Color="Color.Success">Create From Excel</MudButton>
-                    <MudButton Variant="@MudBlazor.Variant.Filled" StartIcon="@Icons.Material.Filled.Download" Color="Color.Info">Export Data</MudButton>
+                    <MudButton Variant="@MudBlazor.Variant.Filled" StartIcon="@Icons.Material.Filled.Download" Color="Color.Info" @onclick="Export">Export Data</MudButton>
+                    <MudButton Variant="@MudBlazor.Variant.Filled" StartIcon="@Icons.Material.Filled.Download" Color="Color.Warning" @onclick="GetTemplate">Get Template</MudButton>
                     <br />
                     <br />
                     <NHTypeTable Items="subCategories"
@@ -217,3 +280,4 @@
 <CreateSubcategory @ref="create" />
 <UpdateSubcategory @ref="update" />
 <DeleteSubCategory @ref="delete" />
+<LoadingModal @ref="loading" />
