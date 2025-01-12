@@ -1,14 +1,24 @@
 ﻿@page "/upload-main-category"
 @using MudBlazor
+@using RocketShop.Retail.Service
+@using RocketShop.Shared.Constraint
+@using RocketShop.Shared.SharedService.Scoped
 @using RocketShop.SharedBlazor.Condition
 @using RocketShop.SharedBlazor.Domain
 @using RocketShop.SharedBlazor.Table
-<h3>UploadMainCategory</h3>
-
+@using RocketShop.SharedBlazor.Tools
+@using static RocketShop.Retail.Model.MainCategoryExcelModelExtensions
+@inject ICategoryServices categoryService
+@inject IImportExcelServices importService
+@inject ILogger<UploadMainCategory> logger;
 @code {
     bool isUploaded = false,
        hasCorrupt = false;
     int corruped = 0;
+    List<MainCategoryExcelModelValidator> mainCategoryExcelModelValidators = new List<MainCategoryExcelModelValidator>();
+
+    const string Headers = "Name_TH;Name_EN;Description";
+    LoadingModal? loadingModal;
     List<BreadcrumbItem> items = new List<BreadcrumbItem>
     {
     new BreadcrumbItem("Home", href: "/"),
@@ -21,6 +31,21 @@
         new ModelDescription("Name_EN","Text","Category Name (English Only)",true),
         new ModelDescription("Description","Text","Category Description",false)
     };
+    private async Task UploadFiles(IBrowserFile file)
+    {
+        loadingModal!.Open("Uploading 0%");
+        try{
+
+        }
+        catch(Exception x){
+            logger.LogError(x, x.Message);
+            await loadingModal!.Then(false, "Error", "An error occurred while uploading the file");
+        }
+        finally{
+            StateHasChanged();
+        }
+        //TODO upload the files to the server
+    }
 }
 <CascadingAuthenticationState>
     <AuthorizeView Policy="@ServicePermission.PolicyNames.SellerManager">
@@ -34,7 +59,7 @@
                 <div class="col-1"></div>
                 <div class="col-10">
                     <center>
-                        <h1 class="text-3xl font-bold">Import Employee Financial Data</h1>
+                        <h1 class="text-3xl font-bold">Upload Main Category</h1>
                     </center>
                     <br />
                     <br />
@@ -45,8 +70,11 @@
                         <NoOperation>
                             <NHModelDescriptionTable Descriptions="descriptions" />
                         </NoOperation>
+                        <YesOperation>
+
+                        </YesOperation>
                     </NHIF>
-                    <MudFileUpload T="IBrowserFile" >
+                    <MudFileUpload T="IBrowserFile" Accept="@FileExtensionConstraint.SpreadSheet" FilesChanged="UploadFiles">
                         <ActivatorContent>
                             <MudButton Variant="Variant.Filled"
                                        Color="Color.Primary"
@@ -65,3 +93,4 @@
         </NotAuthorized>
     </AuthorizeView>
 </CascadingAuthenticationState>
+<LoadingModal @ref="loadingModal" />

@@ -1,4 +1,5 @@
 ﻿using RocketShop.Database.Model.Retail;
+using RocketShop.Shared.Model;
 
 namespace RocketShop.Retail.Model
 {
@@ -31,6 +32,11 @@ namespace RocketShop.Retail.Model
                 CreateBy = createBy ?? string.Empty,
                 LastUpdatedBy = createBy ?? string.Empty
             }).ToList();
+
+        public class MainCategoryExcelModelValidator :ImportExcelValidator<string, MainCategoryExcelModel>
+        {
+
+        }
 
     }
 

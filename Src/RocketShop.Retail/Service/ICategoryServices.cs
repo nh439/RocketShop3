@@ -4,7 +4,9 @@ using RocketShop.Database.Extension;
 using RocketShop.Database.Model.Retail;
 using RocketShop.Framework.Extension;
 using RocketShop.Framework.Services;
+using RocketShop.Retail.Model;
 using RocketShop.Retail.Repository;
+using static RocketShop.Retail.Model.MainCategoryExcelModelExtensions;
 
 namespace RocketShop.Retail.Service
 {
@@ -30,6 +32,7 @@ namespace RocketShop.Retail.Service
         Task<Either<Exception, bool>> UpdateSubCategory(SubCategory subCategory);
         Task<Either<Exception, bool>> DeleteSubCategory(long id);
         Task<Either<Exception, int>> DeleteSubCategories(IEnumerable<long> ids);
+        Task<Either<Exception, List<MainCategoryExcelModelValidator>>> ValidateExcelData(IEnumerable<MainCategoryExcelModel> mainCategories);
     }
     public class CategoryServices(
         ILogger<CategoryServices> logger,
@@ -41,7 +44,7 @@ namespace RocketShop.Retail.Service
         public async Task<Either<Exception, bool>> CreateMainCategory(MainCategory mainCategory) =>
             await InvokeDapperServiceAsync(async retailConnection =>
                 {
-                  retailConnection.Open();
+                    retailConnection.Open();
                     using var transaction = retailConnection.BeginTransaction();
                     var result = await mainCategoryRepository.Create(mainCategory, retailConnection, transaction);
                     if (result.IsNull())
@@ -49,17 +52,17 @@ namespace RocketShop.Retail.Service
                         transaction.Rollback();
                         throw new ResultIsNullException("Cannot Create Main Category");
                     }
-                    await subCategoryRepository.Create( new SubCategory
+                    await subCategoryRepository.Create(new SubCategory
                     {
                         CreateBy = mainCategory.CreateBy,
                         Created = mainCategory.Created,
                         MainCategoryId = result!.Id,
                         NameEn = mainCategory.NameEn,
-                        NameTh=mainCategory.NameTh,
+                        NameTh = mainCategory.NameTh,
                         LastUpdated = mainCategory.LastUpdated,
                         LastUpdatedBy = mainCategory.LastUpdatedBy,
                         Description = mainCategory.Description,
-                        Primary=true        
+                        Primary = true
                     }, retailConnection, transaction);
                     transaction.Commit();
                     retailConnection.Close();
@@ -88,19 +91,20 @@ namespace RocketShop.Retail.Service
                     LastUpdatedBy = mainCategory.LastUpdatedBy,
                     Description = mainCategory.Description,
                     Primary = true
-                }),retailConnection,transaction);      
+                }), retailConnection, transaction);
                 transaction.Commit();
                 retailConnection.Close();
                 return mainCategories.Count();
             });
 
         public async Task<Either<Exception, bool>> UpdateMainCategory(MainCategory mainCategory) =>
-            await InvokeDapperServiceAsync(async retailConnection => {
+            await InvokeDapperServiceAsync(async retailConnection =>
+            {
                 var primarySubCategory = await subCategoryRepository.GetPrimarySubCategory(mainCategory.Id);
                 mainCategory.LastUpdated = DateTime.UtcNow;
                 retailConnection.Open();
                 using var transaction = retailConnection.BeginTransaction();
-                await mainCategoryRepository.Update(mainCategory, retailConnection,transaction);
+                await mainCategoryRepository.Update(mainCategory, retailConnection, transaction);
                 primarySubCategory!.NameEn = mainCategory.NameEn;
                 primarySubCategory!.NameTh = mainCategory.NameTh;
                 primarySubCategory!.Description = mainCategory.Description;
@@ -113,9 +117,10 @@ namespace RocketShop.Retail.Service
             });
 
         public async Task<Either<Exception, bool>> DeleteMainCategory(long id) =>
-            await InvokeServiceAsync(async () => { 
+            await InvokeServiceAsync(async () =>
+            {
                 await subCategoryRepository.DeleteByMainCategory(id);
-               return await mainCategoryRepository.Delete(id); 
+                return await mainCategoryRepository.Delete(id);
             });
 
         public async Task<Either<Exception, List<MainCategory>>> ListMainCategories(string? search = null, int? page = null, int per = 20) =>
@@ -131,7 +136,7 @@ namespace RocketShop.Retail.Service
             await InvokeServiceAsync(async () => await mainCategoryRepository.GetLastPage(search, per));
 
         public async Task<Either<Exception, bool>> CreateSubCategory(SubCategory subCategory) =>
-            await InvokeDapperServiceAsync(async retailConnection => await subCategoryRepository.Create(subCategory,retailConnection));
+            await InvokeDapperServiceAsync(async retailConnection => await subCategoryRepository.Create(subCategory, retailConnection));
 
         public async Task<Either<Exception, int>> CreateSubCategories(IEnumerable<SubCategory> subCategories) =>
             await InvokeDapperServiceAsync(async retailConnection => await subCategoryRepository.Creates(subCategories, retailConnection));
@@ -165,5 +170,28 @@ namespace RocketShop.Retail.Service
 
         public async Task<Either<Exception, int>> GetLastPageSubCategoryByMainCategoryId(long mainCategoryId, string? search = null, int per = 20) =>
             await InvokeServiceAsync(async () => await subCategoryRepository.GetLastpageByMainCategoryId(mainCategoryId, search, per));
+
+        public async Task<Either<Exception, List<MainCategoryExcelModelValidator>>> ValidateExcelData(IEnumerable<MainCategoryExcelModel> mainCategories) =>
+            await InvokeServiceAsync(async () =>
+            {
+                var nameList = mainCategories.Select(x => x.Name_EN).ToList();
+                nameList.If(x => x.HasData(),
+                    () => nameList = nameList.Union(mainCategories.Select(x => x.Name_TH)).ToList(),
+                    () => nameList = mainCategories.Select(x => x.Name_TH).ToList()
+                    );
+                var existingCategories = await mainCategoryRepository.ListByNameENOrTH(nameList.ToArray());
+                List<MainCategoryExcelModelValidator> returnValues = new List<MainCategoryExcelModelValidator>();
+                await mainCategories.HasDataAndForEachAsync(m =>
+                {
+                    MainCategoryExcelModelValidator newItem = new();
+                    m.Name_TH.IfNull(m.Name_EN);
+                    newItem.Entity = m;
+                    newItem.Key = m.Name_EN;
+                    newItem.IsCorruped = m.Name_EN.IsNullOrEmpty()
+                    .Or(existingCategories.Where(x=>x.NameEn.InCaseSensitiveEquals(m.Name_EN) || x.NameTh.InCaseSensitiveEquals(m.Name_TH)).HasData());
+                    returnValues.Add(newItem);
+                });
+                return returnValues;
+            });
     }
 }

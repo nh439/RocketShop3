@@ -71,5 +71,8 @@ namespace RocketShop.Retail.Repository
             await entity.Where(x => x.NameEn.Contains(search!) || (x.NameTh ?? string.Empty).Contains(search!))
             .GetLastpageAsync(per) :
             await entity.GetLastpageAsync(per);
+
+        public async Task<List<MainCategory>> ListByNameENOrTH(params string[] names) =>
+            await entity.Where(x => names.Contains(x.NameEn) || names.Contains(x.NameTh ?? string.Empty)).ToListAsync();
     }
 }
