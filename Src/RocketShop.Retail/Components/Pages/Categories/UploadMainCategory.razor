@@ -1,5 +1,7 @@
 ﻿@page "/upload-main-category"
 @using MudBlazor
+@using RocketShop.Framework.Extension
+@using RocketShop.Retail.Model
 @using RocketShop.Retail.Service
 @using RocketShop.Shared.Constraint
 @using RocketShop.Shared.SharedService.Scoped
@@ -34,8 +36,42 @@
     private async Task UploadFiles(IBrowserFile file)
     {
         loadingModal!.Open("Uploading 0%");
+        if (!file.ContentType.InCaseSensitiveEquals(FileContentTypeConstraint.Spreadsheet))
+        {
+            await loadingModal!.Then(false, "Error", "Invalid file type");
+            return;
+        };
         try{
-
+            loadingModal.SetText("Uploading 10%");
+            using  var stream = file.OpenReadStream(5120000);
+            loadingModal.SetText("Uploading 12%");
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            loadingModal.SetText("Uploading 20%");
+            var data = ms.ToArray();
+            loadingModal.SetText("Uploading 30%");
+            var excelDataResult = await importService.ReadExcelAsync(data);
+            if (excelDataResult.IsLeft)
+            {
+                var ex = excelDataResult.GetLeft()!;
+                logger.LogError(ex, ex.Message);
+                throw ex;
+            };
+            loadingModal.SetText("Uploading 54%");
+            var items = excelDataResult.GetRight()!.ToEnumerable<MainCategoryExcelModel>();
+            var result = await categoryService.ValidateExcelData(items);
+            loadingModal.SetText("Uploading 68%");
+            if (result.IsLeft)
+            {
+                var ex = result.GetLeft()!;
+                logger.LogError(ex, ex.Message);
+                throw ex;
+            };
+            loadingModal.SetText("Uploading 78%");
+            mainCategoryExcelModelValidators = result.GetRight()!;
+            loadingModal.SetText("Uploading 90%");
+            loadingModal!.Close();
+            isUploaded = true;
         }
         catch(Exception x){
             logger.LogError(x, x.Message);
@@ -44,7 +80,6 @@
         finally{
             StateHasChanged();
         }
-        //TODO upload the files to the server
     }
 }
 <CascadingAuthenticationState>
