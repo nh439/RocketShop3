@@ -34,6 +34,9 @@ namespace RocketShop.Shared.Model
                     return true;
             return false;
         }
-           
+
+        public static IEnumerable<ImportExcelValidator<TKey, TEntity>> RemoveCorrupedItems<TKey, TEntity>(this IEnumerable<ImportExcelValidator<TKey, TEntity>> items)=>
+                        items.Where(x => !x.IsCorruped);
+
     }
 }

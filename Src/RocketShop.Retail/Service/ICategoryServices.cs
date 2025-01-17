@@ -183,12 +183,24 @@ namespace RocketShop.Retail.Service
                 List<MainCategoryExcelModelValidator> returnValues = new List<MainCategoryExcelModelValidator>();
                 await mainCategories.HasDataAndForEachAsync(m =>
                 {
+                    bool nameEmpty = m.Name_EN.IsNullOrEmpty();
                     MainCategoryExcelModelValidator newItem = new();
                     m.Name_TH.IfNull(m.Name_EN);
                     newItem.Entity = m;
                     newItem.Key = m.Name_EN;
                     newItem.IsCorruped = m.Name_EN.IsNullOrEmpty()
                     .Or(existingCategories.Where(x=>x.NameEn.InCaseSensitiveEquals(m.Name_EN) || x.NameTh.InCaseSensitiveEquals(m.Name_TH)).HasData());
+                    if(newItem.IsCorruped)
+                    {
+                        if(nameEmpty)
+                        {
+                            newItem.Message = "Name_EN is Empty";
+                        }
+                        else
+                        {
+                            newItem.Message = "Name_EN or Name_TH is already exist";
+                        }
+                    }
                     returnValues.Add(newItem);
                 });
                 return returnValues;

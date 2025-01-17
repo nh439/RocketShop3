@@ -5,6 +5,7 @@
 @using RocketShop.Retail.Service
 @using RocketShop.Shared.Constraint
 @using RocketShop.Shared.SharedService.Scoped
+@using RocketShop.Shared.Model
 @using RocketShop.SharedBlazor.Condition
 @using RocketShop.SharedBlazor.Domain
 @using RocketShop.SharedBlazor.Table
@@ -19,7 +20,7 @@
     int corruped = 0;
     List<MainCategoryExcelModelValidator> mainCategoryExcelModelValidators = new List<MainCategoryExcelModelValidator>();
 
-    const string Headers = "Name_TH;Name_EN;Description";
+    const string Headers = "Name_TH;Name_EN;Description;Message";
     LoadingModal? loadingModal;
     List<BreadcrumbItem> items = new List<BreadcrumbItem>
     {
@@ -35,15 +36,23 @@
     };
     private async Task UploadFiles(IBrowserFile file)
     {
+        logger.LogInformation($"Uploading file {file.Name}");
         loadingModal!.Open("Uploading 0%");
+        if (file is null)
+        {
+            logger.LogError("File IS NULL");
+            await loadingModal!.Then(false, "Error", "An error occurred while uploading the file");
+            return;
+        }
         if (!file.ContentType.InCaseSensitiveEquals(FileContentTypeConstraint.Spreadsheet))
         {
             await loadingModal!.Then(false, "Error", "Invalid file type");
             return;
         };
-        try{
+        try
+        {
             loadingModal.SetText("Uploading 10%");
-            using  var stream = file.OpenReadStream(5120000);
+            using var stream = file.OpenReadStream(5120000);
             loadingModal.SetText("Uploading 12%");
             using var ms = new MemoryStream();
             await stream.CopyToAsync(ms);
@@ -58,7 +67,14 @@
                 throw ex;
             };
             loadingModal.SetText("Uploading 54%");
-            var items = excelDataResult.GetRight()!.ToEnumerable<MainCategoryExcelModel>();
+            var items = await excelDataResult.GetRight()!.ReadAsync<MainCategoryExcelModel>(row =>
+            {
+                var description = row["Description"].IsNotNull() ? row["Description"].ToString() : null;
+                return new MainCategoryExcelModel(
+                    row["Name_TH"].ToString()!,
+                    row["Name_EN"].ToString()!,
+                    description);
+            });
             var result = await categoryService.ValidateExcelData(items);
             loadingModal.SetText("Uploading 68%");
             if (result.IsLeft)
@@ -72,14 +88,38 @@
             loadingModal.SetText("Uploading 90%");
             loadingModal!.Close();
             isUploaded = true;
+            hasCorrupt = mainCategoryExcelModelValidators.HasCorrupted();
+            if (hasCorrupt)
+            {
+                corruped = mainCategoryExcelModelValidators.CorrupedCount();
+            }
         }
-        catch(Exception x){
+        catch (Exception x)
+        {
             logger.LogError(x, x.Message);
             await loadingModal!.Then(false, "Error", "An error occurred while uploading the file");
         }
-        finally{
+        finally
+        {
             StateHasChanged();
         }
+    }
+    void RemoveCorrupted()
+    {
+        var corrupedRemoved = mainCategoryExcelModelValidators.RemoveCorrupedItems().ToList();
+        mainCategoryExcelModelValidators = corrupedRemoved.HasData() ?
+        corrupedRemoved.Select(s => new MainCategoryExcelModelValidator
+            {
+                Entity = s.Entity,
+                IsCorruped = s.IsCorruped,
+                Key = s.Key,
+                Message = s.Message
+
+            }).ToList()
+    : new();
+        hasCorrupt = false;
+        corruped = 0;
+        StateHasChanged();
     }
 }
 <CascadingAuthenticationState>
@@ -101,14 +141,6 @@
                     <h2 class="text-xl font-semibold">Excel Data</h2>
                     <br />
                     <br />
-                     <NHIF Condition="isUploaded">
-                        <NoOperation>
-                            <NHModelDescriptionTable Descriptions="descriptions" />
-                        </NoOperation>
-                        <YesOperation>
-
-                        </YesOperation>
-                    </NHIF>
                     <MudFileUpload T="IBrowserFile" Accept="@FileExtensionConstraint.SpreadSheet" FilesChanged="UploadFiles">
                         <ActivatorContent>
                             <MudButton Variant="Variant.Filled"
@@ -118,7 +150,37 @@
                             </MudButton>
                         </ActivatorContent>
                     </MudFileUpload>
-
+                    <NHIF Condition="isUploaded">
+                        <NoOperation>
+                            <br />
+                            <NHModelDescriptionTable Descriptions="descriptions" />
+                        </NoOperation>
+                        <YesOperation>
+                            <br />
+                            <NHIF Condition="hasCorrupt">
+                                <div class="alert alert-danger" style="font-weight:bolder;font-size:larger" role="alert">
+                                    @corruped Main Category Data Corrupted <button class="alert-link" @onclick="RemoveCorrupted">Remove Corrupt Items</button>
+                                </div>
+                            </NHIF>
+                            <br />
+                            <br />
+                            <NHTypeTable Columns="@Headers"
+                                         Items="mainCategoryExcelModelValidators"
+                                         Context="item"
+                                         TableClass="table table-hover"
+                                         TableHeaderClass="table-dark">
+                                <tr class="@(item.IsCorruped ? "table-danger":"table-success")">
+                                    <td>@item.Entity.Name_TH</td>
+                                    <td>@item.Entity.Name_EN</td>
+                                    <td>@item.Entity.Description</td>
+                                    <td>@item.Message</td>
+                                </tr>
+                            </NHTypeTable>
+                            <NHIF Condition="@(!hasCorrupt)">
+                                <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Upload">Upload Main Categories</MudButton>
+                            </NHIF>
+                        </YesOperation>
+                    </NHIF>
                 </div>
                 <div class="col-1"></div>
             </div>
