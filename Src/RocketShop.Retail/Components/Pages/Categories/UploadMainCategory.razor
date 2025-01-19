@@ -11,8 +11,10 @@
 @using RocketShop.SharedBlazor.Table
 @using RocketShop.SharedBlazor.Tools
 @using static RocketShop.Retail.Model.MainCategoryExcelModelExtensions
+@using Newtonsoft.Json
 @inject ICategoryServices categoryService
 @inject IImportExcelServices importService
+@inject IHttpContextAccessor httpContextAccessor
 @inject ILogger<UploadMainCategory> logger;
 @code {
     bool isUploaded = false,
@@ -36,14 +38,13 @@
     };
     private async Task UploadFiles(IBrowserFile file)
     {
-        logger.LogInformation($"Uploading file {file.Name}");
-        loadingModal!.Open("Uploading 0%");
         if (file is null)
         {
             logger.LogError("File IS NULL");
-            await loadingModal!.Then(false, "Error", "An error occurred while uploading the file");
             return;
         }
+        logger.LogInformation($"Uploading file {file.Name}");
+        loadingModal!.Open("Uploading 0%");
         if (!file.ContentType.InCaseSensitiveEquals(FileContentTypeConstraint.Spreadsheet))
         {
             await loadingModal!.Then(false, "Error", "Invalid file type");
@@ -60,6 +61,7 @@
             var data = ms.ToArray();
             loadingModal.SetText("Uploading 30%");
             var excelDataResult = await importService.ReadExcelAsync(data);
+            loadingModal.SetText("Uploading 40%");
             if (excelDataResult.IsLeft)
             {
                 var ex = excelDataResult.GetLeft()!;
@@ -97,7 +99,7 @@
         catch (Exception x)
         {
             logger.LogError(x, x.Message);
-            await loadingModal!.Then(false, "Error", "An error occurred while uploading the file");
+            await loadingModal!.Then(false, "An error occurred while uploading the file", "Error" );
         }
         finally
         {
@@ -120,6 +122,30 @@
         hasCorrupt = false;
         corruped = 0;
         StateHasChanged();
+    }
+    async Task Submit()
+    {
+        loadingModal!.Open("Submitting...");
+        try
+        {
+            var data = mainCategoryExcelModelValidators.ToEntityModel();
+            await data.HasDataAndForEachAsync(data =>
+            {
+                data.CreateBy = httpContextAccessor.GetCurrentUserId()!;
+                data.LastUpdatedBy = httpContextAccessor.GetCurrentUserId()!;
+            });
+            var result = await categoryService.CreateMainCategories(data);
+            if (result.IsLeft)
+                throw result.GetLeft()!;
+            var json = JsonConvert.SerializeObject(data.Select(s => s.ToString()), Formatting.Indented);
+            await activityLogService.Create("Retail", "Category", $"Create Main Categories {json}");
+            await loadingModal!.Then(true, "Data Created successfully", "Success", "/categories");
+        }
+        catch (Exception x)
+        {
+            logger.LogError(x, x.Message);
+            await loadingModal!.Then(false, "An error occurred while submitting the data", "Error");
+        }
     }
 }
 <CascadingAuthenticationState>
@@ -177,7 +203,7 @@
                                 </tr>
                             </NHTypeTable>
                             <NHIF Condition="@(!hasCorrupt)">
-                                <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Upload">Upload Main Categories</MudButton>
+                                <MudButton Color="Color.Primary" OnClick="Submit" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Upload">Upload Main Categories</MudButton>
                             </NHIF>
                         </YesOperation>
                     </NHIF>

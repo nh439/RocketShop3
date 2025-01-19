@@ -101,7 +101,7 @@
             StateHasChanged();
         }
     }
-    async void PageChanged(PagerEventArgs args)
+    async Task PageChanged(PagerEventArgs args)
     {
 
         currentPage = args.PageIndex + 1;
@@ -189,14 +189,14 @@
 <CascadingAuthenticationState>
     <AuthorizeView Policy="@ServicePermission.PolicyNames.SellerManager" Context="authContext">
         <Authorized>
-            <NHIF Condition="majorException">
+            <NHIF Condition="@majorException">
                 <YesOperation>
                     <center>
                         <div class="alert alert-danger text-4xl font-bold" role="alert">Error While Gethering Clients </div>
                     </center>
                 </YesOperation>
                 <NoOperation>
-                    <NHIF Condition="minorException">
+                    <NHIF Condition="@minorException">
                         <div class="alert alert-warning text-3xl font-bold" role="alert">
                             This Current Operation ran With Problems.
                             &nbsp;&nbsp;
@@ -253,7 +253,7 @@
                                 </NHIF>
                             </td>
                             <td>
-                                <NHIF Condition="context.Primary">
+                                <NHIF Condition="@context.Primary">
                                     <NoOperation>
                                         <button class="btn btn-info mx-1" @onclick="() => UpdateSubCategoryBtnClicked(context.Id)"><i class="edit icon" /></button>
                                         <button class="btn btn-danger mx-1" @onclick="()=> DeleteSubCategoryBtnClicked(context)"><i class="trash icon" /></button>

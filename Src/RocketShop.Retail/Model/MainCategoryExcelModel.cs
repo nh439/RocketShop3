@@ -33,11 +33,33 @@ namespace RocketShop.Retail.Model
                 LastUpdatedBy = createBy ?? string.Empty
             }).ToList();
 
-        public class MainCategoryExcelModelValidator :ImportExcelValidator<string, MainCategoryExcelModel>
+        public static List<MainCategory> ToEntityModel(this IEnumerable<MainCategoryExcelModelValidator> mainCategories)
         {
+            var result = new List<MainCategory>();
+            foreach (var item in mainCategories)
+            {
+                if (item.IsCorruped)
+                    continue;
+                result.Add(new MainCategory
+                {
+                    NameTh = item.Entity.Name_TH,
+                    NameEn = item.Entity.Name_EN,
+                    Description = item.Entity.Description,
+                    Created = DateTime.UtcNow,
+                    LastUpdated = DateTime.UtcNow,
+                    CreateBy = string.Empty,
+                    LastUpdatedBy = string.Empty
+                });
+            }
+            return result;
+
+
 
         }
+    }
+    public class MainCategoryExcelModelValidator : ImportExcelValidator<string, MainCategoryExcelModel>
+    {
 
     }
-
 }
+

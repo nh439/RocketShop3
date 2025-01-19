@@ -10,9 +10,9 @@ using System.Data;
 
 namespace RocketShop.Retail.Repository
 {
-    public class MainCategoryRepository(RetailContext context,IConfiguration configuration)
+    public class MainCategoryRepository(IDbContextFactory<RetailContext> factory,IConfiguration configuration)
     {
-        readonly DbSet<MainCategory>  entity = context.MainCategories;
+        readonly DbSet<MainCategory>  entity = factory.CreateDbContext().MainCategories;
         readonly string tableName = TableConstraint.MainCategory;
         readonly bool EnabledSqlLogging = configuration.EnabledSqlLogging();
 

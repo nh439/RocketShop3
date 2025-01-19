@@ -9,7 +9,6 @@ using RocketShop.Database.EntityFramework;
 using RocketShop.Database.Helper;
 using RocketShop.Database.Model.Identity;
 using RocketShop.Framework.Helper;
-using RocketShop.Framework.Services;
 using RocketShop.Retail.Components;
 using RocketShop.Retail.Repository;
 using RocketShop.Retail.Service;
@@ -45,7 +44,7 @@ builder.InstallSerilog()
 .AddClaimsPrincipalFactory<UserClaimsPrincipalFactory<User, IdentityRole>>()
 .AddEntityFrameworkStores<IdentityContext>()
 .AddDefaultTokenProviders();
-       install.InstallDatabase<AuditLogContext, IdentityContext,RetailContext>()
+       install.InstallDatabase<AuditLogContext, IdentityContext>()
        .AddHttpContextAccessor()
        .AddAuthentication(options =>
        {
@@ -62,6 +61,7 @@ builder.InstallSerilog()
        })
         .AddMudServices()
         .AddRadzenComponents();
+       install.ContructRetailContext();
    })
    .InstallServices(repositories =>
    {
