@@ -23,6 +23,7 @@ namespace RocketShop.Database.Model.Retail
         public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
         public string CreateBy { get; set; }
         public string LastUpdatedBy { get; set; }
+        public bool Primary { get; set; }=false;
     }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 }

@@ -10,20 +10,30 @@ using System.Data;
 
 namespace RocketShop.Retail.Repository
 {
-    public class MainCategoryRepository(RetailContext context,IConfiguration configuration)
+    public class MainCategoryRepository(IDbContextFactory<RetailContext> factory,IConfiguration configuration)
     {
-        readonly DbSet<MainCategory>  entity = context.MainCategories;
+        readonly DbSet<MainCategory>  entity = factory.CreateDbContext().MainCategories;
         readonly string tableName = TableConstraint.MainCategory;
         readonly bool EnabledSqlLogging = configuration.EnabledSqlLogging();
 
-        public async Task<bool> Create(MainCategory mainCategory) =>
-            await entity.Add(mainCategory)
-            .Context.SaveChangesAsync().EqAsync(1);
+        public async Task<MainCategory?> Create(MainCategory mainCategory,
+            IDbConnection retailConnection,
+            IDbTransaction? transaction = null
+            ) =>
+            await retailConnection.CreateQueryStore(tableName, EnabledSqlLogging)
+            .InsertAndReturnItemAsync(mainCategory, transaction,autoGenerateColumn: nameof(MainCategory.Id));
 
-        public async Task<int> Creates(IEnumerable<MainCategory> mainCategories)
+        public async Task<List<MainCategory>> Creates(IEnumerable<MainCategory> mainCategories, IDbConnection retailConnection,IDbTransaction? transaction = null)
         {
-            await entity.AddRangeAsync(mainCategories);
-            return await context.SaveChangesAsync();
+            List<MainCategory> returnValue = new List<MainCategory>();
+            foreach (var mainCategory in mainCategories)
+            {
+                var result = await retailConnection.CreateQueryStore(tableName, EnabledSqlLogging)
+                .InsertAndReturnItemAsync(mainCategory, transaction, autoGenerateColumn: nameof(MainCategory.Id));
+                if (result.IsNotNull())
+                    returnValue.Add(result!);
+            }
+            return returnValue;
         }
 
         public async Task<bool> Update(MainCategory mainCategory,IDbConnection retailConnection,IDbTransaction? transaction = null) =>
@@ -41,18 +51,28 @@ namespace RocketShop.Retail.Repository
             int per = 20) =>
             search.HasMessage() ?
             await entity.Where(x => x.NameEn.Contains(search!) || (x.NameTh ?? string.Empty).Contains(search!))
+            .OrderByDescending(x => x.Id)
             .UsePaging(page, per)
             .ToListAsync() :
-            await entity.UsePaging(page, per).ToListAsync();
+            await entity
+            .OrderByDescending(x => x.Id)
+            .UsePaging(page, per).ToListAsync();
 
         public async Task<MainCategory?> GetMainCategory(long id) =>
             await entity.FirstOrDefaultAsync(x => x.Id == id);
 
         public async Task<int> GetCount(string? search = null) =>
-            await entity.CountAsync(x => x.NameEn.Contains(search!) || (x.NameTh ?? string.Empty).Contains(search!));
+            search.HasMessage() ?
+            await entity.CountAsync(x => x.NameEn.Contains(search!) || (x.NameTh ?? string.Empty).Contains(search!)) :
+            await entity.CountAsync();
 
         public async Task<int> GetLastPage(string? search = null, int per = 20) =>
+            search.HasMessage() ?
             await entity.Where(x => x.NameEn.Contains(search!) || (x.NameTh ?? string.Empty).Contains(search!))
-            .GetLastpageAsync(per);
+            .GetLastpageAsync(per) :
+            await entity.GetLastpageAsync(per);
+
+        public async Task<List<MainCategory>> ListByNameENOrTH(params string[] names) =>
+            await entity.Where(x => names.Contains(x.NameEn) || names.Contains(x.NameTh ?? string.Empty)).ToListAsync();
     }
 }

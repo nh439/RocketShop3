@@ -1,0 +1,69 @@
+﻿@using MudBlazor
+@using RocketShop.Database.Model.Retail
+@using RocketShop.Framework.Extension
+@using RocketShop.Retail.Service
+@using RocketShop.SharedBlazor.Modal
+@using RocketShop.SharedBlazor.Modal.ModalCompenment
+@using RocketShop.SharedBlazor.SharedFunction
+@using RocketShop.SharedBlazor.Tools
+@using System.Text.RegularExpressions
+@inject ICategoryServices categoryServices
+@inject IHttpContextAccessor accessor
+@code {
+    Modal? e;
+    MainCategory mainCategory = new();
+    LoadingModal? loadingModal;
+    public Action? AfterSubmitAction;
+    bool nameValidate = false;
+    public void Open()
+    {
+        e!.Show();
+    }
+    async Task Submit()
+    {
+        nameValidate = mainCategory.NameEn.IsNullOrEmpty().Or(!Regex.IsMatch(mainCategory.NameEn, "^[a-zA-Z0-9]*$"));
+        if (nameValidate)
+            return;
+        loadingModal!.Open("Creating...");
+        try
+        {
+            var createUserId = accessor.GetCurrentUserId();
+            mainCategory.CreateBy = createUserId!;
+            mainCategory.LastUpdatedBy = createUserId!;
+            var result = await categoryServices.CreateMainCategory(mainCategory);
+            if (result.IsLeft)
+                throw result.GetLeft()!;
+            await activityLogService.Create("Retail", "Category", $"Create Main Category '{mainCategory.NameEn}'");
+            if (AfterSubmitAction.IsNotNull())
+                AfterSubmitAction!();
+            loadingModal.Close();
+            mainCategory = new();
+            e!.Close();
+        }
+        catch
+        {
+            await loadingModal!.Then(false, "Error While Creating Main Category", "Failed");
+        }
+    }
+}
+<Modal @ref="e" Title="Create Main Category">
+    <ModalBody>
+        <div class="form-group">
+            <label for="nameTH">Name</label>
+            <input type="text" class="form-control" id="nameTH" @bind-value="mainCategory.NameTh" />
+        </div>
+        <div class="form-group">
+            <label for="nameEN">Name(English)*</label>
+            <input type="text" class="form-control @TextValidator.InvalidDisplay(nameValidate)" id="nameEN" @bind-value="mainCategory.NameEn" />
+        </div>
+        <div class="form-group">
+            <label for="textarea">Description</label>
+            <textarea id="textarea" name="textarea" cols="40" rows="5" class="form-control" @bind="mainCategory.Description"></textarea>
+        </div>
+    </ModalBody>
+    <ModalFooter>
+        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Create" Color="Color.Primary" @onclick="Submit">Create</MudButton>
+    </ModalFooter>
+
+</Modal>
+<LoadingModal @ref="loadingModal" />

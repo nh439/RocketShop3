@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using RocketShop.Database.EntityFramework;
@@ -11,9 +12,11 @@ using RocketShop.Database.EntityFramework;
 namespace RocketShop.Migration.Migrations.Retail
 {
     [DbContext(typeof(RetailContext))]
-    partial class RetailContextModelSnapshot : ModelSnapshot
+    [Migration("20241221045802_Add_Unique_For_Main_Category")]
+    partial class Add_Unique_For_Main_Category
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -62,7 +65,7 @@ namespace RocketShop.Migration.Migrations.Retail
                     b.HasIndex("NameTh")
                         .IsUnique();
 
-                    b.ToTable("M_Category", (string)null);
+                    b.ToTable("M_Category");
                 });
 
             modelBuilder.Entity("RocketShop.Database.Model.Retail.Product", b =>
@@ -88,7 +91,7 @@ namespace RocketShop.Migration.Migrations.Retail
 
                     b.HasIndex("SubCategoryId", "Name");
 
-                    b.ToTable("Products", (string)null);
+                    b.ToTable("Products");
                 });
 
             modelBuilder.Entity("RocketShop.Database.Model.Retail.SubCategory", b =>
@@ -133,7 +136,7 @@ namespace RocketShop.Migration.Migrations.Retail
 
                     b.HasIndex("NameEn", "NameTh", "MainCategoryId");
 
-                    b.ToTable("S_Category", (string)null);
+                    b.ToTable("S_Category");
                 });
 
             modelBuilder.Entity("RocketShop.Database.Model.Retail.SubModel.ProductAttribute", b =>
@@ -159,7 +162,7 @@ namespace RocketShop.Migration.Migrations.Retail
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ProductAttribute", (string)null);
+                    b.ToTable("ProductAttribute");
                 });
 
             modelBuilder.Entity("RocketShop.Database.Model.Retail.SubModel.ProductImages", b =>
@@ -178,7 +181,7 @@ namespace RocketShop.Migration.Migrations.Retail
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ProductImage", (string)null);
+                    b.ToTable("ProductImage");
                 });
 
             modelBuilder.Entity("RocketShop.Database.Model.Retail.SubModel.ProductAttribute", b =>

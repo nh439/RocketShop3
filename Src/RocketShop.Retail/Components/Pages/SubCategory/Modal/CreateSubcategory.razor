@@ -1,0 +1,119 @@
+﻿@using LanguageExt
+@using RocketShop.Database.Model.Retail
+@using RocketShop.Framework.Extension
+@using RocketShop.Retail.Service
+@using RocketShop.SharedBlazor.Condition
+@using RocketShop.SharedBlazor.Modal
+@using RocketShop.SharedBlazor.Modal.ModalCompenment
+@using Blazored.Typeahead
+@using RocketShop.SharedBlazor.SharedFunction
+@using RocketShop.SharedBlazor.Tools
+@inject ICategoryServices categoryServices
+@inject IHttpContextAccessor accessor
+@code {
+    Modal? modal;
+    List<MainCategory> mainCategories = new List<MainCategory>();
+    MainCategory selectedMainCategory = new MainCategory();
+    SubCategory subCategory = new SubCategory();
+    LoadingModal loadingModal;
+    public Action? AfterSubmitAction { get; set; }
+    bool lockMainCategory = false, nameEnValidate = false,mainCategoryValidate =false;
+    public async void Open(List<MainCategory>? mainCategories = null)
+    {
+        if (!mainCategories.HasData())
+        {
+            var mainCategoriesResult = await categoryServices.ListMainCategories();
+            if (mainCategoriesResult.IsLeft)
+                throw mainCategoriesResult.GetLeft()!;
+            mainCategories = mainCategoriesResult.GetRight()!;
+        }
+        else
+            this.mainCategories = mainCategories!;
+        lockMainCategory = false;
+
+        modal!.Show();
+    }
+    public async void Open(long mainCategoryId)
+    {
+        var mainCategoriesResult = await categoryServices.GetMainCategory(mainCategoryId);
+        if (mainCategoriesResult.IsLeft)
+            throw mainCategoriesResult.GetLeft()!;
+        selectedMainCategory = mainCategoriesResult.GetRight()!;
+        lockMainCategory = true;
+        modal!.Show();
+    }
+
+    async Task<IEnumerable<MainCategory>> SearchMainCategory(string searchTerm) =>
+        await Task.FromResult(mainCategories.Where(x => x.ToString().ToLower().Contains(searchTerm.ToLower())));
+
+    async Task Save(){
+        nameEnValidate = subCategory.NameEn.IsNullOrEmpty()
+        .Or(subCategory.NameEn.InCaseSensitiveEquals(selectedMainCategory.NameEn),
+        subCategory.NameTh.InCaseSensitiveEquals(selectedMainCategory.NameTh));
+
+        mainCategoryValidate = selectedMainCategory.IsNull();
+        if (nameEnValidate.Or(mainCategoryValidate))
+            return;
+        loadingModal.SetText("Saving...");
+        await Task.Delay(100);
+        try{
+            subCategory.MainCategoryId = selectedMainCategory.Id;
+            subCategory.CreateBy = accessor.GetCurrentUserId()!;
+            subCategory.LastUpdatedBy = accessor.GetCurrentUserId()!;
+            var result = await categoryServices.CreateSubCategory(subCategory);
+            if (result.IsLeft)
+                throw result.GetLeft()!;
+            await activityLogService.Create("Retail", "Category", $"Create Sub Category '{subCategory.ToString()}'" );
+            if (AfterSubmitAction.IsNotNull())
+                AfterSubmitAction!();
+            modal!.Close();
+            subCategory = new SubCategory();
+            await loadingModal.Then(true, "Sub category saved successfully");
+        }
+        catch{
+           await loadingModal.Then(false, "Failed to save sub category");
+        }
+    }
+}
+<Modal @ref="modal" Title="Create Sub Category">
+    <ModalBody>
+        <div class="form-group">
+            <label for="text">Name</label>
+            <input id="text" name="text" @bind-value="subCategory.NameTh" type="text" class="form-control">
+        </div>
+        <div class="form-group">
+            <label for="text1">Name (English)</label>
+            <input id="text1" name="text1" type="text" @bind-value="subCategory.NameEn" class="form-control @TextValidator.InvalidDisplay(nameEnValidate)">
+        </div>
+        <NHIF condition="lockMainCategory">
+            <YesOperation>
+                <div class="form-group">
+                    <label for="texth">Parent Category</label>
+                    <input id="texth" value="@selectedMainCategory.ToString()" name="text1" type="text" class="form-control @TextValidator.InvalidDisplay(mainCategoryValidate)">
+                </div>
+            </YesOperation>
+            <NoOperation>
+                <div class="form-group">
+                    <label for="select">Parent Category</label>
+                    <BlazoredTypeahead @bind-Value="selectedMainCategory"
+                                       SearchMethod="SearchMainCategory"
+                                       Placeholder="Select Main Category"
+                                       EnableDropDown="true"
+                                       class="custom-select">
+                        <ResultTemplate>@context.ToString()</ResultTemplate>
+                        <SelectedTemplate>@context.ToString()</SelectedTemplate>
+                    </BlazoredTypeahead>
+                </div>
+            </NoOperation>
+        </NHIF>
+        <div class="form-group">
+            <label for="textarea">Description</label>
+            <textarea id="textarea" name="textarea" cols="40" rows="5" @bind="subCategory.Description" class="form-control">@subCategory.Description</textarea>
+        </div>
+    </ModalBody>
+    <ModalFooter>
+        <button class="btn btn-primary" @onclick="Save"><i class="save icon" />Save Changes</button>
+        <button class="btn btn-secondary" @onclick="()=>modal!.Close()"><i class="x icon" />Cancel</button>
+    </ModalFooter>
+</Modal>
+<LoadingModal @ref="loadingModal" />

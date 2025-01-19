@@ -1,0 +1,51 @@
+﻿@using MudBlazor
+@using RocketShop.Database.Model.Retail
+@using RocketShop.Framework.Extension
+@using RocketShop.Retail.Service
+@using RocketShop.SharedBlazor.Modal
+@using RocketShop.SharedBlazor.Modal.ModalCompenment
+@using RocketShop.SharedBlazor.Tools
+@inject ICategoryServices categoryServices
+
+@code {
+    Modal? e; 
+    MainCategory category = new MainCategory();
+    public Action? AfterSubmitAction;
+    LoadingModal? loading;
+    public void Open(MainCategory category)
+    {
+        this.category = category;
+        e!.Show();
+    }
+    public void Close()
+    {
+        e!.Close();
+    }
+    public async Task Delete()
+    {
+        loading!.Open("Deleting...");
+        try
+        {
+            await categoryServices.DeleteMainCategory(category.Id);
+            loading!.Close();
+            if (AfterSubmitAction.IsNotNull())
+                AfterSubmitAction!();
+            await activityLogService.Create("Retail", "Category", $"Delete Main Category '{category.Id}'");
+            e!.Close();
+        }
+        catch
+        {
+           await loading!.Then(false, "Error While Deleting Main Category", "Failed");
+        }
+    }
+}
+<Modal Title="Delete Main Category" @ref="e">
+    <ModalBody>
+        <p>Are you sure you want to delete '@category.ToString()'</p>
+    </ModalBody>
+    <ModalFooter>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever" @onclick="Delete">Delete</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.Close" @onclick="Close">Cancel</MudButton>
+    </ModalFooter>
+</Modal>
+<LoadingModal @ref="loading" />
