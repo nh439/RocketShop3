@@ -1,0 +1,52 @@
+﻿@page "/category/{id}"
+@using MudBlazor
+@using RocketShop.Framework.Extension
+@using RocketShop.Retail.Service
+@using RocketShop.Database.Model.Retail
+@inject ICategoryServices categoryServices
+<h3>SubcategoryByMainCategory</h3>
+
+@code {
+    [Parameter]
+    public string id { get; set; }
+    int count, lastPage = 1, currentPage = 1;
+    bool isLoading, majorException, minorException, isExoprting;
+    const string Headers = "Id;Name TH;Name EN;";
+    string? search, _search, pagingSummaryFormat = "Displaying page {0} of {1} (total {2} records)";
+    List<SubCategory> subCategories = new List<SubCategory>();
+    List<BreadcrumbItem> items = new List<BreadcrumbItem>
+    {
+    new BreadcrumbItem("Home", href: "/"),
+    new BreadcrumbItem("Category", "/categories"),
+    new BreadcrumbItem("Sub Category", href:null,disabled:true)
+    };
+    protected override async Task OnInitializedAsync()
+
+    {
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var authenicated = state.IsNotNull().And(state!.User.Identity!.IsAuthenticated);
+        if (authenicated)
+            await FetchData();
+        else
+            navigationManager.NavigateTo("/login");
+    }
+    async Task FetchData()
+    {
+        try
+        {
+            var result = await categoryServices.ListSubCategoriesByMainCategory(long.Parse(id), search, currentPage);
+            if (result.IsLeft)
+                throw result.GetLeft()!;
+            subCategories = result.GetRight();
+        }
+        catch
+        {
+            majorException = true;
+
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+}

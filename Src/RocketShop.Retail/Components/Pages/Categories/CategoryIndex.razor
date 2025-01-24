@@ -17,6 +17,7 @@
 @inject ILogger<CategoryIndex> logger
 @inject IDownloadServices downloadServices
 @inject IExportExcelServices exportServices
+@implements IDisposable
 @code {
     int count, currentPage = 1, lastpage = 1;
     bool isLoading, majorException, minorException, isExoprting;
@@ -170,6 +171,9 @@
             StateHasChanged();
         }
     }
+    void IDisposable.Dispose(){
+
+    }
 
 }
 <CascadingAuthenticationState>
@@ -189,7 +193,7 @@
                             For a Better experience <button class="btn btn-link text-3xl font-bold" @onclick="FetchData">Please Try Again.</button>
                         </div>
                     </NHIF>
-                    <h1 style="text-align:center">Category</h1>
+                    <h1 style="text-align:center">Category xc</h1>
                     <br />
                     <br />
                     <MudBreadcrumbs Items="items" />

@@ -1,7 +1,9 @@
 ﻿using LanguageExt;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using RocketShop.Framework.Extension;
 using RocketShop.Shared.Model;
+using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -54,81 +56,144 @@ namespace RocketShop.Shared.SharedService.Singletion
         /// <param name="tag">Tag To Clear</param>
         void Clear(string tag);
     }
-    public class MemoryStorageServices : IMemoryStorageServices,IDisposable
+    public class MemoryStorageServices : IMemoryStorageServices, IDisposable
     {
         readonly System.Timers.Timer timer;
         readonly ILogger<MemoryStorageServices> logger;
+        readonly bool useRedis;
+        readonly IDatabase readisDatabase;
         List<MemoryStorage> storages = new List<MemoryStorage>();
-        public MemoryStorageServices(ILogger<MemoryStorageServices> logger)
+
+        public MemoryStorageServices(ILogger<MemoryStorageServices> logger, IConfiguration configuration)
         {
             this.logger = logger;
-            timer = new System.Timers.Timer(1000);
-            timer.Elapsed += Fetching;
-            timer.Enabled = true;
-        }
-
-
-
-        public void AddData(string key, object value, TimeSpan expiredIn,string? tag= null)
-        {
-            storages.Add(new MemoryStorage
+            try
             {
-                CreateDate = DateTime.Now,
-                Key = key,
-                Value = value,
-                ExpiredIn = expiredIn,
-                Tag=tag
-            });
-            logger.LogInformation("Storage Added");
+                string? connectionString = configuration.GetConnectionString("Redis");
+                if (connectionString.IsNull())
+                    throw new Exception("Redis Connection String Not Found");
+                ConnectionMultiplexer redis = ConnectionMultiplexer.Connect(connectionString!);
+                readisDatabase = redis.GetDatabase();
+                useRedis = true;
+                logger.LogInformation("Redis Mode");
+            }
+            catch
+            {            
+                timer = new System.Timers.Timer(1000);
+                timer.Elapsed += Fetching;
+                timer.Enabled = true;
+                useRedis = false;
+                logger.LogInformation("Local Memory Storage Mode");
+            }
+
         }
 
-        public void RemoveData(string key) { 
-            storages = storages.Where(x=>x.Key != key).ToList(); 
-            if(storages.IsNull())storages = new List<MemoryStorage>();
-            logger.LogInformation("Storage Removed");
+
+
+        public void AddData(string key, object value, TimeSpan expiredIn, string? tag = null)
+        {
+            if (useRedis)
+            {
+                readisDatabase.StringSet(key, value.FromObjectToBase64(), expiredIn);
+                logger.LogInformation("Redis Storage Added");
+            }
+            else
+            {
+                storages.Add(new MemoryStorage
+                {
+                    CreateDate = DateTime.Now,
+                    Key = key,
+                    Value = value,
+                    ExpiredIn = expiredIn,
+                    Tag = tag
+                });
+                logger.LogInformation("Storage Added");
+            }
+        }
+
+        public void RemoveData(string key)
+        {
+            if (useRedis)
+            {
+                readisDatabase.KeyDelete(key);
+                logger.LogInformation("Redis Storage Removed");
+            }
+            else
+            {
+                storages = storages.Where(x => x.Key != key).ToList();
+                if (storages.IsNull()) storages = new List<MemoryStorage>();
+                logger.LogInformation("Storage Removed");
+            }
         }
 
         public Option<object> GetData(string key)
         {
-                var output = storages.FirstOrDefault(x => x.Key == key)?.Value;
-                logger.LogInformation("Storage Retrived");
-                return output;
-        }
-
-        public Option<T> GetData<T>(string key) where T : class 
-        {
-            try
+            if (useRedis)
+            {
+                string? content = readisDatabase.StringGet(key);
+                logger.LogInformation("Redis Storage Retrived");
+                return content.FromBase64ToObject<object>();
+            }
+            else
             {
                 var output = storages.FirstOrDefault(x => x.Key == key)?.Value;
                 logger.LogInformation("Storage Retrived");
-                return output as T;
+                return output;
             }
-            catch (Exception ex) {
+        }
+
+        public Option<T> GetData<T>(string key) where T : class
+        {
+            try
+            {
+                if (useRedis)
+                {
+                    string? content = readisDatabase.StringGet(key);
+                    logger.LogInformation("Redis Storage Retrived");
+                    if (content.IsNull()) return Option<T>.None;
+                    return content.FromBase64ToObject<T>();
+                }
+                else
+                {
+                    var output = storages.FirstOrDefault(x => x.Key == key)?.Value;
+                    logger.LogInformation("Storage Retrived");
+                    return output as T;
+                }
+            }
+            catch (Exception ex)
+            {
                 logger.LogError(ex, ex.Message);
                 return Option<T>.None;
             }
         }
 
-        public bool Exists(string key) => storages.Where(x => x.Key == key).HasData();
+        public bool Exists(string key) =>useRedis ? readisDatabase.StringGet(key).HasValue : storages.Where(x => x.Key == key).HasData();
 
-        void Fetching(object? src,ElapsedEventArgs e)
+        void Fetching(object? src, ElapsedEventArgs e)
         {
-            int expiredCnt = storages.Count(x=>x.IsExpired);
-            storages =storages.Where(x=>!x.IsExpired).ToList();
-            if (storages.IsNull()) storages = new List<MemoryStorage>();
-            if (expiredCnt.Ge(0))
-                logger.LogInformation("Clear {cnt} Expired Data", expiredCnt);
+            if (!useRedis)
+            {
+                int expiredCnt = storages.Count(x => x.IsExpired);
+                storages = storages.Where(x => !x.IsExpired).ToList();
+                if (storages.IsNull()) storages = new List<MemoryStorage>();
+                if (expiredCnt.Ge(0))
+                    logger.LogInformation("Clear {cnt} Expired Data", expiredCnt);
+            }
         }
 
         public void Clear(string tag)
         {
-            storages = storages.Where(x=>x.Tag !=  tag).ToList();
-            logger.LogInformation("Force Clear Tag '{tag}' ", tag);
+            if (!useRedis)
+            {
+                storages = storages.Where(x => x.Tag != tag).ToList();
+                logger.LogInformation("Force Clear Tag '{tag}' ", tag);
+            }
         }
-            
 
-        void IDisposable.Dispose() { 
-        timer?.Dispose();
+
+        void IDisposable.Dispose()
+        {
+            timer?.Dispose();
         }
     }
 }

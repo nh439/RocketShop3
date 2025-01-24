@@ -18,6 +18,13 @@ namespace RocketShop.Framework.Extension
                 Encoding.UTF32.GetBytes(JsonSerializer.Serialize(obj))
                 );
         }
+        public static T? FromBase64ToObject<T>(this string? base64)
+        {
+            if (base64.IsNullOrEmpty()) return default;
+            var arr = Convert.FromBase64String(base64!);
+            string result = Encoding.UTF32.GetString(arr, 0, arr.Length);
+            return JsonSerializer.Deserialize<T>(result);
+        }
         public static string[] GetTypeProperties(this object? obj)
         {
             if(obj.IsNull())

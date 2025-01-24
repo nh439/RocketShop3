@@ -1,8 +1,10 @@
 ﻿@page "/subcategories"
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
 @using MudBlazor
 @using Radzen
 @using Radzen.Blazor
+@using RocketShop.Database.EntityFramework
 @using RocketShop.Framework.Extension
 @using RocketShop.Retail.Components.Pages.SubCategory.Modal
 @using RocketShop.Retail.Model
@@ -14,11 +16,12 @@
 @using RocketShop.SharedBlazor.SharedBlazorServices.Scope
 @using RocketShop.SharedBlazor.Table
 @using RocketShop.SharedBlazor.Tools
-@inject ICategoryServices categoryServices
 @inject ILogger<SubcategoryIndex> logger
 @inject IDownloadServices downloadServices
 @inject IExportExcelServices exportServices
-
+@inject ILogger<CategoryServices> categoryServicesLogger
+@inject IDbContextFactory<RetailContext> dbContextFactory
+@inject IConfiguration configuration
 @code {
     List<BreadcrumbItem> items = new List<BreadcrumbItem>
     {
@@ -27,7 +30,9 @@
     new BreadcrumbItem("Sub Category",  href: null ,disabled:true)
     };
     int count, currentPage = 1, lastpage = 1;
-    bool isLoading, majorException, minorException;
+    bool isLoading = false, 
+    majorException = false, 
+    minorException = false;
     List<SubCategory> subCategories = new List<SubCategory>();
     List<MainCategory> mainCategories = new List<MainCategory>();
     CreateSubcategory create;
@@ -36,9 +41,15 @@
     LoadingModal loading;
     const string Headers = "Id;Main Category;Name TH;Name EN;Inherit From Main Category;";
     string? search, _search, pagingSummaryFormat = "Displaying page {0} of {1} (total {2} records)";
+    ICategoryServices categoryServices;
     protected override async Task OnInitializedAsync()
     {
-
+        categoryServices = new CategoryServices(
+    categoryServicesLogger,
+    configuration,
+    new Repository.MainCategoryRepository(dbContextFactory, configuration),
+    new Repository.SubCategoryRepository(dbContextFactory, configuration)
+    );
         var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var authenicated = state.IsNotNull().And(state!.User.Identity!.IsAuthenticated);
         if (authenicated)
@@ -118,12 +129,12 @@
         create.AfterSubmitAction = async () => await FetchData();
         create.Open(mainCategories);
     }
-     void UpdateSubCategoryBtnClicked(long id)
+    void UpdateSubCategoryBtnClicked(long id)
     {
         update.AfterSubmitAction = async () => await FetchData();
         update.Open(id);
     }
-     void DeleteSubCategoryBtnClicked(SubCategory subCategory)
+    void DeleteSubCategoryBtnClicked(SubCategory subCategory)
     {
         delete.AfterSubmitAction = async () => await FetchData();
         delete.Open(subCategory);
@@ -189,7 +200,7 @@
 <CascadingAuthenticationState>
     <AuthorizeView Policy="@ServicePermission.PolicyNames.SellerManager" Context="authContext">
         <Authorized>
-            <NHIF Condition="@majorException">
+           <NHIF Condition="@majorException">
                 <YesOperation>
                     <center>
                         <div class="alert alert-danger text-4xl font-bold" role="alert">Error While Gethering Clients </div>
