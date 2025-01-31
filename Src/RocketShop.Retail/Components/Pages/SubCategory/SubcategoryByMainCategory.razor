@@ -1,10 +1,15 @@
 ﻿@page "/category/{id}"
 @using MudBlazor
+@using Radzen
+@using Radzen.Blazor
 @using RocketShop.Framework.Extension
+@using RocketShop.Retail.Components.Pages.SubCategory.Modal
 @using RocketShop.Retail.Service
 @using RocketShop.Database.Model.Retail
+@using RocketShop.Retail.ServicePermission
+@using RocketShop.SharedBlazor.Condition
+@using RocketShop.SharedBlazor.Table
 @inject ICategoryServices categoryServices
-<h3>SubcategoryByMainCategory</h3>
 
 @code {
     [Parameter]
@@ -14,12 +19,16 @@
     const string Headers = "Id;Name TH;Name EN;";
     string? search, _search, pagingSummaryFormat = "Displaying page {0} of {1} (total {2} records)";
     List<SubCategory> subCategories = new List<SubCategory>();
+    MainCategory currentCategory = new MainCategory();
     List<BreadcrumbItem> items = new List<BreadcrumbItem>
     {
     new BreadcrumbItem("Home", href: "/"),
     new BreadcrumbItem("Category", "/categories"),
     new BreadcrumbItem("Sub Category", href:null,disabled:true)
     };
+    CreateSubcategory? createSubCategory;
+    UpdateSubcategory? UpdateSubCategory;
+    DeleteSubCategory? delete;
     protected override async Task OnInitializedAsync()
 
     {
@@ -34,10 +43,34 @@
     {
         try
         {
-            var result = await categoryServices.ListSubCategoriesByMainCategory(long.Parse(id), search, currentPage);
+            var result = await categoryServices.ListSubCategoriesByMainCategory(id.ToLong(), search, currentPage);
             if (result.IsLeft)
                 throw result.GetLeft()!;
-            subCategories = result.GetRight();
+            subCategories = result.GetRight()!;
+            var countResult = await categoryServices.GetCountSubCategoryByMainCategoryId(id.ToLong(), search);
+            var lastpageResult = await categoryServices.GetLastPageSubCategoryByMainCategoryId(id.ToLong(), search);
+            var currentCategoryResult = await categoryServices.GetMainCategory(id.ToLong());
+            countResult.If(x => x.IsRight,
+            x => count = x.GetRight()!,
+            _ =>
+            {
+                minorException = true;
+                count = 0;
+            });
+            lastpageResult.If(x => x.IsRight,
+                x => lastPage = x.GetRight()!,
+                _ =>
+                {
+                    minorException = true;
+                    lastPage = 1;
+                });
+            currentCategoryResult.If(x => x.IsRight,
+                x => currentCategory = x.GetRight()!,
+                _ =>
+                {
+                    minorException = true;
+                    currentCategory = new MainCategory();
+                });
         }
         catch
         {
@@ -49,4 +82,112 @@
             StateHasChanged();
         }
     }
+    async Task PageChanged(PagerEventArgs args)
+    {
+
+        currentPage = args.PageIndex + 1;
+        await FetchData();
+    }
+    async Task SetSearch()
+    {
+        currentPage = 1;
+        search = _search;
+        await FetchData();
+    }
+    void CreateSubCategoryBtnCliecked()
+    {
+        createSubCategory!.AfterSubmitAction = async ()=> await FetchData();
+        createSubCategory.Open(id.ToLong());
+    }
+    void UpdateSubCategoryBtnClicked(long id)
+    {
+        UpdateSubCategory!.AfterSubmitAction = async () => await FetchData();
+        UpdateSubCategory.Open(id);
+    }
+    void DeleteSubCategoryBtnClicked(SubCategory subCategory)
+    {
+        delete!.AfterSubmitAction = async () => await FetchData();
+        delete.Open(subCategory);
+    }
 }
+<CascadingAuthenticationState>
+    <AuthorizeView Policy="@PolicyNames.SellerManager">
+        <Authorized>
+            <NHIF Condition="majorException">
+                <YesOperation>
+                    <center>
+                        <div class="alert alert-danger text-4xl font-bold" role="alert">Error While Gethering Clients </div>
+                    </center>
+                </YesOperation>
+                <NoOperation>
+                    <NHIF Condition="minorException">
+                        <div class="alert alert-warning text-3xl font-bold" role="alert">
+                            This Current Operation ran With Problems.
+                            &nbsp;&nbsp;
+                            For a Better experience <button class="btn btn-link text-3xl font-bold" @onclick="FetchData">Please Try Again.</button>
+                        </div>
+                    </NHIF>
+                    <h1 style="text-align:center">Sub Category Of @currentCategory.If(x => x.IsNotNull(), x => x!.ToString(), _ => "???")</h1>
+                    <br />
+                    <br />
+                    <MudBreadcrumbs Items="items" />
+                    <br />
+                    <br />
+                    <div>
+                        <div Class="row">
+                            <div Class="col-5">
+                                <div class="input-group mb-3">
+                                    <input type="text" class="form-control" @bind-value="_search" placeholder="Category Name" aria-describedby="basic-addon2">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-info" type="button" @onclick="SetSearch"><i class="search icon"></i> Search</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-5">
+                                <MudButton Color="Color.Info" Variant="MudBlazor.Variant.Filled" StartIcon="@Icons.Material.Filled.Create" OnClick="CreateSubCategoryBtnCliecked">Create Sub Category</MudButton>
+                            </div>
+                            <div class="col-2">
+                                <h3 class="text-2xl font-semibold">Count : @count</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <br />
+                    <br />
+                    <NHTypeTable Items="subCategories"
+                                 Columns="@Headers"
+                                 TableClass="table table-hover"
+                                 TableBodyClass="table-success"
+                                 TableHeaderClass="table-dark"
+                                 Context="subCategory">
+                        <tr>
+                            <td>@subCategory.Id</td>
+                            <td>@subCategory.NameTh</td>
+                            <td>@subCategory.NameEn</td>
+                            <td>
+                                <NHIF Condition="subCategory.Primary">
+                                    <NoOperation>
+                                        <button class="btn btn-warning mx-1" @onclick="()=>UpdateSubCategoryBtnClicked(subCategory.Id)"><i class="edit icon"></i></button>
+                                        <button class="btn btn-danger mx-1" @onclick="()=>DeleteSubCategoryBtnClicked(subCategory)"><i class="trash icon"></i></button>
+                                    </NoOperation>
+                                </NHIF>
+                            </td>
+                        </tr>
+                    </NHTypeTable>
+                       <RadzenPager ShowPagingSummary="true"
+                                 PagingSummaryFormat="@pagingSummaryFormat"
+                                 HorizontalAlign="HorizontalAlign.Right"
+                                 Count="@((int)count)"
+                                 PageSize="20"
+                                 PageNumbersCount="@lastPage"
+                                 PageChanged="@PageChanged" />
+                </NoOperation>
+            </NHIF>
+        </Authorized>
+        <NotAuthorized>
+            <RocketShop.SharedBlazor.Page.AccessDenied />
+        </NotAuthorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>
+<CreateSubcategory @ref="createSubCategory" />
+<UpdateSubcategory @ref="UpdateSubCategory" />
+<DeleteSubCategory @ref="delete" />
