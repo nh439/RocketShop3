@@ -13,6 +13,10 @@ namespace RocketShop.Framework.NumberCalculation
         {
             HashSet<char> allowedChars = new HashSet<char>("1234567890ABCDEF");
             bool isValid = true;
+            if(value.StartsWith("0x"))
+            {
+                value = value.Substring(2);
+            }
             foreach (char c in value)
             {
                 if (!allowedChars.Contains(c))
@@ -54,5 +58,35 @@ namespace RocketShop.Framework.NumberCalculation
         public static implicit operator Hexadecimal(Int128 value) => new Hexadecimal(value.ToString("X"));
 
         public override string ToString() => Value;
+
+        public byte ToByte() => Convert.ToByte(Value, 16);
+        public short ToShort() => Convert.ToInt16(Value, 16);
+        public int ToInt() => Convert.ToInt32(Value, 16);
+        public long ToLong() => Convert.ToInt64(Value, 16);
+        public Int128 ToInt128() => Int128.Parse(Value, System.Globalization.NumberStyles.HexNumber);
+
+        byte ConvertCharecterToByte(char c)
+        {
+           switch(c)
+            {
+                case '0': return 0;
+                case '1': return 1;
+                case '2': return 2;
+                case '3': return 3;
+                case '4': return 4;
+                case '5': return 5;
+                case '6': return 6;
+                case '7': return 7;
+                case '8': return 8;
+                case '9': return 9;
+                case 'A': return 10;
+                case 'B': return 11;
+                case 'C': return 12;
+                case 'D': return 13;
+                case 'E': return 14;
+                case 'F': return 15;
+                default: throw new ArgumentException("Invalid hexadecimal value");
+            }
+        }
     }
 }
