@@ -1,4 +1,5 @@
 ﻿using RocketShop.Database.Model.Retail;
+using RocketShop.Shared.Model;
 
 namespace RocketShop.Retail.Model
 {
@@ -38,5 +39,10 @@ namespace RocketShop.Retail.Model
 
 
 
+    }
+    public class SubCategoryExcelModelValidator : ImportExcelValidator<string, SubCategoryExcelModel>
+    {
+        public bool NewMainCategory { get; set; }
+        public long? MainCategoryId { get; set; }
     }
 }

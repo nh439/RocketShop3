@@ -1,0 +1,209 @@
+﻿@page "/upload-sub-category"
+@using MudBlazor
+@using RocketShop.Framework.Extension
+@using RocketShop.Retail.Model
+@using RocketShop.Retail.Service
+@using RocketShop.Shared.Constraint
+@using RocketShop.Shared.SharedService.Scoped
+@using RocketShop.Shared.Model
+@using RocketShop.SharedBlazor.Condition
+@using RocketShop.SharedBlazor.Domain
+@using RocketShop.SharedBlazor.Table
+@using RocketShop.SharedBlazor.Tools
+@using static RocketShop.Retail.Model.MainCategoryExcelModelExtensions
+@using Newtonsoft.Json
+@inject ICategoryServices categoryService
+@inject IImportExcelServices importService
+@inject IHttpContextAccessor httpContextAccessor
+@inject ILogger<UploadSubCategory> logger;
+@code {
+    bool isUploaded = false,
+       hasCorrupt = false;
+    int corruped = 0;
+    List<SubCategoryExcelModelValidator> subCategoryExcelModelValidators = new List<SubCategoryExcelModelValidator>();
+
+    const string Headers = "Name_TH;Name_EN;Description;Message";
+    LoadingModal? loadingModal;
+    List<BreadcrumbItem> items = new List<BreadcrumbItem>
+    {
+    new BreadcrumbItem("Home", href: "/"),
+    new BreadcrumbItem("Category",  href: "/categories"),
+    new BreadcrumbItem("Sub Category",  href: "/subcategories"),
+    new BreadcrumbItem("Upload",  href: null,disabled:true)
+    };
+    List<ModelDescription> descriptions = new List<ModelDescription>()
+    {
+        new ModelDescription("Name_TH","Text","Category Name",true),
+        new ModelDescription("Name_EN","Text","Category Name (English Only)",true),
+        new ModelDescription("Main Category","Text","Parent Category",true),
+        new ModelDescription("Description","Text","Category Description",false)
+    };
+    private async Task UploadFiles(IBrowserFile file)
+    {
+        if (file is null)
+        {
+            logger.LogError("File IS NULL");
+            return;
+        }
+        logger.LogInformation($"Uploading file {file.Name}");
+        loadingModal!.Open("Uploading 0%");
+        if (!file.ContentType.InCaseSensitiveEquals(FileContentTypeConstraint.Spreadsheet))
+        {
+            await loadingModal!.Then(false, "Error", "Invalid file type");
+            return;
+        };
+        try
+        {
+            loadingModal.SetText("Uploading 10%");
+            using var stream = file.OpenReadStream(5120000);
+            loadingModal.SetText("Uploading 12%");
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            loadingModal.SetText("Uploading 20%");
+            var data = ms.ToArray();
+            loadingModal.SetText("Uploading 30%");
+            var excelDataResult = await importService.ReadExcelAsync(data);
+            loadingModal.SetText("Uploading 40%");
+            if (excelDataResult.IsLeft)
+            {
+                var ex = excelDataResult.GetLeft()!;
+                logger.LogError(ex, ex.Message);
+                throw ex;
+            };
+            loadingModal.SetText("Uploading 54%");
+            var items = await excelDataResult.GetRight()!.ReadAsync<SubCategoryExcelModel>(row =>
+            {
+                var description = row["Description"].IsNotNull() ? row["Description"].ToString() : null;
+                return new SubCategoryExcelModel(
+                    row["NameTH"].ToString()!,
+                    row["NameEN"].ToString()!,
+                    row["mainCategoryName"].ToString()!,
+                    description);
+            });
+            var result = await categoryService.ValidateSubCategoryExcelData(items);
+            loadingModal.SetText("Uploading 68%");
+            if (result.IsLeft)
+            {
+                var ex = result.GetLeft()!;
+                logger.LogError(ex, ex.Message);
+                throw ex;
+            };
+            loadingModal.SetText("Uploading 78%");
+            subCategoryExcelModelValidators = result.GetRight()!;
+            loadingModal.SetText("Uploading 90%");
+            loadingModal!.Close();
+            isUploaded = true;
+            hasCorrupt = subCategoryExcelModelValidators.HasCorrupted();
+            if (hasCorrupt)
+            {
+                corruped = subCategoryExcelModelValidators.CorrupedCount();
+            }
+        }
+        catch (Exception x)
+        {
+            logger.LogError(x, x.Message);
+            await loadingModal!.Then(false, "An error occurred while uploading the file", "Error" );
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+    void RemoveCorrupted()
+    {
+        var corrupedRemoved = subCategoryExcelModelValidators.RemoveCorrupedItems().ToList();
+        subCategoryExcelModelValidators = corrupedRemoved.HasData() ?
+        corrupedRemoved.Select(s => new SubCategoryExcelModelValidator
+            {
+                Entity = s.Entity,
+                IsCorruped = s.IsCorruped,
+                Key = s.Key,
+                Message = s.Message
+
+            }).ToList()
+    : new();
+        hasCorrupt = false;
+        corruped = 0;
+        StateHasChanged();
+    }
+    async Task Submit()
+    {
+
+        try
+        {
+        
+        }
+        catch (Exception x)
+        {
+        }
+    }
+}
+<CascadingAuthenticationState>
+    <AuthorizeView Policy="@ServicePermission.PolicyNames.SellerManager">
+        <Authorized>
+            <br />
+            <br />
+            <MudBreadcrumbs Items="items" />
+            <br />
+            <br />
+            <div class="row">
+                <div class="col-1"></div>
+                <div class="col-10">
+                    <center>
+                        <h1 class="text-3xl font-bold">Upload Sub Category</h1>
+                    </center>
+                    <br />
+                    <br />
+                    <h2 class="text-xl font-semibold">Excel Data</h2>
+                    <br />
+                    <br />
+                    <MudFileUpload T="IBrowserFile" Accept="@FileExtensionConstraint.SpreadSheet" FilesChanged="UploadFiles">
+                        <ActivatorContent>
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.TableRows">
+                                Upload Excel Files
+                            </MudButton>
+                        </ActivatorContent>
+                    </MudFileUpload>
+                    <NHIF Condition="isUploaded">
+                        <NoOperation>
+                            <br />
+                            <NHModelDescriptionTable Descriptions="descriptions" />
+                        </NoOperation>
+                        <YesOperation>
+                            <br />
+                            <NHIF Condition="hasCorrupt">
+                                <div class="alert alert-danger" style="font-weight:bolder;font-size:larger" role="alert">
+                                    @corruped Main Category Data Corrupted <button class="alert-link" @onclick="RemoveCorrupted">Remove Corrupt Items</button>
+                                </div>
+                            </NHIF>
+                            <br />
+                            <br />
+                            <NHTypeTable Columns="@Headers"
+                                         Items="subCategoryExcelModelValidators"
+                                         Context="item"
+                                         TableClass="table table-hover"
+                                         TableHeaderClass="table-dark">
+                                <tr class="@(item.IsCorruped ? "table-danger":"table-success")">
+                                    <td>@item.Entity.nameTH</td>
+                                    <td>@item.Entity.nameEN</td>
+                                    <td>@item.Entity.description</td>
+                                    <td>@item.Message</td>
+                                </tr>
+                            </NHTypeTable>
+                            <NHIF Condition="@(!hasCorrupt)">
+                                <MudButton Color="Color.Primary" OnClick="Submit" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Upload">Upload Main Categories</MudButton>
+                            </NHIF>
+                        </YesOperation>
+                    </NHIF>
+                </div>
+                <div class="col-1"></div>
+            </div>
+        </Authorized>
+        <NotAuthorized>
+            <RocketShop.SharedBlazor.Page.AccessDenied />
+        </NotAuthorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>
+<LoadingModal @ref="loadingModal" />

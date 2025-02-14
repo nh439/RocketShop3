@@ -3,7 +3,7 @@ using RocketShop.Framework.Extension;
 
 namespace RocketShop.Shared.Model
 {
-    public class ImportExcelValidator<TKey, TEntity>
+    public abstract class ImportExcelValidator<TKey, TEntity>
     {
         public bool IsCorruped { get; set; }
         public string? Message { get; set; }

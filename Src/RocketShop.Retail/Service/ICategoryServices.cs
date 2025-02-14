@@ -33,6 +33,7 @@ namespace RocketShop.Retail.Service
         Task<Either<Exception, bool>> DeleteSubCategory(long id);
         Task<Either<Exception, int>> DeleteSubCategories(IEnumerable<long> ids);
         Task<Either<Exception, List<MainCategoryExcelModelValidator>>> ValidateExcelData(IEnumerable<MainCategoryExcelModel> mainCategories);
+        Task<Either<Exception, List<SubCategoryExcelModelValidator>>> ValidateSubCategoryExcelData(IEnumerable<SubCategoryExcelModel> subCategories);
     }
     public class CategoryServices(
         ILogger<CategoryServices> logger,
@@ -203,6 +204,14 @@ namespace RocketShop.Retail.Service
                     }
                     returnValues.Add(newItem);
                 });
+                return returnValues;
+            });
+        public async Task<Either<Exception, List<SubCategoryExcelModelValidator>>> ValidateSubCategoryExcelData(IEnumerable<SubCategoryExcelModel> subCategories) =>
+            await InvokeServiceAsync(async () =>
+            {
+                var mainCategories = await mainCategoryRepository.ListMainCategories();
+                var subCategories = await subCategoryRepository.ListSubCategories();
+                List<SubCategoryExcelModelValidator> returnValues = new List<SubCategoryExcelModelValidator>();
                 return returnValues;
             });
     }
