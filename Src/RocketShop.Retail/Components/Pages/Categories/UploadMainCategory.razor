@@ -73,8 +73,8 @@
             {
                 var description = row["Description"].IsNotNull() ? row["Description"].ToString() : null;
                 return new MainCategoryExcelModel(
-                    row["Name_TH"].ToString()!,
-                    row["Name_EN"].ToString()!,
+                    row["NameTH"].ToString()!,
+                    row["NameEN"].ToString()!,
                     description);
             });
             var result = await categoryService.ValidateExcelData(items);

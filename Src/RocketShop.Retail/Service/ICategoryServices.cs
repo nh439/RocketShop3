@@ -206,12 +206,34 @@ namespace RocketShop.Retail.Service
                 });
                 return returnValues;
             });
-        public async Task<Either<Exception, List<SubCategoryExcelModelValidator>>> ValidateSubCategoryExcelData(IEnumerable<SubCategoryExcelModel> subCategories) =>
+        public async Task<Either<Exception, List<SubCategoryExcelModelValidator>>> ValidateSubCategoryExcelData(IEnumerable<SubCategoryExcelModel> subCategoriesExcel) =>
             await InvokeServiceAsync(async () =>
             {
                 var mainCategories = await mainCategoryRepository.ListMainCategories();
                 var subCategories = await subCategoryRepository.ListSubCategories();
                 List<SubCategoryExcelModelValidator> returnValues = new List<SubCategoryExcelModelValidator>();
+                await subCategoriesExcel.HasDataAndParallelForEachAsync(s =>
+                {
+                    SubCategoryExcelModelValidator item = new SubCategoryExcelModelValidator() {
+                        Entity = s,
+                        Key = s.nameEN                 
+                    };
+                    long? parentCategory = mainCategories
+                    .Where(x=>x.ToString().InCaseSensitiveEquals(s.mainCategoryName))
+                    .Select(s=>s.Id).FirstOrDefault();
+                    item.MainCategoryId = parentCategory;
+                    item.NewMainCategory = !parentCategory.HasValue;
+                    item.IsCorruped = s.nameEN.IsNullOrEmpty()
+                    .Or(
+                        subCategories.Where(
+                            x=>
+                            (x.NameEn.InCaseSensitiveEquals(s.nameEN) ||
+                            x.NameTh.InCaseSensitiveEquals(s.nameTH)) &&
+                            x.MainCategoryId == parentCategory
+                        ).HasData()
+                        );
+                    returnValues.Add(item);
+                });
                 return returnValues;
             });
     }
