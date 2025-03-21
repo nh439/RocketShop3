@@ -86,6 +86,7 @@ namespace RocketShop.Framework.Services
                 try
                 {
                     operation();
+                    break;
                 }
                 catch (Exception x)
                 {
@@ -114,6 +115,7 @@ namespace RocketShop.Framework.Services
                 try
                 {
                     await operation();
+                    break;
                 }
                 catch (Exception x)
                 {

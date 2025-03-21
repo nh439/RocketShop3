@@ -28,7 +28,7 @@ namespace RocketShop.Retail.Service
         Task<Either<Exception, int>> GetCountSubCategoryByMainCategoryId(long mainCategoryId, string? search = null);
         Task<Either<Exception, int>> GetLastPageSubCategoryByMainCategoryId(long mainCategoryId, string? search = null, int per = 20);
         Task<Either<Exception, bool>> CreateSubCategory(SubCategory subCategory);
-        Task<Either<Exception, int>> CreateSubCategories(IEnumerable<SubCategory> subCategories);
+        Task<Either<Exception, int>> ImportSubCategories(IEnumerable<SubCategoryExcelModelValidator> subCategories, string createBy);
         Task<Either<Exception, bool>> UpdateSubCategory(SubCategory subCategory);
         Task<Either<Exception, bool>> DeleteSubCategory(long id);
         Task<Either<Exception, int>> DeleteSubCategories(IEnumerable<long> ids);
@@ -139,8 +139,45 @@ namespace RocketShop.Retail.Service
         public async Task<Either<Exception, bool>> CreateSubCategory(SubCategory subCategory) =>
             await InvokeDapperServiceAsync(async retailConnection => await subCategoryRepository.Create(subCategory, retailConnection));
 
-        public async Task<Either<Exception, int>> CreateSubCategories(IEnumerable<SubCategory> subCategories) =>
-            await InvokeDapperServiceAsync(async retailConnection => await subCategoryRepository.Creates(subCategories, retailConnection));
+        public async Task<Either<Exception, int>> ImportSubCategories(IEnumerable<SubCategoryExcelModelValidator> subCategories, string createBy) =>
+            await InvokeDapperServiceAsync(async retailConnection =>
+            {
+                var mcToCreate = subCategories.Where(x => x.NewMainCategory).Select(x => new MainCategory
+                {
+                    CreateBy = createBy,
+                    Created = DateTime.UtcNow,
+                    Description = x.Entity.description,
+                    LastUpdated = DateTime.UtcNow,
+                    LastUpdatedBy = createBy,
+                    NameEn = x.Entity.nameEN,
+                    NameTh = x.Entity.nameTH
+                });
+                retailConnection.Open();
+                using var transaction = retailConnection.BeginTransaction();
+                var mcResult = await CreateMainCategories(mcToCreate);
+                if (mcResult.IsLeft)
+                {
+                    transaction.Rollback();
+                    retailConnection.Close();
+                    throw mcResult.GetLeft()!;
+                }
+                var sc = subCategories.Where(x => !x.NewMainCategory).Select(x => new SubCategory
+                {
+                    CreateBy = createBy,
+                    Created = DateTime.UtcNow,
+                    Description = x.Entity.description,
+                    LastUpdated = DateTime.UtcNow,
+                    LastUpdatedBy = createBy,
+                    MainCategoryId = x.MainCategoryId!.Value,
+                    NameEn = x.Entity.nameEN,
+                    NameTh = x.Entity.nameTH
+                });
+                var scResult = await subCategoryRepository.Creates(sc, retailConnection, transaction);
+                transaction.Commit();
+                retailConnection.Close();
+                return mcResult.GetRight() + scResult;
+            }
+        );
 
         public async Task<Either<Exception, bool>> UpdateSubCategory(SubCategory subCategory) =>
             await InvokeDapperServiceAsync(async retailConnection => await subCategoryRepository.Update(subCategory, retailConnection));
@@ -190,10 +227,10 @@ namespace RocketShop.Retail.Service
                     newItem.Entity = m;
                     newItem.Key = m.Name_EN;
                     newItem.IsCorruped = m.Name_EN.IsNullOrEmpty()
-                    .Or(existingCategories.Where(x=>x.NameEn.InCaseSensitiveEquals(m.Name_EN) || x.NameTh.InCaseSensitiveEquals(m.Name_TH)).HasData());
-                    if(newItem.IsCorruped)
+                    .Or(existingCategories.Where(x => x.NameEn.InCaseSensitiveEquals(m.Name_EN) || x.NameTh.InCaseSensitiveEquals(m.Name_TH)).HasData());
+                    if (newItem.IsCorruped)
                     {
-                        if(nameEmpty)
+                        if (nameEmpty)
                         {
                             newItem.Message = "Name_EN is Empty";
                         }
@@ -214,19 +251,20 @@ namespace RocketShop.Retail.Service
                 List<SubCategoryExcelModelValidator> returnValues = new List<SubCategoryExcelModelValidator>();
                 await subCategoriesExcel.HasDataAndParallelForEachAsync(s =>
                 {
-                    SubCategoryExcelModelValidator item = new SubCategoryExcelModelValidator() {
+                    SubCategoryExcelModelValidator item = new SubCategoryExcelModelValidator()
+                    {
                         Entity = s,
-                        Key = s.nameEN                 
+                        Key = s.nameEN
                     };
                     long? parentCategory = mainCategories
-                    .Where(x=>x.ToString().InCaseSensitiveEquals(s.mainCategoryName))
-                    .Select(s=>s.Id).FirstOrDefault();
+                    .Where(x => x.ToString().InCaseSensitiveEquals(s.mainCategoryName))
+                    .Select(s => s.Id).FirstOrDefault();
                     item.MainCategoryId = parentCategory;
                     item.NewMainCategory = !parentCategory.HasValue;
                     item.IsCorruped = s.nameEN.IsNullOrEmpty()
                     .Or(
                         subCategories.Where(
-                            x=>
+                            x =>
                             (x.NameEn.InCaseSensitiveEquals(s.nameEN) ||
                             x.NameTh.InCaseSensitiveEquals(s.nameTH)) &&
                             x.MainCategoryId == parentCategory

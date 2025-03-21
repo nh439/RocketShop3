@@ -22,7 +22,7 @@
     int corruped = 0;
     List<SubCategoryExcelModelValidator> subCategoryExcelModelValidators = new List<SubCategoryExcelModelValidator>();
 
-    const string Headers = "Name_TH;Name_EN;Description;Message";
+    const string Headers = "Name_TH;Name_EN;Main Category;Description;Message";
     LoadingModal? loadingModal;
     List<BreadcrumbItem> items = new List<BreadcrumbItem>
     {
@@ -188,6 +188,7 @@
                                 <tr class="@(item.IsCorruped ? "table-danger":"table-success")">
                                     <td>@item.Entity.nameTH</td>
                                     <td>@item.Entity.nameEN</td>
+                                    <td>@item.MainCategoryId</td>
                                     <td>@item.Entity.description</td>
                                     <td>@item.Message</td>
                                 </tr>
